@@ -1,5 +1,5 @@
 {
-  "collected_at_utc": "2026-08-28T03:12:45.909245Z",
+  "collected_at_utc": "2026-08-28T03:25:48.658255Z",
   "collection_mode": "read_only",
   "commands_attempted": [
     {
@@ -66,30 +66,90 @@
     }
   ],
   "gpu": {
+    "criterion": "read_only_enumeration_succeeded",
+    "interpretation": "not_a_calibration_or_performance_result",
+    "result_type": "enumeration_only",
+    "source": {
+      "command": [
+        "nvidia-smi",
+        "--query-gpu=name,memory.total,driver_version",
+        "--format=csv,noheader"
+      ]
+    },
     "status": "available",
     "value": "NVIDIA GeForce RTX 5090, 32607 MiB, 580.105.08"
   },
   "groups": {
+    "criterion": "read_only_enumeration_succeeded",
+    "interpretation": "not_a_calibration_or_performance_result",
+    "result_type": "enumeration_only",
+    "source": {
+      "command": [
+        "id",
+        "-nG"
+      ]
+    },
     "status": "available",
     "value": "ubuntu adm cdrom sudo dip plugdev lpadmin lxd sambashare"
   },
   "os": {
+    "criterion": "read_only_enumeration_succeeded",
+    "interpretation": "not_a_calibration_or_performance_result",
     "kernel": {
+      "criterion": "read_only_enumeration_succeeded",
+      "interpretation": "not_a_calibration_or_performance_result",
+      "result_type": "enumeration_only",
+      "source": {
+        "command": [
+          "uname",
+          "-r"
+        ]
+      },
       "status": "available",
       "value": "6.8.0-138-generic"
     },
-    "name": "Ubuntu 22.04.5 LTS"
+    "name": "Ubuntu 22.04.5 LTS",
+    "result_type": "enumeration_only",
+    "status": "available"
   },
   "python": {
+    "criterion": "read_only_enumeration_succeeded",
+    "interpretation": "not_a_calibration_or_performance_result",
+    "result_type": "enumeration_only",
+    "source": {
+      "command": [
+        "python",
+        "--version"
+      ]
+    },
     "status": "available",
     "value": "Python 3.10.21"
   },
   "schema_version": "p0/environment/v1",
   "software": {
     "pyorbbecsdk": {
+      "criterion": "read_only_enumeration_unavailable",
+      "interpretation": "not_a_calibration_or_performance_result",
+      "result_type": "enumeration_only",
+      "source": {
+        "command": [
+          "python",
+          "-c",
+          "import pyorbbecsdk; print(getattr(pyorbbecsdk, '__version__', 'installed'))"
+        ]
+      },
       "status": "not_installed"
     },
     "ros2": {
+      "criterion": "read_only_enumeration_unavailable",
+      "interpretation": "not_a_calibration_or_performance_result",
+      "result_type": "enumeration_only",
+      "source": {
+        "command": [
+          "ros2",
+          "--version"
+        ]
+      },
       "status": "not_installed"
     }
   },

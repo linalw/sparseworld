@@ -14,6 +14,7 @@ CommandRunner = Callable[[list[str]], CompletedProcess[str]]
 def discover_environment(
     command_runner: CommandRunner | None = None,
     sysfs_root: str | Path = "/sys",
+    now=None,
 ) -> dict[str, object]:
     """Return a snapshot collected exclusively by enumeration commands and reads.
 
@@ -24,7 +25,10 @@ def discover_environment(
     commands: list[dict[str, object]] = []
 
     def probe(name: str, command: list[str]) -> dict[str, object]:
-        result = runner(command)
+        try:
+            result = runner(command)
+        except Exception as error:
+            result = CompletedProcess(command, 1, "", f"{type(error).__name__}: {error}")
         record = {
             "name": name,
             "command": command,
@@ -35,7 +39,7 @@ def discover_environment(
         commands.append(record)
         return record
 
-    os_release = _os_release()
+    os_release = _safe(_os_release)
     kernel = probe("kernel", ["uname", "-r"])
     python = probe("python", ["python", "--version"])
     gpu = probe(
@@ -51,14 +55,14 @@ def discover_environment(
     root = Path(sysfs_root)
     usb_devices = _usb_devices(root)
     video_labels = _video_labels(root)
-    v4l2_links = _v4l2_links()
+    v4l2_links = _safe(_v4l2_links)
 
     return {
         "schema_version": "p0/environment/v1",
         "collection_mode": "read_only",
-        "collected_at_utc": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "collected_at_utc": (now or (lambda: datetime.now(timezone.utc)))().isoformat().replace("+00:00", "Z"),
         "commands_attempted": commands,
-        "os": {"name": os_release.get("PRETTY_NAME", "unknown"), "kernel": _fact(kernel)},
+        "os": ({"name": os_release.get("PRETTY_NAME", "unknown"), "kernel": _fact(kernel), "status": os_release.get("status", "available"), "criterion": "read_only_enumeration_succeeded", "result_type": "enumeration_only", "interpretation": "not_a_calibration_or_performance_result"} if isinstance(os_release, dict) else {"status": "permission_denied"}),
         "python": _fact(python),
         "gpu": _fact(gpu),
         "groups": _fact(groups),
@@ -79,15 +83,27 @@ def _run_read_only(command: list[str]) -> CompletedProcess[str]:
 
 def _fact(record: dict[str, object]) -> dict[str, object]:
     status = _status(record)
-    result: dict[str, object] = {"status": status}
-    if status == "available":
+    if status == "available" and not record["stdout"]:
+        status = "not_detected"
+    result: dict[str, object] = {"status": status, "source": {"command": record["command"]}, "criterion": "read_only_enumeration_succeeded" if status == "available" else "read_only_enumeration_unavailable", "result_type": "enumeration_only", "interpretation": "not_a_calibration_or_performance_result"}
+    if status == "available" and record["stdout"]:
         result["value"] = record["stdout"]
     return result
+
+def _safe(action):
+    try:
+        return action()
+    except PermissionError:
+        return {"status": "permission_denied"}
+    except OSError:
+        return {"status": "not_detected"}
 
 
 def _software_fact(record: dict[str, object]) -> dict[str, object]:
     status = _status(record)
-    result: dict[str, object] = {"status": status}
+    if status == "available" and not record["stdout"]:
+        status = "not_detected"
+    result: dict[str, object] = {"status": status, "source": {"command": record["command"]}, "criterion": "read_only_enumeration_succeeded" if status == "available" else "read_only_enumeration_unavailable", "result_type": "enumeration_only", "interpretation": "not_a_calibration_or_performance_result"}
     if status == "available":
         result["version"] = record["stdout"]
     return result
