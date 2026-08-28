@@ -1,0 +1,169 @@
+{
+  "collected_at_utc": "2026-08-28T03:12:45.909245Z",
+  "collection_mode": "read_only",
+  "commands_attempted": [
+    {
+      "command": [
+        "uname",
+        "-r"
+      ],
+      "name": "kernel",
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "6.8.0-138-generic"
+    },
+    {
+      "command": [
+        "python",
+        "--version"
+      ],
+      "name": "python",
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "Python 3.10.21"
+    },
+    {
+      "command": [
+        "nvidia-smi",
+        "--query-gpu=name,memory.total,driver_version",
+        "--format=csv,noheader"
+      ],
+      "name": "gpu",
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "NVIDIA GeForce RTX 5090, 32607 MiB, 580.105.08"
+    },
+    {
+      "command": [
+        "id",
+        "-nG"
+      ],
+      "name": "groups",
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "ubuntu adm cdrom sudo dip plugdev lpadmin lxd sambashare"
+    },
+    {
+      "command": [
+        "ros2",
+        "--version"
+      ],
+      "name": "ros2",
+      "returncode": 127,
+      "stderr": "[Errno 2] No such file or directory: 'ros2'",
+      "stdout": ""
+    },
+    {
+      "command": [
+        "python",
+        "-c",
+        "import pyorbbecsdk; print(getattr(pyorbbecsdk, '__version__', 'installed'))"
+      ],
+      "name": "pyorbbecsdk",
+      "returncode": 1,
+      "stderr": "Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\nModuleNotFoundError: No module named 'pyorbbecsdk'",
+      "stdout": ""
+    }
+  ],
+  "gpu": {
+    "status": "available",
+    "value": "NVIDIA GeForce RTX 5090, 32607 MiB, 580.105.08"
+  },
+  "groups": {
+    "status": "available",
+    "value": "ubuntu adm cdrom sudo dip plugdev lpadmin lxd sambashare"
+  },
+  "os": {
+    "kernel": {
+      "status": "available",
+      "value": "6.8.0-138-generic"
+    },
+    "name": "Ubuntu 22.04.5 LTS"
+  },
+  "python": {
+    "status": "available",
+    "value": "Python 3.10.21"
+  },
+  "schema_version": "p0/environment/v1",
+  "software": {
+    "pyorbbecsdk": {
+      "status": "not_installed"
+    },
+    "ros2": {
+      "status": "not_installed"
+    }
+  },
+  "usb": {
+    "gemini": [
+      {
+        "path": "/sys/bus/usb/devices/2-10",
+        "product": "Orbbec Gemini 335",
+        "product_id": "0800",
+        "serial": "CP0F4630001M",
+        "vendor_id": "2bc5"
+      }
+    ]
+  },
+  "v4l2": {
+    "by_id": [
+      {
+        "link": "/dev/v4l/by-id/usb-Orbbec_R__Orbbec_Gemini_335_CP0F4630001M-video-index0",
+        "target": "/dev/video0"
+      },
+      {
+        "link": "/dev/v4l/by-id/usb-Orbbec_R__Orbbec_Gemini_335_CP0F4630001M-video-index1",
+        "target": "/dev/video1"
+      },
+      {
+        "link": "/dev/v4l/by-id/usb-Orbbec_R__Orbbec_Gemini_335_CP0F4630001M-video-index2",
+        "target": "/dev/video2"
+      },
+      {
+        "link": "/dev/v4l/by-id/usb-Orbbec_R__Orbbec_Gemini_335_CP0F4630001M-video-index3",
+        "target": "/dev/video3"
+      },
+      {
+        "link": "/dev/v4l/by-id/usb-Orbbec_R__Orbbec_Gemini_335_CP0F4630001M-video-index4",
+        "target": "/dev/video4"
+      },
+      {
+        "link": "/dev/v4l/by-id/usb-Orbbec_R__Orbbec_Gemini_335_CP0F4630001M-video-index5",
+        "target": "/dev/video5"
+      }
+    ],
+    "sysfs_labels": [
+      {
+        "device": "video0",
+        "label": "Orbbec Gemini 335: Orbbec Gemin"
+      },
+      {
+        "device": "video1",
+        "label": "Orbbec Gemini 335: Orbbec Gemin"
+      },
+      {
+        "device": "video2",
+        "label": "Orbbec Gemini 335: Orbbec Gemin"
+      },
+      {
+        "device": "video3",
+        "label": "Orbbec Gemini 335: Orbbec Gemin"
+      },
+      {
+        "device": "video4",
+        "label": "Orbbec Gemini 335: Orbbec Gemin"
+      },
+      {
+        "device": "video5",
+        "label": "Orbbec Gemini 335: Orbbec Gemin"
+      },
+      {
+        "device": "video6",
+        "label": "Orbbec Gemini 335: Orbbec Gemin"
+      },
+      {
+        "device": "video7",
+        "label": "Orbbec Gemini 335: Orbbec Gemin"
+      }
+    ]
+  }
+}
