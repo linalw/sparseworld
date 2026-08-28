@@ -13,11 +13,11 @@ frames:
   intrinsics: pending_measurement
   extrinsics: pending_measurement
 streams:
-  rgb: {resolution: pending_measurement, rate_hz: pending_measurement}
-  depth: {resolution: pending_measurement, rate_hz: pending_measurement}
-  left: {resolution: pending_measurement, rate_hz: pending_measurement}
-  right: {resolution: pending_measurement, rate_hz: pending_measurement}
-  imu: {rate_hz: pending_measurement}
+  rgb: {resolution: pending_measurement, nominal_rate: pending_measurement}
+  depth: {resolution: pending_measurement, nominal_rate: pending_measurement}
+  left: {resolution: pending_measurement, nominal_rate: pending_measurement}
+  right: {resolution: pending_measurement, nominal_rate: pending_measurement}
+  imu: {resolution: pending_measurement, nominal_rate: pending_measurement}
 map:
   origin: local_initialization_without_external_datum
   units: SI
@@ -31,6 +31,10 @@ time_gates:
 diagnostics:
   window_seconds: 30
   storage: bounded_local_dense
+  dense_buffer:
+    local_origin_frame: camera_link
+    timestamp_field: UTC ISO-8601
+    ttl_seconds: 30
 topology:
   requires_realtime_clearance_check: true
 scope:

@@ -2,6 +2,7 @@
 
 from pathlib import Path
 from typing import Any, Mapping
+from types import MappingProxyType
 
 import yaml
 
@@ -19,15 +20,15 @@ def load_profile(path: str | Path) -> CaptureProfile:
         raise ValueError("profile root must be a mapping")
     return CaptureProfile(
         schema_version=data.get("schema_version"),
-        device=_mapping(data, "device"),
-        frames=_mapping(data, "frames"),
-        streams=_mapping(data, "streams"),
-        map=_mapping(data, "map"),
-        quality_gates=_mapping(data, "quality_gates"),
-        time_gates=_mapping(data, "time_gates"),
-        diagnostics=_mapping(data, "diagnostics"),
-        topology=_mapping(data, "topology"),
-        scope=_mapping(data, "scope"),
+        device=_freeze_mapping(data, "device"),
+        frames=_freeze_mapping(data, "frames"),
+        streams=_freeze_mapping(data, "streams"),
+        map=_freeze_mapping(data, "map"),
+        quality_gates=_freeze_mapping(data, "quality_gates"),
+        time_gates=_freeze_mapping(data, "time_gates"),
+        diagnostics=_freeze_mapping(data, "diagnostics"),
+        topology=_freeze_mapping(data, "topology"),
+        scope=_freeze_mapping(data, "scope"),
     )
 
 
@@ -40,24 +41,44 @@ def validate_profile(profile: CaptureProfile) -> list[str]:
         errors.append("frames.tree must be map -> odom -> base_link -> camera_link -> camera_optical_frame")
     if profile.frames.get("imu_parent") != "base_link" or profile.frames.get("imu_frame") != "imu_link":
         errors.append("frames must define base_link -> imu_link")
-    missing_streams = [name for name in REQUIRED_STREAMS if name not in profile.streams]
-    if missing_streams:
+    if any(name not in profile.streams for name in REQUIRED_STREAMS):
         errors.append("streams must include rgb, depth, left, right, and imu")
+    for name in REQUIRED_STREAMS:
+        stream = profile.streams.get(name)
+        if not isinstance(stream, Mapping):
+            errors.append(f"streams.{name} must be a mapping")
+            continue
+        for field in ("resolution", "nominal_rate"):
+            if not stream.get(field):
+                errors.append(f"streams.{name}.{field} must be non-empty")
     if profile.map.get("origin") != "local_initialization_without_external_datum":
         errors.append("map.origin must be local_initialization_without_external_datum")
     if profile.map.get("units") != "SI":
         errors.append("map.units must be SI")
     if profile.map.get("timestamp_standard") != "UTC ISO-8601":
         errors.append("map.timestamp_standard must be UTC ISO-8601")
-    if not profile.quality_gates:
-        errors.append("quality_gates must be explicit")
-    if not profile.time_gates:
-        errors.append("time_gates must be explicit")
+    for field in ("stationary_calibration", "hand_carried_supervised_route"):
+        if not profile.quality_gates.get(field):
+            errors.append(f"quality_gates.{field} must be explicit")
+    for field in ("device_host_offset", "timestamp_pairing_policy"):
+        if not profile.time_gates.get(field):
+            errors.append(f"time_gates.{field} must be explicit")
     window = profile.diagnostics.get("window_seconds")
     if not isinstance(window, (int, float)) or not 10 <= window <= 60:
         errors.append("diagnostics.window_seconds must be between 10 and 60")
     if profile.diagnostics.get("storage") != "bounded_local_dense":
         errors.append("diagnostics.storage must be bounded_local_dense")
+    dense_buffer = profile.diagnostics.get("dense_buffer")
+    if not isinstance(dense_buffer, Mapping):
+        errors.append("diagnostics.dense_buffer must be a mapping")
+    else:
+        if not dense_buffer.get("local_origin_frame"):
+            errors.append("diagnostics.dense_buffer.local_origin_frame must be explicit")
+        if not dense_buffer.get("timestamp_field"):
+            errors.append("diagnostics.dense_buffer.timestamp_field must be explicit")
+        ttl = dense_buffer.get("ttl_seconds")
+        if not isinstance(ttl, (int, float)) or not 10 <= ttl <= 60:
+            errors.append("diagnostics.dense_buffer.ttl_seconds must be between 10 and 60")
     if profile.topology.get("requires_realtime_clearance_check") is not True:
         errors.append("topology.requires_realtime_clearance_check must be true")
     if profile.scope.get("motor_control") is not False:
@@ -65,6 +86,14 @@ def validate_profile(profile: CaptureProfile) -> list[str]:
     return errors
 
 
-def _mapping(data: Mapping[str, Any], key: str) -> Mapping[str, Any]:
+def _freeze_mapping(data: Mapping[str, Any], key: str) -> Mapping[str, Any]:
     value = data.get(key, {})
-    return value if isinstance(value, dict) else {}
+    return _freeze(value) if isinstance(value, dict) else MappingProxyType({})
+
+
+def _freeze(value: Any) -> Any:
+    if isinstance(value, dict):
+        return MappingProxyType({key: _freeze(item) for key, item in value.items()})
+    if isinstance(value, list):
+        return tuple(_freeze(item) for item in value)
+    return value
