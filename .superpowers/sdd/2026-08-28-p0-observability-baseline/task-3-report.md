@@ -39,4 +39,6 @@ Added provenance (`source`, criterion, result type, interpretation) to claims; h
 
 ## Fix round 2
 
+Final closure: current primary evidence `artifacts/evidence/p0_environment_20260828T041820Z.json`, payload UTC `2026-08-28T04:18:20Z`, SHA-256 `dab02ab15c0fbbc2287495c02c0de762eec2939d9f1e0e6f2562a7293e120d9a`. `sha256sum -c` succeeded; `git diff --check` clean. Prior artifacts are superseded. Commits: `4a98e4c`, `75b39b0`, `1fa5112`, `60c6b1f`, `76ebc9b`.
+
 Added provenance metadata for USB/V4L2/sysfs and `/etc/os-release`, structured unavailable statuses, safe exception handling, and CLI `--collected-at-utc` deterministic mode. RED: CLI fixed-time test initially failed on unsupported injected `now`; GREEN: focused `7 passed`, full `14 passed`. Evidence sidecar verification: `(cd artifacts/evidence && sha256sum -c p0_environment_20260828T100734Z.json.sha256)` succeeded. Current payload mapping is `p0_environment_20260828T100734Z.json` → sidecar hash (regenerated in this round); prior hash claims are superseded. Hardening commit: `75b39b0`; this correction is committed separately.
