@@ -1,0 +1,120 @@
+{
+  "schema_version": "0.2",
+  "map_frame": {
+    "name": "map",
+    "units": "m",
+    "axis_convention": "x_forward_or_building_east_y_left_or_building_north_z_up",
+    "origin_definition": "First mapping pose projected onto the traversable floor.",
+    "earth_alignment": "Unaligned local building map; no surveyed external datum."
+  },
+  "floors": [
+    {
+      "floor_id": "floor_1",
+      "z_interval_m": [0.0, 0.25],
+      "elevation_confidence": 0.95
+    }
+  ],
+  "places": [
+    {
+      "place_id": "place_study",
+      "place_type": "room",
+      "label_candidates": ["study"],
+      "floor_id": "floor_1",
+      "region": {
+        "polygon_xy": [[0.0, 0.0], [3.2, 0.0], [3.2, 2.8], [0.0, 2.8]],
+        "z_interval_m": [0.0, 2.7]
+      },
+      "confidence": 0.93,
+      "evidence": [
+        {
+          "source_type": "human",
+          "timestamp": "2026-08-27T09:00:00Z",
+          "keyframe_id": "kf_0001",
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "place_id": "place_bedroom",
+      "place_type": "room",
+      "label_candidates": ["bedroom"],
+      "floor_id": "floor_1",
+      "region": {
+        "polygon_xy": [[5.0, 0.0], [8.4, 0.0], [8.4, 3.0], [5.0, 3.0]],
+        "z_interval_m": [0.0, 2.7]
+      },
+      "confidence": 0.91,
+      "evidence": [
+        {
+          "source_type": "rgb",
+          "timestamp": "2026-08-27T09:01:10Z",
+          "keyframe_id": "kf_0031",
+          "score": 0.88
+        }
+      ]
+    }
+  ],
+  "objects": [
+    {
+      "object_id": "obj_cup_0042",
+      "class_candidates": [
+        {"label": "cup", "probability": 0.94},
+        {"label": "mug", "probability": 0.05}
+      ],
+      "attributes": {
+        "color": "red",
+        "place_id": "place_bedroom",
+        "semantic_embedding_ref": "embeddings/obj_cup_0042.int8"
+      },
+      "geometry": {
+        "anchor_xyz": [6.21, 1.08, 0.76],
+        "aabb_min_xyz": [6.15, 1.02, 0.70],
+        "aabb_max_xyz": [6.27, 1.14, 0.86],
+        "oriented_box": {
+          "center_xyz": [6.21, 1.08, 0.78],
+          "size_xyz": [0.12, 0.12, 0.16],
+          "orientation_xyzw": [0.0, 0.0, 0.0, 1.0]
+        },
+        "surface_corners": [[6.15, 1.02, 0.70], [6.15, 1.14, 0.70], [6.15, 1.14, 0.86], [6.15, 1.02, 0.86]],
+        "footprint": [[6.15, 1.02], [6.27, 1.02], [6.27, 1.14], [6.15, 1.14]],
+        "geometry_type": "oriented_box",
+        "geometry_quality": "coarse",
+        "surface_relation": "vertical_to_traversable",
+        "normal_xyz": [-1.0, 0.0, 0.0]
+      },
+      "state": "movable",
+      "lifecycle_status": "confirmed",
+      "traversability": "obstacle",
+      "confidence": 0.87,
+      "retention": "persistent_compact",
+      "first_seen": "2026-08-27T09:01:10Z",
+      "last_seen": "2026-08-27T09:02:15Z",
+      "evidence": [
+        {
+          "source_type": "rgb",
+          "timestamp": "2026-08-27T09:02:15Z",
+          "keyframe_id": "kf_0042",
+          "image_crop_uri": "captures/obj_cup_0042.webp",
+          "score": 0.93
+        }
+      ]
+    }
+  ],
+  "topology": {
+    "nodes": [
+      {"node_id": "wp_study_exit", "kind": "room_portal", "pose_xyz": [3.0, 1.4, 0.0], "floor_id": "floor_1", "heading_rad": 0.0, "clearance_m": 0.9},
+      {"node_id": "wp_hall_turn", "kind": "waypoint", "pose_xyz": [4.1, 1.4, 0.0], "floor_id": "floor_1", "heading_rad": 0.0, "clearance_m": 1.2},
+      {"node_id": "wp_bedroom_entry", "kind": "room_portal", "pose_xyz": [5.0, 1.5, 0.0], "floor_id": "floor_1", "heading_rad": 0.0, "clearance_m": 0.85}
+    ],
+    "edges": [
+      {"edge_id": "edge_study_hall", "from": "wp_study_exit", "to": "wp_hall_turn", "structurally_connected": true, "requires_realtime_clearance_check": true, "cost": 1.1, "edge_type": "corridor", "conditions": ["static map confirms corridor"]},
+      {"edge_id": "edge_hall_bedroom", "from": "wp_hall_turn", "to": "wp_bedroom_entry", "structurally_connected": true, "requires_realtime_clearance_check": true, "cost": 0.9, "edge_type": "door", "conditions": ["bedroom door must be open"]}
+    ]
+  },
+  "map_artifacts": {
+    "sparse_landmarks_uri": "maps/floor_1_sparse_landmarks.bin",
+    "global_pose_graph_uri": "maps/global_pose_graph.g2o",
+    "static_occupancy_uri": "maps/floor_1_static_occupancy.yaml",
+    "semantic_index_uri": "indices/semantic_objects.faiss"
+  }
+}

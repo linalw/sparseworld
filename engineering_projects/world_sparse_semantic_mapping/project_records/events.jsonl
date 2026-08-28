@@ -1,0 +1,7 @@
+{"timestamp": "2026-08-27T09:26:37+00:00", "event": "project_initialized", "details": "project=world_sparse_semantic_mapping"}
+{"timestamp": "2026-08-27T09:26:37+00:00", "event": "manifest_refreshed", "details": "files=6"}
+{"timestamp": "2026-08-27T10:24:48+00:00", "event": "manifest_refreshed", "details": "files=6"}
+{"timestamp": "2026-08-27T10:33:01+00:00", "event": "manifest_refreshed", "details": "files=7"}
+{"timestamp": "2026-08-27T10:39:39+00:00", "event": "final_design_verification", "details": "v0.2 proposal, schema, example, PDF, DOCX, and requirements matrix checked; PDF visual QA passed; DOCX visual QA remains open because soffice is unavailable"}
+{"timestamp": "2026-08-27T10:39:39+00:00", "event": "manifest_refreshed", "details": "files=7"}
+{"timestamp": "2026-08-28T01:29:36+00:00", "event": "manifest_refreshed", "details": "files=8"}
