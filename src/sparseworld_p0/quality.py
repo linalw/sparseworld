@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib, json
 from collections.abc import Mapping, Sequence
 from typing import Any
-from .timing import analyze_stream, analyze_interstream
+from .timing import analyze_device_host_offset, analyze_interstream, analyze_stream
 
 def _metric(rows, keys):
     vals=[]
@@ -97,10 +97,11 @@ def assess(profile, samples: Mapping[str, Sequence[Mapping[str, Any]]]) -> dict[
       "gyro_saturation": _gate(gyro_v, _threshold(profile,"gyro_saturation","maximum","max")[0], minimum=False, count=gyro_n),
       "acceleration_saturation": _gate(accel_v, _threshold(profile,"acceleration_saturation","maximum","max")[0], minimum=False, count=accel_n),
     }
-    paired_offsets = [abs(offset) for offsets in inter["offsets_ns"].values() for offset in offsets]
-    offset_value = max(paired_offsets) if paired_offsets else None
+    device_host_offset = analyze_device_host_offset(samples)
+    offset_value = device_host_offset["max_abs_ns"]
     gates["device_host_offset"] = _gate(
-        offset_value, _time_threshold(profile, "device_host_offset"), minimum=False, count=len(paired_offsets), minimum_samples=1
+        offset_value, _time_threshold(profile, "device_host_offset"), minimum=False,
+        count=device_host_offset["sample_count"], minimum_samples=1
     )
     # Profile-declared calibration/route gates remain unmeasured until evidence exists.
     for name in ("stationary_calibration", "hand_carried_supervised_route"):
@@ -112,4 +113,5 @@ def assess(profile, samples: Mapping[str, Sequence[Mapping[str, Any]]]) -> dict[
             "source": {"raw": "normalized JSONL samples supplied to assess", "sha256": source_hash,
                        "format": "normalized_jsonl", "tool": "sparseworld-p0", "tool_version": "0.1.0",
                        "criterion": "deterministic_sha256_of_canonical_samples"},
-            "source_sha256":source_hash, "timing":timing, "interstream":inter, "gates":gates}
+            "source_sha256":source_hash, "timing":timing, "interstream":inter,
+            "device_host_offset":device_host_offset, "gates":gates}
