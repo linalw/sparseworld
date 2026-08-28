@@ -1,5 +1,5 @@
 {
-  "collected_at_utc": "2026-08-28T03:55:28.503834Z",
+  "collected_at_utc": "2026-08-28T04:04:20.226870Z",
   "collection_mode": "read_only",
   "commands_attempted": [
     {
@@ -162,10 +162,22 @@
       "devices": [
         {
           "path": "/sys/bus/usb/devices/2-10",
-          "product": "Orbbec Gemini 335",
-          "product_id": "0800",
-          "serial": "CP0F4630001M",
-          "vendor_id": "2bc5"
+          "product": {
+            "status": "available",
+            "value": "Orbbec Gemini 335"
+          },
+          "product_id": {
+            "status": "available",
+            "value": "0800"
+          },
+          "serial": {
+            "status": "available",
+            "value": "CP0F4630001M"
+          },
+          "vendor_id": {
+            "status": "available",
+            "value": "2bc5"
+          }
         }
       ],
       "interpretation": "not_a_calibration_or_performance_result",
@@ -218,35 +230,59 @@
       "labels": [
         {
           "device": "video0",
-          "label": "Orbbec Gemini 335: Orbbec Gemin"
+          "label": {
+            "status": "available",
+            "value": "Orbbec Gemini 335: Orbbec Gemin"
+          }
         },
         {
           "device": "video1",
-          "label": "Orbbec Gemini 335: Orbbec Gemin"
+          "label": {
+            "status": "available",
+            "value": "Orbbec Gemini 335: Orbbec Gemin"
+          }
         },
         {
           "device": "video2",
-          "label": "Orbbec Gemini 335: Orbbec Gemin"
+          "label": {
+            "status": "available",
+            "value": "Orbbec Gemini 335: Orbbec Gemin"
+          }
         },
         {
           "device": "video3",
-          "label": "Orbbec Gemini 335: Orbbec Gemin"
+          "label": {
+            "status": "available",
+            "value": "Orbbec Gemini 335: Orbbec Gemin"
+          }
         },
         {
           "device": "video4",
-          "label": "Orbbec Gemini 335: Orbbec Gemin"
+          "label": {
+            "status": "available",
+            "value": "Orbbec Gemini 335: Orbbec Gemin"
+          }
         },
         {
           "device": "video5",
-          "label": "Orbbec Gemini 335: Orbbec Gemin"
+          "label": {
+            "status": "available",
+            "value": "Orbbec Gemini 335: Orbbec Gemin"
+          }
         },
         {
           "device": "video6",
-          "label": "Orbbec Gemini 335: Orbbec Gemin"
+          "label": {
+            "status": "available",
+            "value": "Orbbec Gemini 335: Orbbec Gemin"
+          }
         },
         {
           "device": "video7",
-          "label": "Orbbec Gemini 335: Orbbec Gemin"
+          "label": {
+            "status": "available",
+            "value": "Orbbec Gemini 335: Orbbec Gemin"
+          }
         }
       ],
       "result_type": "enumeration_only",

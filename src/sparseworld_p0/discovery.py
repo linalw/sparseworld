@@ -62,7 +62,7 @@ def discover_environment(
         "collection_mode": "read_only",
         "collected_at_utc": (now or (lambda: datetime.now(timezone.utc)))().isoformat().replace("+00:00", "Z"),
         "commands_attempted": commands,
-        "os": ({"name": os_release.get("PRETTY_NAME", "unknown"), "kernel": _fact(kernel), "status": os_release.get("status", "available"), "source": {"path": "/etc/os-release"}, "criterion": "read_only_enumeration_succeeded", "result_type": "enumeration_only", "interpretation": "not_a_calibration_or_performance_result"} if isinstance(os_release, dict) else _meta("permission_denied", {"path": "/etc/os-release"})),
+        "os": {**os_release, "kernel": _fact(kernel)},
         "python": _fact(python),
         "gpu": _fact(gpu),
         "groups": _fact(groups),
@@ -98,8 +98,8 @@ def _safe(action):
     except OSError:
         return _meta("not_detected", {})
 
-def _meta(status, source):
-    return {"status": status, "source": source, "criterion": "read_only_enumeration_succeeded" if status == "available" else "read_only_enumeration_unavailable", "result_type": "enumeration_only", "interpretation": "not_a_calibration_or_performance_result"}
+def _meta(status, source, **values):
+    return {"status": status, "source": source, "criterion": "read_only_enumeration_succeeded" if status == "available" else "read_only_enumeration_unavailable", "result_type": "enumeration_only", "interpretation": "not_a_calibration_or_performance_result", **values}
 
 
 def _software_fact(record: dict[str, object]) -> dict[str, object]:
@@ -126,24 +126,28 @@ def _status(record: dict[str, object]) -> str:
 
 def _os_release() -> dict[str, str]:
     path = Path("/etc/os-release")
-    if not path.is_file():
-        return {}
-    return {
+    try:
+      if not path.is_file(): return _meta("not_detected", {"path": str(path)})
+      values = {
         key: value.strip().strip('"')
         for line in path.read_text(encoding="utf-8").splitlines()
         if "=" in line
         for key, value in [line.split("=", 1)]
-    }
+      }
+      return _meta("available", {"path": str(path)}, name=values.get("PRETTY_NAME", "unknown"))
+    except PermissionError: return _meta("permission_denied", {"path": str(path)})
+    except OSError: return _meta("not_detected", {"path": str(path)})
 
 
 def _usb_devices(root: Path) -> list[dict[str, str]] | dict[str, str]:
     records: list[dict[str, str]] = []
     for vendor in root.glob("bus/usb/devices/*/idVendor"):
-        if _read(vendor).lower() != "2bc5":
+        rv = _read(vendor)
+        if rv.get("value", "").lower() != "2bc5":
             continue
         device = vendor.parent
         records.append({
-            "vendor_id": "2bc5",
+            "vendor_id": rv,
             "product_id": _read(device / "idProduct"),
             "serial": _read(device / "serial"),
             "product": _read(device / "product"),
@@ -163,13 +167,14 @@ def _v4l2_links() -> list[dict[str, str]] | dict[str, str]:
     base = Path("/dev/v4l/by-id")
     if not base.is_dir():
         return _meta("not_detected", {"path": str(base)})
-    return _meta("available", {"path": str(base)}) | {"links": [{"link": str(path), "target": str(path.resolve())} for path in sorted(base.iterdir())]}
+    links = [{"link": str(path), "target": str(path.resolve())} for path in sorted(base.iterdir())]
+    return _meta("available" if links else "not_detected", {"path": str(base)}) | ({"links": links} if links else {})
 
 
-def _read(path: Path) -> str:
+def _read(path: Path) -> dict[str, str]:
     try:
-        return path.read_text(encoding="utf-8").strip()
+        return {"status": "available", "value": path.read_text(encoding="utf-8").strip()}
     except PermissionError:
-        return "permission_denied"
+        return {"status": "permission_denied"}
     except OSError:
-        return "not_detected"
+        return {"status": "not_detected"}
