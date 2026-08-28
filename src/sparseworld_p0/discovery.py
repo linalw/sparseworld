@@ -62,7 +62,7 @@ def discover_environment(
         "collection_mode": "read_only",
         "collected_at_utc": (now or (lambda: datetime.now(timezone.utc)))().isoformat().replace("+00:00", "Z"),
         "commands_attempted": commands,
-        "os": ({"name": os_release.get("PRETTY_NAME", "unknown"), "kernel": _fact(kernel), "status": os_release.get("status", "available"), "criterion": "read_only_enumeration_succeeded", "result_type": "enumeration_only", "interpretation": "not_a_calibration_or_performance_result"} if isinstance(os_release, dict) else {"status": "permission_denied"}),
+        "os": ({"name": os_release.get("PRETTY_NAME", "unknown"), "kernel": _fact(kernel), "status": os_release.get("status", "available"), "source": {"path": "/etc/os-release"}, "criterion": "read_only_enumeration_succeeded", "result_type": "enumeration_only", "interpretation": "not_a_calibration_or_performance_result"} if isinstance(os_release, dict) else _meta("permission_denied", {"path": "/etc/os-release"})),
         "python": _fact(python),
         "gpu": _fact(gpu),
         "groups": _fact(groups),
@@ -94,9 +94,12 @@ def _safe(action):
     try:
         return action()
     except PermissionError:
-        return {"status": "permission_denied"}
+        return _meta("permission_denied", {})
     except OSError:
-        return {"status": "not_detected"}
+        return _meta("not_detected", {})
+
+def _meta(status, source):
+    return {"status": status, "source": source, "criterion": "read_only_enumeration_succeeded" if status == "available" else "read_only_enumeration_unavailable", "result_type": "enumeration_only", "interpretation": "not_a_calibration_or_performance_result"}
 
 
 def _software_fact(record: dict[str, object]) -> dict[str, object]:
@@ -146,21 +149,21 @@ def _usb_devices(root: Path) -> list[dict[str, str]] | dict[str, str]:
             "product": _read(device / "product"),
             "path": str(device),
         })
-    return records if records else {"status": "not_detected"}
+    return _meta("available" if records else "not_detected", {"sysfs_path": str(root / "bus/usb/devices")}) | ({"devices": records} if records else {})
 
 
 def _video_labels(root: Path) -> list[dict[str, str]] | dict[str, str]:
     labels: list[dict[str, str]] = []
     for name in sorted(root.glob("class/video4linux/video*/name")):
         labels.append({"device": name.parent.name, "label": _read(name)})
-    return labels if labels else {"status": "not_detected"}
+    return _meta("available" if labels else "not_detected", {"sysfs_path": str(root / "class/video4linux")}) | ({"labels": labels} if labels else {})
 
 
 def _v4l2_links() -> list[dict[str, str]] | dict[str, str]:
     base = Path("/dev/v4l/by-id")
     if not base.is_dir():
-        return {"status": "not_detected"}
-    return [{"link": str(path), "target": str(path.resolve())} for path in sorted(base.iterdir())]
+        return _meta("not_detected", {"path": str(base)})
+    return _meta("available", {"path": str(base)}) | {"links": [{"link": str(path), "target": str(path.resolve())} for path in sorted(base.iterdir())]}
 
 
 def _read(path: Path) -> str:

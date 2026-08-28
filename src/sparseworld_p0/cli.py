@@ -15,9 +15,12 @@ def main() -> int:
     subparsers = parser.add_subparsers(dest="command", required=True)
     discover = subparsers.add_parser("discover", help="collect read-only environment evidence")
     discover.add_argument("--output", required=True, type=Path)
+    discover.add_argument("--collected-at-utc")
     args = parser.parse_args()
     if args.command == "discover":
-        payload = json.dumps(discover_environment(), indent=2, sort_keys=True) + "\n"
+        from datetime import datetime, timezone
+        fixed = datetime.fromisoformat(args.collected_at_utc.replace("Z", "+00:00")) if args.collected_at_utc else None
+        payload = json.dumps(discover_environment(now=(lambda: fixed) if fixed else None), indent=2, sort_keys=True) + "\n" if args.collected_at_utc else json.dumps(discover_environment(), indent=2, sort_keys=True) + "\n"
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(payload, encoding="utf-8")
         digest = hashlib.sha256(payload.encode("utf-8")).hexdigest()

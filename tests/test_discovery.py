@@ -58,6 +58,17 @@ def test_cli_hash_matches_output(tmp_path, monkeypatch) -> None:
     expected = hashlib.sha256(out.read_bytes()).hexdigest()
     assert out.with_suffix(".json.sha256").read_text() == f"{expected}  snapshot.json\n"
 
+def test_cli_fixed_timestamp_is_byte_deterministic(tmp_path, monkeypatch) -> None:
+    from sparseworld_p0 import cli
+    monkeypatch.setattr(cli, "discover_environment", lambda now=None: {"collection_mode": "read_only", "collected_at_utc": now().isoformat().replace("+00:00", "Z")})
+    outputs = []
+    for name in ("a.json", "b.json"):
+        out = tmp_path / name
+        monkeypatch.setattr("sys.argv", ["sparseworld-p0", "discover", "--output", str(out), "--collected-at-utc", "2026-08-28T03:20:00Z"])
+        assert cli.main() == 0
+        outputs.append(out.read_bytes())
+    assert outputs[0] == outputs[1]
+
 def test_empty_or_raising_probe_is_not_detected(tmp_path) -> None:
     def runner(command):
         if command == ["uname", "-r"]:

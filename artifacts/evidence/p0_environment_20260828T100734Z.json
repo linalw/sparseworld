@@ -1,5 +1,5 @@
 {
-  "collected_at_utc": "2026-08-28T03:25:48.658255Z",
+  "collected_at_utc": "2026-08-28T03:55:28.503834Z",
   "collection_mode": "read_only",
   "commands_attempted": [
     {
@@ -110,6 +110,9 @@
     },
     "name": "Ubuntu 22.04.5 LTS",
     "result_type": "enumeration_only",
+    "source": {
+      "path": "/etc/os-release"
+    },
     "status": "available"
   },
   "python": {
@@ -154,76 +157,103 @@
     }
   },
   "usb": {
-    "gemini": [
-      {
-        "path": "/sys/bus/usb/devices/2-10",
-        "product": "Orbbec Gemini 335",
-        "product_id": "0800",
-        "serial": "CP0F4630001M",
-        "vendor_id": "2bc5"
-      }
-    ]
+    "gemini": {
+      "criterion": "read_only_enumeration_succeeded",
+      "devices": [
+        {
+          "path": "/sys/bus/usb/devices/2-10",
+          "product": "Orbbec Gemini 335",
+          "product_id": "0800",
+          "serial": "CP0F4630001M",
+          "vendor_id": "2bc5"
+        }
+      ],
+      "interpretation": "not_a_calibration_or_performance_result",
+      "result_type": "enumeration_only",
+      "source": {
+        "sysfs_path": "/sys/bus/usb/devices"
+      },
+      "status": "available"
+    }
   },
   "v4l2": {
-    "by_id": [
-      {
-        "link": "/dev/v4l/by-id/usb-Orbbec_R__Orbbec_Gemini_335_CP0F4630001M-video-index0",
-        "target": "/dev/video0"
+    "by_id": {
+      "criterion": "read_only_enumeration_succeeded",
+      "interpretation": "not_a_calibration_or_performance_result",
+      "links": [
+        {
+          "link": "/dev/v4l/by-id/usb-Orbbec_R__Orbbec_Gemini_335_CP0F4630001M-video-index0",
+          "target": "/dev/video0"
+        },
+        {
+          "link": "/dev/v4l/by-id/usb-Orbbec_R__Orbbec_Gemini_335_CP0F4630001M-video-index1",
+          "target": "/dev/video1"
+        },
+        {
+          "link": "/dev/v4l/by-id/usb-Orbbec_R__Orbbec_Gemini_335_CP0F4630001M-video-index2",
+          "target": "/dev/video2"
+        },
+        {
+          "link": "/dev/v4l/by-id/usb-Orbbec_R__Orbbec_Gemini_335_CP0F4630001M-video-index3",
+          "target": "/dev/video3"
+        },
+        {
+          "link": "/dev/v4l/by-id/usb-Orbbec_R__Orbbec_Gemini_335_CP0F4630001M-video-index4",
+          "target": "/dev/video4"
+        },
+        {
+          "link": "/dev/v4l/by-id/usb-Orbbec_R__Orbbec_Gemini_335_CP0F4630001M-video-index5",
+          "target": "/dev/video5"
+        }
+      ],
+      "result_type": "enumeration_only",
+      "source": {
+        "path": "/dev/v4l/by-id"
       },
-      {
-        "link": "/dev/v4l/by-id/usb-Orbbec_R__Orbbec_Gemini_335_CP0F4630001M-video-index1",
-        "target": "/dev/video1"
+      "status": "available"
+    },
+    "sysfs_labels": {
+      "criterion": "read_only_enumeration_succeeded",
+      "interpretation": "not_a_calibration_or_performance_result",
+      "labels": [
+        {
+          "device": "video0",
+          "label": "Orbbec Gemini 335: Orbbec Gemin"
+        },
+        {
+          "device": "video1",
+          "label": "Orbbec Gemini 335: Orbbec Gemin"
+        },
+        {
+          "device": "video2",
+          "label": "Orbbec Gemini 335: Orbbec Gemin"
+        },
+        {
+          "device": "video3",
+          "label": "Orbbec Gemini 335: Orbbec Gemin"
+        },
+        {
+          "device": "video4",
+          "label": "Orbbec Gemini 335: Orbbec Gemin"
+        },
+        {
+          "device": "video5",
+          "label": "Orbbec Gemini 335: Orbbec Gemin"
+        },
+        {
+          "device": "video6",
+          "label": "Orbbec Gemini 335: Orbbec Gemin"
+        },
+        {
+          "device": "video7",
+          "label": "Orbbec Gemini 335: Orbbec Gemin"
+        }
+      ],
+      "result_type": "enumeration_only",
+      "source": {
+        "sysfs_path": "/sys/class/video4linux"
       },
-      {
-        "link": "/dev/v4l/by-id/usb-Orbbec_R__Orbbec_Gemini_335_CP0F4630001M-video-index2",
-        "target": "/dev/video2"
-      },
-      {
-        "link": "/dev/v4l/by-id/usb-Orbbec_R__Orbbec_Gemini_335_CP0F4630001M-video-index3",
-        "target": "/dev/video3"
-      },
-      {
-        "link": "/dev/v4l/by-id/usb-Orbbec_R__Orbbec_Gemini_335_CP0F4630001M-video-index4",
-        "target": "/dev/video4"
-      },
-      {
-        "link": "/dev/v4l/by-id/usb-Orbbec_R__Orbbec_Gemini_335_CP0F4630001M-video-index5",
-        "target": "/dev/video5"
-      }
-    ],
-    "sysfs_labels": [
-      {
-        "device": "video0",
-        "label": "Orbbec Gemini 335: Orbbec Gemin"
-      },
-      {
-        "device": "video1",
-        "label": "Orbbec Gemini 335: Orbbec Gemin"
-      },
-      {
-        "device": "video2",
-        "label": "Orbbec Gemini 335: Orbbec Gemin"
-      },
-      {
-        "device": "video3",
-        "label": "Orbbec Gemini 335: Orbbec Gemin"
-      },
-      {
-        "device": "video4",
-        "label": "Orbbec Gemini 335: Orbbec Gemin"
-      },
-      {
-        "device": "video5",
-        "label": "Orbbec Gemini 335: Orbbec Gemin"
-      },
-      {
-        "device": "video6",
-        "label": "Orbbec Gemini 335: Orbbec Gemin"
-      },
-      {
-        "device": "video7",
-        "label": "Orbbec Gemini 335: Orbbec Gemin"
-      }
-    ]
+      "status": "available"
+    }
   }
 }
