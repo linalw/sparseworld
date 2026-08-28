@@ -88,7 +88,7 @@ def test_package_exposes_a_version() -> None:
 - [ ] Exporter records ROS recorded timestamp separately from header timestamp, topic type/QoS, and null unknown sequence.
 - [ ] Calibration protocol requires raw intrinsics, stereo/RGB-depth alignment, camera-IMU rigid transform/time offset, base-camera transform, residuals, tool versions, and rejection conditions. Every current field remains pending until raw output exists.
 - [ ] Rosbag protocol requires a 30-s stationary check and the exact loop: start -> textured wall/doorframe -> 90-degree turn -> texture-poor wall -> doorway -> return -> stop. It includes monitor, pace, light, clear test zone, stop criteria, topic list, record command, metadata, and replay.
-- [ ] Verify fixture tests and `ros2 launch orbbec_camera gemini_335.launch.py --show-args` before any stream; commit `feat: add Gemini P0 capture and rosbag protocol`.
+- [ ] Verify fixture tests and `ros2 launch orbbec_camera gemini_330_series.launch.py --show-args` before any stream. This is the Gemini 335 launch file published by the official Orbbec ROS 2 v2 support matrix; commit `feat: add Gemini P0 capture and rosbag protocol`.
 
 ## Task 6: P0 Evidence Run and Authority Records
 
