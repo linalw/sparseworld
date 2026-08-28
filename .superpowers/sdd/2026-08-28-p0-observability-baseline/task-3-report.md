@@ -2,12 +2,12 @@
 
 Status: complete.
 
-## Files
+## Files (current primary)
 
 - `src/sparseworld_p0/discovery.py`: injectable command runner and sysfs-root discovery for OS/kernel, Python, GPU, USB Gemini, V4L2 links/labels, groups, ROS 2 and pyorbbecsdk. All probes are enumeration/read-only; unavailable states are explicit.
 - `src/sparseworld_p0/cli.py`: `sparseworld-p0 discover --output PATH`, deterministic JSON and sidecar SHA-256.
 - `tests/test_discovery.py`: injected missing-ROS2 and missing-SDK behavior tests.
-- `artifacts/evidence/.gitkeep`, `artifacts/evidence/p0_environment_20260828T100734Z.json`, and `.json.sha256`.
+- `artifacts/evidence/p0_environment_20260828T041820Z.json` and its sidecar.
 
 ## TDD evidence
 
@@ -17,14 +17,14 @@ GREEN (`conda run -n sparseworld pytest -q tests/test_discovery.py`): `2 passed`
 
 Full suite (`conda run -n sparseworld pytest -q`): `9 passed`.
 
-## Evidence
+## Evidence (current)
 
-Snapshot: `artifacts/evidence/p0_environment_20260828T100734Z.json`  
-SHA-256: `99f312b5ff33ec9f9a6712cb8f081f4661736059b0a064663b59c9709b4a92f0` (also recorded in sidecar).
+Snapshot: `artifacts/evidence/p0_environment_20260828T041820Z.json` (`2026-08-28T04:18:20Z`)  
+SHA-256: `dab02ab15c0fbbc2287495c02c0de762eec2939d9f1e0e6f2562a7293e120d9a`.
 
 ## Commit
 
-`4a98e4c feat: capture read-only P0 environment evidence` (original implementation); hardening follow-up `69e0fa0`.
+Commit chain: `4a98e4c`, `75b39b0`, `1fa5112`, `60c6b1f`, `76ebc9b`, `9c07428`.
 
 ## Self-review / concerns
 
@@ -38,6 +38,8 @@ SHA-256: `99f312b5ff33ec9f9a6712cb8f081f4661736059b0a064663b59c9709b4a92f0` (als
 Added provenance (`source`, criterion, result type, interpretation) to claims; hardened permission/OSError handling for OS, V4L2, USB and video sysfs; empty command output and runner exceptions are `not_detected`; added injected permission, empty/raising, provenance, and CLI hash tests. RED showed the expected missing structured fields/statuses; GREEN focused Task 3 tests: `6 passed`; full suite: `13 passed`; `git diff --check` clean. Regenerated evidence and verified with `(cd artifacts/evidence && sha256sum -c p0_environment_20260828T100734Z.json.sha256)`: `OK`. JSON is deterministic only when a fixed `now` provider is supplied; live runs use UTC capture time and the filename is an operator-supplied run ID.
 
 ## Fix round 2
+
+Superseded history: earlier 100734Z/99f and intermediate 041421Z files are retained uncommitted diagnostics, not current evidence.
 
 Final closure: current primary evidence `artifacts/evidence/p0_environment_20260828T041820Z.json`, payload UTC `2026-08-28T04:18:20Z`, SHA-256 `dab02ab15c0fbbc2287495c02c0de762eec2939d9f1e0e6f2562a7293e120d9a`. `sha256sum -c` succeeded; `git diff --check` clean. Prior artifacts are superseded. Commits: `4a98e4c`, `75b39b0`, `1fa5112`, `60c6b1f`, `76ebc9b`.
 

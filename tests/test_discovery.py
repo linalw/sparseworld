@@ -90,3 +90,10 @@ def test_empty_or_raising_probe_is_not_detected(tmp_path) -> None:
     snap = discover_environment(runner, tmp_path)
     assert snap["os"]["kernel"]["status"] == "not_detected"
     assert snap["python"]["status"] == "not_detected"
+
+def test_usb_glob_permission_error_is_structured(monkeypatch, tmp_path) -> None:
+    class Root:
+        def __truediv__(self, name): return tmp_path / name
+        def glob(self, pattern): raise PermissionError("denied")
+    result = discovery._usb_devices(Root())
+    assert result["status"] == "permission_denied"

@@ -141,7 +141,11 @@ def _os_release() -> dict[str, str]:
 
 def _usb_devices(root: Path) -> list[dict[str, str]] | dict[str, str]:
     records: list[dict[str, str]] = []
-    for vendor in root.glob("bus/usb/devices/*/idVendor"):
+    try:
+      vendors = list(root.glob("bus/usb/devices/*/idVendor"))
+    except PermissionError: return _meta("permission_denied", {"sysfs_path": str(root / "bus/usb/devices")})
+    except OSError: return _meta("not_detected", {"sysfs_path": str(root / "bus/usb/devices")})
+    for vendor in vendors:
         rv = _read(vendor)
         if rv.get("value", "").lower() != "2bc5":
             continue
@@ -158,7 +162,11 @@ def _usb_devices(root: Path) -> list[dict[str, str]] | dict[str, str]:
 
 def _video_labels(root: Path) -> list[dict[str, str]] | dict[str, str]:
     labels: list[dict[str, str]] = []
-    for name in sorted(root.glob("class/video4linux/video*/name")):
+    try:
+      names = sorted(root.glob("class/video4linux/video*/name"))
+    except PermissionError: return _meta("permission_denied", {"sysfs_path": str(root / "class/video4linux")})
+    except OSError: return _meta("not_detected", {"sysfs_path": str(root / "class/video4linux")})
+    for name in names:
         labels.append({"device": name.parent.name, "label": _read(name)})
     return _meta("available" if labels else "not_detected", {"sysfs_path": str(root / "class/video4linux")}) | ({"labels": labels} if labels else {})
 
