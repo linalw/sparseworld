@@ -51,7 +51,7 @@ def test_snapshot_facts_include_provenance(tmp_path) -> None:
 def test_cli_hash_matches_output(tmp_path, monkeypatch) -> None:
     import hashlib, json
     from sparseworld_p0 import cli
-    monkeypatch.setattr(cli, "discover_environment", lambda: {"collection_mode": "read_only"})
+    monkeypatch.setattr(cli, "discover_environment", lambda now=None: {"collection_mode": "read_only"})
     out = tmp_path / "snapshot.json"
     monkeypatch.setattr("sys.argv", ["sparseworld-p0", "discover", "--output", str(out)])
     assert cli.main() == 0
@@ -68,6 +68,19 @@ def test_cli_fixed_timestamp_is_byte_deterministic(tmp_path, monkeypatch) -> Non
         assert cli.main() == 0
         outputs.append(out.read_bytes())
     assert outputs[0] == outputs[1]
+
+def test_cli_evidence_directory_run_id_matches_payload_time(tmp_path) -> None:
+    from sparseworld_p0 import cli
+    import json
+    import sys
+    old = sys.argv
+    try:
+        sys.argv = ["sparseworld-p0", "discover", "--output", str(tmp_path), "--collected-at-utc", "2026-08-28T03:20:00Z"]
+        assert cli.main() == 0
+    finally:
+        sys.argv = old
+    output = tmp_path / "p0_environment_20260828T032000Z.json"
+    assert json.loads(output.read_text())["collected_at_utc"] == "2026-08-28T03:20:00Z"
 
 def test_empty_or_raising_probe_is_not_detected(tmp_path) -> None:
     def runner(command):

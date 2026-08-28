@@ -173,7 +173,8 @@ def _v4l2_links() -> list[dict[str, str]] | dict[str, str]:
 
 def _read(path: Path) -> dict[str, str]:
     try:
-        return {"status": "available", "value": path.read_text(encoding="utf-8").strip()}
+        value = path.read_text(encoding="utf-8").strip()
+        return {"status": "available", "value": value} if value else {"status": "not_detected"}
     except PermissionError:
         return {"status": "permission_denied"}
     except OSError:

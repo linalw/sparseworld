@@ -20,12 +20,17 @@ def main() -> int:
     if args.command == "discover":
         from datetime import datetime, timezone
         fixed = datetime.fromisoformat(args.collected_at_utc.replace("Z", "+00:00")) if args.collected_at_utc else None
-        payload = json.dumps(discover_environment(now=(lambda: fixed) if fixed else None), indent=2, sort_keys=True) + "\n" if args.collected_at_utc else json.dumps(discover_environment(), indent=2, sort_keys=True) + "\n"
-        args.output.parent.mkdir(parents=True, exist_ok=True)
-        args.output.write_text(payload, encoding="utf-8")
+        captured = fixed or datetime.now(timezone.utc).replace(microsecond=0)
+        snapshot = discover_environment(now=lambda: captured)
+        output = args.output
+        if output.suffix != ".json":
+            output = output / f"p0_environment_{captured.strftime('%Y%m%dT%H%M%SZ')}.json"
+        payload = json.dumps(snapshot, indent=2, sort_keys=True) + "\n"
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(payload, encoding="utf-8")
         digest = hashlib.sha256(payload.encode("utf-8")).hexdigest()
-        args.output.with_suffix(args.output.suffix + ".sha256").write_text(
-            f"{digest}  {args.output.name}\n", encoding="utf-8"
+        output.with_suffix(output.suffix + ".sha256").write_text(
+            f"{digest}  {output.name}\n", encoding="utf-8"
         )
         return 0
     return 2
