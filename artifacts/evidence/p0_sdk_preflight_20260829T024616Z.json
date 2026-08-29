@@ -1,0 +1,30 @@
+{
+  "schema_version": "p0/sdk-preflight/v1",
+  "collected_at_utc": "2026-08-29T02:46:16Z",
+  "collection_mode": "read_only_then_fail_closed_open_attempt",
+  "environment": "conda:sparseworld",
+  "distribution": {
+    "name": "pyorbbecsdk2",
+    "version": "2.1.2",
+    "wheel_sha256": "e1d3e207995ac60e2bf3350086777df1ba15669a41c6dcfb81c0d896cbb17fcb",
+    "import_name": "pyorbbecsdk",
+    "import_status": "ok"
+  },
+  "device_enumeration": {
+    "count_reported": 1,
+    "expected_model": "Gemini 335",
+    "expected_serial": "CP0F4630001M",
+    "usb_vid_pid": "2bc5:0800"
+  },
+  "open_attempt": {
+    "status": "failed_incomplete",
+    "error_type": "OBError",
+    "error": "usbEnumerator openUsbDevice failed!",
+    "interpretation": "USB access denied before stream start; zero samples; no calibration, timing, quality, SLAM, navigation, or safety result"
+  },
+  "evidence": {
+    "capture_manifest": "p0_capture_preflight_20260829T024616Z/capture_manifest.json",
+    "capture_manifest_sha256": "49660e8dcf412865b525936f61ace16d5c25ec99efda88c490e8d2997dcc02c7",
+    "sdk_log": "../../Log/OrbbecSDK.log.txt"
+  }
+}

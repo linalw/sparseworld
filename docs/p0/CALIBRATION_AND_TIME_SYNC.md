@@ -31,9 +31,14 @@ allowed.
 
 ## Current state
 
-As of this baseline, `pyorbbecsdk`, ROS 2 Humble/rosbag2/MCAP/tf2 tools, `v4l-utils`,
-and the matching Orbbec ROS driver are not installed in the execution
-environment. The `video` group is not present in the current login groups
-(`ubuntu adm cdrom sudo dip plugdev lpadmin lxd sambashare`); adding access
-requires a deliberate group change and a new login before recording. No hardware
-calibration or timing measurement is claimed.
+`pyorbbecsdk2==2.1.2` is installed and importable in `sparseworld`; its wheel
+SHA-256 is `e1d3e207995ac60e2bf3350086777df1ba15669a41c6dcfb81c0d896cbb17fcb`.
+ROS 2 Humble/rosbag2/MCAP/tf2 tools, `v4l-utils`, and the matching Orbbec ROS
+driver are still unavailable. On 2026-08-29, an SDK preflight found one Gemini
+335 but failed before stream start with USB Access denied (status 113). The
+`video` group is not present in the current login groups (`ubuntu adm cdrom sudo
+dip plugdev lpadmin lxd sambashare`); `/dev/video*` is owned by `root:video`.
+Adding approved udev or group access requires a new login before recording can
+resume. See `artifacts/evidence/p0_capture_preflight_20260829T024616Z/` and
+`Log/OrbbecSDK.log.txt`. No hardware calibration or timing measurement is
+claimed.

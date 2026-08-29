@@ -44,3 +44,16 @@ hardware capture, and no hardware/calibration/timing claim is made.
 All calibration, clock-offset, residual, stream-rate, and quality fields remain
 `pending_measurement` or `not_measured` until an attended run produces retained
 raw outputs.
+
+## Follow-up addendum (2026-08-29)
+
+Task 5 hardening after review: profile hashes now use explicit canonical
+dataclass/mapping fields; each selected video profile records
+`profile_validation`, IMU accel/gyro provenance records requested versus still
+unmeasured rates, and setup/capture exceptions write a `failed_incomplete`
+manifest with counts, profile hash, SDK version, and error. Orbbec USB access
+errors are actionable and fail closed. Tests added for all behaviors (11
+focused adapter tests; 44 tests in the current full suite). A real SDK preflight
+then imported `pyorbbecsdk2==2.1.2` but failed to open the connected Gemini 335
+with Access denied before stream start; see the project evidence records. No
+calibration, timing, rosbag, SLAM, navigation, or safety result is claimed.

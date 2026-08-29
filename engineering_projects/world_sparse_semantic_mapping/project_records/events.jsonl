@@ -5,3 +5,7 @@
 {"timestamp": "2026-08-27T10:39:39+00:00", "event": "final_design_verification", "details": "v0.2 proposal, schema, example, PDF, DOCX, and requirements matrix checked; PDF visual QA passed; DOCX visual QA remains open because soffice is unavailable"}
 {"timestamp": "2026-08-27T10:39:39+00:00", "event": "manifest_refreshed", "details": "files=7"}
 {"timestamp": "2026-08-28T01:29:36+00:00", "event": "manifest_refreshed", "details": "files=8"}
+{"timestamp": "2026-08-29T02:25:43Z", "event": "pyorbbecsdk_preflight", "details": "pyorbbecsdk2=2.1.2 imported; Gemini 335 SDK open failed closed with USB access denied; no streams started; failed_incomplete manifest recorded (superseded by 02:46 run)"}
+{"timestamp": "2026-08-29T02:46:16Z", "event": "pyorbbecsdk_preflight", "details": "pyorbbecsdk2=2.1.2 imported; Gemini 335 SDK open failed closed with USB access denied; zero samples; manifest SHA-256=49660e8dcf412865b525936f61ace16d5c25ec99efda88c490e8d2997dcc02c7"}
+{"timestamp": "2026-08-29T02:47:00Z", "event": "sdk_preflight_evidence_sealed", "details": "p0_sdk_preflight_20260829T024616Z.json records distribution/import/device/open-attempt facts with SHA-256 sidecar"}
+{"timestamp": "2026-08-29T02:27:30Z", "event": "task5_audit_hardened", "details": "deterministic profile payload, pending profile markers, IMU provenance, setup/partial-capture manifests, and actionable access errors covered by 44 tests"}

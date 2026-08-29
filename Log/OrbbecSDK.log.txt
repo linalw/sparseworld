@@ -1,0 +1,276 @@
+[08/29 10:09:12.867752][info][101692][HostTimestampProvider.cpp:36] Update clock type to: realtime(0)
+[08/29 10:09:12.867786][warning][101692][UsbEnumeratorLibusb.cpp:398] Failed to open USB device: error=Access denied (insufficient permissions). Try again
+[08/29 10:09:12.917887][warning][101692][UsbEnumeratorLibusb.cpp:407] Failed to open USB device (Access denied (insufficient permissions)), skipping, info.serial and infName may be empty
+[08/29 10:09:12.918551][info][101692][LinuxUsbPal.cpp:334] Create PollingDeviceWatcher!
+[08/29 10:09:12.918565][info][101692][DeviceManager.cpp:25] Current found device(s): (1)
+[08/29 10:09:12.918568][info][101692][DeviceManager.cpp:34] 	- Name: Gemini 335, PID: 0x0800, SN/ID: , Connection: USB3.2
+[08/29 10:09:12.918571][info][101692][DeviceManager.cpp:463] Enable net device enumeration: true
+[08/29 10:09:13.931856][info][101692][DeviceManager.cpp:25] Current device(s) list: (1)
+[08/29 10:09:13.931884][info][101692][DeviceManager.cpp:34] 	- Name: Gemini 335, PID: 0x0800, SN/ID: , Connection: USB3.2
+[08/29 10:09:13.932280][warning][101692][ObException.cpp:32] A unrecoverable_exception has occurred!
+ - where: UsbEnumeratorLibusb.cpp(537)
+ - msg: Open device failed: Access denied (insufficient permissions)
+ - type: DEVICE_UNAVAILABLE
+ - status: 113
+[08/29 10:09:13.932373][warning][101692][UsbEnumeratorLibusb.cpp:462] Execute failure! A libobsensor_exception has occurred!
+ - where: UsbEnumeratorLibusb.cpp(462):openUsbDevice
+ - msg: Open device failed: Access denied (insufficient permissions)
+ - type: N11libobsensor23unrecoverable_exceptionE
+ - status: 113
+[08/29 10:09:13.932402][warning][101692][ObException.cpp:32] A unrecoverable_exception has occurred!
+ - where: UsbEnumeratorLibusb.cpp(537)
+ - msg: Open device failed: Access denied (insufficient permissions)
+ - type: DEVICE_UNAVAILABLE
+ - status: 113
+[08/29 10:09:13.932423][warning][101692][UsbEnumeratorLibusb.cpp:462] Execute failure! A libobsensor_exception has occurred!
+ - where: UsbEnumeratorLibusb.cpp(462):openUsbDevice
+ - msg: Open device failed: Access denied (insufficient permissions)
+ - type: N11libobsensor23unrecoverable_exceptionE
+ - status: 113
+[08/29 10:09:13.932436][warning][101692][ObException.cpp:32] A unrecoverable_exception has occurred!
+ - where: LinuxUsbPal.cpp(317)
+ - msg: usbEnumerator openUsbDevice failed!
+ - type: DEVICE_UNAVAILABLE
+ - status: 113
+[08/29 10:09:13.932511][warning][101692][DeviceBase.cpp:374] Execute failure! A libobsensor_exception has occurred!
+ - where: DeviceBase.cpp(374):getComponent
+ - msg: usbEnumerator openUsbDevice failed!
+ - type: N11libobsensor23unrecoverable_exceptionE
+ - status: 113
+[08/29 10:09:13.932601][warning][101692][ObException.cpp:32] A unrecoverable_exception has occurred!
+ - where: UsbEnumeratorLibusb.cpp(537)
+ - msg: Open device failed: Access denied (insufficient permissions)
+ - type: DEVICE_UNAVAILABLE
+ - status: 113
+[08/29 10:09:13.932624][warning][101692][UsbEnumeratorLibusb.cpp:462] Execute failure! A libobsensor_exception has occurred!
+ - where: UsbEnumeratorLibusb.cpp(462):openUsbDevice
+ - msg: Open device failed: Access denied (insufficient permissions)
+ - type: N11libobsensor23unrecoverable_exceptionE
+ - status: 113
+[08/29 10:09:13.932658][warning][101692][ObException.cpp:32] A unrecoverable_exception has occurred!
+ - where: UsbEnumeratorLibusb.cpp(537)
+ - msg: Open device failed: Access denied (insufficient permissions)
+ - type: DEVICE_UNAVAILABLE
+ - status: 113
+[08/29 10:09:13.932679][warning][101692][UsbEnumeratorLibusb.cpp:462] Execute failure! A libobsensor_exception has occurred!
+ - where: UsbEnumeratorLibusb.cpp(462):openUsbDevice
+ - msg: Open device failed: Access denied (insufficient permissions)
+ - type: N11libobsensor23unrecoverable_exceptionE
+ - status: 113
+[08/29 10:09:13.932691][warning][101692][ObException.cpp:32] A unrecoverable_exception has occurred!
+ - where: LinuxUsbPal.cpp(317)
+ - msg: usbEnumerator openUsbDevice failed!
+ - type: DEVICE_UNAVAILABLE
+ - status: 113
+[08/29 10:09:13.932729][warning][101692][DeviceBase.cpp:374] Execute failure! A libobsensor_exception has occurred!
+ - where: DeviceBase.cpp(374):getComponent
+ - msg: usbEnumerator openUsbDevice failed!
+ - type: N11libobsensor23unrecoverable_exceptionE
+ - status: 113
+[08/29 10:27:20.335164][info][103093][HostTimestampProvider.cpp:36] Update clock type to: realtime(0)
+[08/29 10:27:20.335209][warning][103093][UsbEnumeratorLibusb.cpp:398] Failed to open USB device: error=Access denied (insufficient permissions). Try again
+[08/29 10:27:20.385342][warning][103093][UsbEnumeratorLibusb.cpp:407] Failed to open USB device (Access denied (insufficient permissions)), skipping, info.serial and infName may be empty
+[08/29 10:27:20.386238][info][103093][LinuxUsbPal.cpp:334] Create PollingDeviceWatcher!
+[08/29 10:27:20.386255][info][103093][DeviceManager.cpp:25] Current found device(s): (1)
+[08/29 10:27:20.386258][info][103093][DeviceManager.cpp:34] 	- Name: Gemini 335, PID: 0x0800, SN/ID: , Connection: USB3.2
+[08/29 10:27:20.386263][info][103093][DeviceManager.cpp:463] Enable net device enumeration: true
+[08/29 10:27:21.401894][info][103093][DeviceManager.cpp:25] Current device(s) list: (1)
+[08/29 10:27:21.401920][info][103093][DeviceManager.cpp:34] 	- Name: Gemini 335, PID: 0x0800, SN/ID: , Connection: USB3.2
+[08/29 10:27:21.402304][warning][103093][ObException.cpp:32] A unrecoverable_exception has occurred!
+ - where: UsbEnumeratorLibusb.cpp(537)
+ - msg: Open device failed: Access denied (insufficient permissions)
+ - type: DEVICE_UNAVAILABLE
+ - status: 113
+[08/29 10:27:21.402408][warning][103093][UsbEnumeratorLibusb.cpp:462] Execute failure! A libobsensor_exception has occurred!
+ - where: UsbEnumeratorLibusb.cpp(462):openUsbDevice
+ - msg: Open device failed: Access denied (insufficient permissions)
+ - type: N11libobsensor23unrecoverable_exceptionE
+ - status: 113
+[08/29 10:27:21.402437][warning][103093][ObException.cpp:32] A unrecoverable_exception has occurred!
+ - where: UsbEnumeratorLibusb.cpp(537)
+ - msg: Open device failed: Access denied (insufficient permissions)
+ - type: DEVICE_UNAVAILABLE
+ - status: 113
+[08/29 10:27:21.402458][warning][103093][UsbEnumeratorLibusb.cpp:462] Execute failure! A libobsensor_exception has occurred!
+ - where: UsbEnumeratorLibusb.cpp(462):openUsbDevice
+ - msg: Open device failed: Access denied (insufficient permissions)
+ - type: N11libobsensor23unrecoverable_exceptionE
+ - status: 113
+[08/29 10:27:21.402470][warning][103093][ObException.cpp:32] A unrecoverable_exception has occurred!
+ - where: LinuxUsbPal.cpp(317)
+ - msg: usbEnumerator openUsbDevice failed!
+ - type: DEVICE_UNAVAILABLE
+ - status: 113
+[08/29 10:27:21.402553][warning][103093][DeviceBase.cpp:374] Execute failure! A libobsensor_exception has occurred!
+ - where: DeviceBase.cpp(374):getComponent
+ - msg: usbEnumerator openUsbDevice failed!
+ - type: N11libobsensor23unrecoverable_exceptionE
+ - status: 113
+[08/29 10:27:21.402656][warning][103093][ObException.cpp:32] A unrecoverable_exception has occurred!
+ - where: UsbEnumeratorLibusb.cpp(537)
+ - msg: Open device failed: Access denied (insufficient permissions)
+ - type: DEVICE_UNAVAILABLE
+ - status: 113
+[08/29 10:27:21.402679][warning][103093][UsbEnumeratorLibusb.cpp:462] Execute failure! A libobsensor_exception has occurred!
+ - where: UsbEnumeratorLibusb.cpp(462):openUsbDevice
+ - msg: Open device failed: Access denied (insufficient permissions)
+ - type: N11libobsensor23unrecoverable_exceptionE
+ - status: 113
+[08/29 10:27:21.402698][warning][103093][ObException.cpp:32] A unrecoverable_exception has occurred!
+ - where: UsbEnumeratorLibusb.cpp(537)
+ - msg: Open device failed: Access denied (insufficient permissions)
+ - type: DEVICE_UNAVAILABLE
+ - status: 113
+[08/29 10:27:21.402715][warning][103093][UsbEnumeratorLibusb.cpp:462] Execute failure! A libobsensor_exception has occurred!
+ - where: UsbEnumeratorLibusb.cpp(462):openUsbDevice
+ - msg: Open device failed: Access denied (insufficient permissions)
+ - type: N11libobsensor23unrecoverable_exceptionE
+ - status: 113
+[08/29 10:27:21.402725][warning][103093][ObException.cpp:32] A unrecoverable_exception has occurred!
+ - where: LinuxUsbPal.cpp(317)
+ - msg: usbEnumerator openUsbDevice failed!
+ - type: DEVICE_UNAVAILABLE
+ - status: 113
+[08/29 10:27:21.402779][warning][103093][DeviceBase.cpp:374] Execute failure! A libobsensor_exception has occurred!
+ - where: DeviceBase.cpp(374):getComponent
+ - msg: usbEnumerator openUsbDevice failed!
+ - type: N11libobsensor23unrecoverable_exceptionE
+ - status: 113
+[08/29 10:31:48.389480][info][103447][HostTimestampProvider.cpp:36] Update clock type to: realtime(0)
+[08/29 10:31:48.389567][warning][103447][UsbEnumeratorLibusb.cpp:398] Failed to open USB device: error=Access denied (insufficient permissions). Try again
+[08/29 10:31:48.439691][warning][103447][UsbEnumeratorLibusb.cpp:407] Failed to open USB device (Access denied (insufficient permissions)), skipping, info.serial and infName may be empty
+[08/29 10:31:48.440495][info][103447][LinuxUsbPal.cpp:334] Create PollingDeviceWatcher!
+[08/29 10:31:48.440512][info][103447][DeviceManager.cpp:25] Current found device(s): (1)
+[08/29 10:31:48.440516][info][103447][DeviceManager.cpp:34] 	- Name: Gemini 335, PID: 0x0800, SN/ID: , Connection: USB3.2
+[08/29 10:31:48.440520][info][103447][DeviceManager.cpp:463] Enable net device enumeration: true
+[08/29 10:31:49.443382][info][103447][DeviceManager.cpp:25] Current device(s) list: (1)
+[08/29 10:31:49.443413][info][103447][DeviceManager.cpp:34] 	- Name: Gemini 335, PID: 0x0800, SN/ID: , Connection: USB3.2
+[08/29 10:31:49.443812][warning][103447][ObException.cpp:32] A unrecoverable_exception has occurred!
+ - where: UsbEnumeratorLibusb.cpp(537)
+ - msg: Open device failed: Access denied (insufficient permissions)
+ - type: DEVICE_UNAVAILABLE
+ - status: 113
+[08/29 10:31:49.443912][warning][103447][UsbEnumeratorLibusb.cpp:462] Execute failure! A libobsensor_exception has occurred!
+ - where: UsbEnumeratorLibusb.cpp(462):openUsbDevice
+ - msg: Open device failed: Access denied (insufficient permissions)
+ - type: N11libobsensor23unrecoverable_exceptionE
+ - status: 113
+[08/29 10:31:49.443940][warning][103447][ObException.cpp:32] A unrecoverable_exception has occurred!
+ - where: UsbEnumeratorLibusb.cpp(537)
+ - msg: Open device failed: Access denied (insufficient permissions)
+ - type: DEVICE_UNAVAILABLE
+ - status: 113
+[08/29 10:31:49.443960][warning][103447][UsbEnumeratorLibusb.cpp:462] Execute failure! A libobsensor_exception has occurred!
+ - where: UsbEnumeratorLibusb.cpp(462):openUsbDevice
+ - msg: Open device failed: Access denied (insufficient permissions)
+ - type: N11libobsensor23unrecoverable_exceptionE
+ - status: 113
+[08/29 10:31:49.443972][warning][103447][ObException.cpp:32] A unrecoverable_exception has occurred!
+ - where: LinuxUsbPal.cpp(317)
+ - msg: usbEnumerator openUsbDevice failed!
+ - type: DEVICE_UNAVAILABLE
+ - status: 113
+[08/29 10:31:49.444043][warning][103447][DeviceBase.cpp:374] Execute failure! A libobsensor_exception has occurred!
+ - where: DeviceBase.cpp(374):getComponent
+ - msg: usbEnumerator openUsbDevice failed!
+ - type: N11libobsensor23unrecoverable_exceptionE
+ - status: 113
+[08/29 10:31:49.444132][warning][103447][ObException.cpp:32] A unrecoverable_exception has occurred!
+ - where: UsbEnumeratorLibusb.cpp(537)
+ - msg: Open device failed: Access denied (insufficient permissions)
+ - type: DEVICE_UNAVAILABLE
+ - status: 113
+[08/29 10:31:49.444153][warning][103447][UsbEnumeratorLibusb.cpp:462] Execute failure! A libobsensor_exception has occurred!
+ - where: UsbEnumeratorLibusb.cpp(462):openUsbDevice
+ - msg: Open device failed: Access denied (insufficient permissions)
+ - type: N11libobsensor23unrecoverable_exceptionE
+ - status: 113
+[08/29 10:31:49.444172][warning][103447][ObException.cpp:32] A unrecoverable_exception has occurred!
+ - where: UsbEnumeratorLibusb.cpp(537)
+ - msg: Open device failed: Access denied (insufficient permissions)
+ - type: DEVICE_UNAVAILABLE
+ - status: 113
+[08/29 10:31:49.444191][warning][103447][UsbEnumeratorLibusb.cpp:462] Execute failure! A libobsensor_exception has occurred!
+ - where: UsbEnumeratorLibusb.cpp(462):openUsbDevice
+ - msg: Open device failed: Access denied (insufficient permissions)
+ - type: N11libobsensor23unrecoverable_exceptionE
+ - status: 113
+[08/29 10:31:49.444219][warning][103447][ObException.cpp:32] A unrecoverable_exception has occurred!
+ - where: LinuxUsbPal.cpp(317)
+ - msg: usbEnumerator openUsbDevice failed!
+ - type: DEVICE_UNAVAILABLE
+ - status: 113
+[08/29 10:31:49.444254][warning][103447][DeviceBase.cpp:374] Execute failure! A libobsensor_exception has occurred!
+ - where: DeviceBase.cpp(374):getComponent
+ - msg: usbEnumerator openUsbDevice failed!
+ - type: N11libobsensor23unrecoverable_exceptionE
+ - status: 113
+[08/29 10:46:17.921848][info][104411][HostTimestampProvider.cpp:36] Update clock type to: realtime(0)
+[08/29 10:46:17.921889][warning][104411][UsbEnumeratorLibusb.cpp:398] Failed to open USB device: error=Access denied (insufficient permissions). Try again
+[08/29 10:46:17.972009][warning][104411][UsbEnumeratorLibusb.cpp:407] Failed to open USB device (Access denied (insufficient permissions)), skipping, info.serial and infName may be empty
+[08/29 10:46:17.972920][info][104411][LinuxUsbPal.cpp:334] Create PollingDeviceWatcher!
+[08/29 10:46:17.972937][info][104411][DeviceManager.cpp:25] Current found device(s): (1)
+[08/29 10:46:17.972941][info][104411][DeviceManager.cpp:34] 	- Name: Gemini 335, PID: 0x0800, SN/ID: , Connection: USB3.2
+[08/29 10:46:17.972945][info][104411][DeviceManager.cpp:463] Enable net device enumeration: true
+[08/29 10:46:18.982355][info][104411][DeviceManager.cpp:25] Current device(s) list: (1)
+[08/29 10:46:18.982370][info][104411][DeviceManager.cpp:34] 	- Name: Gemini 335, PID: 0x0800, SN/ID: , Connection: USB3.2
+[08/29 10:46:18.982560][warning][104411][ObException.cpp:32] A unrecoverable_exception has occurred!
+ - where: UsbEnumeratorLibusb.cpp(537)
+ - msg: Open device failed: Access denied (insufficient permissions)
+ - type: DEVICE_UNAVAILABLE
+ - status: 113
+[08/29 10:46:18.982613][warning][104411][UsbEnumeratorLibusb.cpp:462] Execute failure! A libobsensor_exception has occurred!
+ - where: UsbEnumeratorLibusb.cpp(462):openUsbDevice
+ - msg: Open device failed: Access denied (insufficient permissions)
+ - type: N11libobsensor23unrecoverable_exceptionE
+ - status: 113
+[08/29 10:46:18.982626][warning][104411][ObException.cpp:32] A unrecoverable_exception has occurred!
+ - where: UsbEnumeratorLibusb.cpp(537)
+ - msg: Open device failed: Access denied (insufficient permissions)
+ - type: DEVICE_UNAVAILABLE
+ - status: 113
+[08/29 10:46:18.982646][warning][104411][UsbEnumeratorLibusb.cpp:462] Execute failure! A libobsensor_exception has occurred!
+ - where: UsbEnumeratorLibusb.cpp(462):openUsbDevice
+ - msg: Open device failed: Access denied (insufficient permissions)
+ - type: N11libobsensor23unrecoverable_exceptionE
+ - status: 113
+[08/29 10:46:18.982653][warning][104411][ObException.cpp:32] A unrecoverable_exception has occurred!
+ - where: LinuxUsbPal.cpp(317)
+ - msg: usbEnumerator openUsbDevice failed!
+ - type: DEVICE_UNAVAILABLE
+ - status: 113
+[08/29 10:46:18.982693][warning][104411][DeviceBase.cpp:374] Execute failure! A libobsensor_exception has occurred!
+ - where: DeviceBase.cpp(374):getComponent
+ - msg: usbEnumerator openUsbDevice failed!
+ - type: N11libobsensor23unrecoverable_exceptionE
+ - status: 113
+[08/29 10:46:18.982740][warning][104411][ObException.cpp:32] A unrecoverable_exception has occurred!
+ - where: UsbEnumeratorLibusb.cpp(537)
+ - msg: Open device failed: Access denied (insufficient permissions)
+ - type: DEVICE_UNAVAILABLE
+ - status: 113
+[08/29 10:46:18.982751][warning][104411][UsbEnumeratorLibusb.cpp:462] Execute failure! A libobsensor_exception has occurred!
+ - where: UsbEnumeratorLibusb.cpp(462):openUsbDevice
+ - msg: Open device failed: Access denied (insufficient permissions)
+ - type: N11libobsensor23unrecoverable_exceptionE
+ - status: 113
+[08/29 10:46:18.982761][warning][104411][ObException.cpp:32] A unrecoverable_exception has occurred!
+ - where: UsbEnumeratorLibusb.cpp(537)
+ - msg: Open device failed: Access denied (insufficient permissions)
+ - type: DEVICE_UNAVAILABLE
+ - status: 113
+[08/29 10:46:18.982771][warning][104411][UsbEnumeratorLibusb.cpp:462] Execute failure! A libobsensor_exception has occurred!
+ - where: UsbEnumeratorLibusb.cpp(462):openUsbDevice
+ - msg: Open device failed: Access denied (insufficient permissions)
+ - type: N11libobsensor23unrecoverable_exceptionE
+ - status: 113
+[08/29 10:46:18.982787][warning][104411][ObException.cpp:32] A unrecoverable_exception has occurred!
+ - where: LinuxUsbPal.cpp(317)
+ - msg: usbEnumerator openUsbDevice failed!
+ - type: DEVICE_UNAVAILABLE
+ - status: 113
+[08/29 10:46:18.982805][warning][104411][DeviceBase.cpp:374] Execute failure! A libobsensor_exception has occurred!
+ - where: DeviceBase.cpp(374):getComponent
+ - msg: usbEnumerator openUsbDevice failed!
+ - type: N11libobsensor23unrecoverable_exceptionE
+ - status: 113

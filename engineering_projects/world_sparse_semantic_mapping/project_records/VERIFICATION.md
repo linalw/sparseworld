@@ -1,6 +1,6 @@
 # Requirements-to-Evidence Verification
 
-This is a concept/prototype design verification, not a hardware acceptance test.
+This is a concept/prototype design verification, not a hardware acceptance test. The 2026-08-29 SDK preflight failed closed before stream start because USB device access was denied; no calibration, synchronization, rate, SLAM, navigation, or safety result is inferred.
 
 | ID | Requirement | Evidence | Status | Remaining proof |
 |---|---|---|---|---|
@@ -14,3 +14,11 @@ This is a concept/prototype design verification, not a hardware acceptance test.
 | V-008 | Answer language queries such as “find the red cup” | Proposal section 9: parse, retrieve, confirm, generate observation/operation goal | Covered by design | Test multiple candidates, moved objects, occlusion, and no-match behavior |
 | V-009 | Keep long-term storage compact | Proposal sections 2.1 and 10.2; persistent store versus ephemeral navigation buffer | Covered by design | Record actual bytes per keyframe/object/topology edge and TTL behavior |
 | V-010 | Deliver readable engineering artifacts | `outputs/semantic_world_model_proposal.pdf` (13 pages, rendered and visually inspected); DOCX generated and OOXML-checked | PDF passed; DOCX visual QA open | Render DOCX with LibreOffice/soffice when available |
+
+## P0 execution evidence (2026-08-29)
+
+| Check | Evidence | Result | Boundary |
+|---|---|---|---|
+| SDK binding installation/import | `artifacts/evidence/p0_sdk_preflight_20260829T024616Z.json` (sidecar SHA-256 verified); `pyorbbecsdk2==2.1.2`; `import pyorbbecsdk` succeeded in `sparseworld`; wheel SHA-256 `e1d3e207995ac60e2bf3350086777df1ba15669a41c6dcfb81c0d896cbb17fcb` | Software dependency available | Does not prove device access or capture |
+| Gemini 335 SDK open preflight | `artifacts/evidence/p0_capture_preflight_20260829T024616Z/capture_manifest.json` (status `failed_incomplete`, zero samples); `Log/OrbbecSDK.log.txt` (Access denied, status 113) | Failed closed before stream start | Permission/configuration blocker; not a sensor-quality or performance result |
+| Adapter audit hardening | `c1118fa` plus current tests; deterministic profile payload, pending profile markers, IMU provenance, partial-capture manifest, actionable SDK access errors | Covered by automated tests | Mock/fixture coverage only; real streams still pending |

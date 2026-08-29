@@ -40,4 +40,4 @@ Task 4: fix round 1 (normalized timestamp contract, same-sample device/host offs
 unit-safe timing, deterministic duplicate/order handling, fail-closed durations, and
 report sidecar checksum test; 5 RED -> 13 focused GREEN -> 31 full-suite GREEN; commit recorded in task-4-report.md)
 
-Task 5: complete (adapter/export fixture suite and full suite verified; dependencies/launch preflight unavailable and explicitly recorded; commit pending)
+Task 5: complete (adapter/export fixtures plus follow-up provenance/partial-capture hardening verified; SDK binding installed, real device open preflight failed closed on USB permissions; ROS/launch preflight remains unavailable; commit pending)

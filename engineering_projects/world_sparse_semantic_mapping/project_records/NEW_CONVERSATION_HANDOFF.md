@@ -1,9 +1,9 @@
 # 新对话交接包：world_sparse_semantic_mapping
 
-- 交接日期：2026-08-28
+- 交接日期：2026-08-29
 - 项目状态：`proposal_ready; prototype_validation_pending`
-- 当前阶段：技术方案、数据模型和交付文档已经完成；尚未开始真实机器人原型集成与现场验证。
-- 推荐接手目标：冻结传感器与计算配置，获取可重复的室内 ROS 2 数据集，并完成 P0/P1 标定、定位和静态障碍导航验证。
+- 当前阶段：技术方案、数据模型和 P0 采集/分析适配器已经完成；真实 Gemini 335 SDK 打开在权限前置条件处失败，尚未采集或验证硬件数据。
+- 推荐接手目标：完成 video/udev 权限与新登录后，获取可重复的室内 ROS 2 数据集，并完成 P0/P1 标定、定位和静态障碍导航验证。
 
 ## 1. 这份交接包的用途
 
@@ -84,6 +84,13 @@
 接手者必须以 `VERIFICATION.md` 为范围基准，并在每项实测后更新证据、配置、原始数据位置和结论。
 
 ## 7. P0/P1 的下一步工作
+
+### 已执行的 P0 前置检查（2026-08-29）
+
+- 已在 `sparseworld` 中安装并导入 `pyorbbecsdk2==2.1.2`（导入名 `pyorbbecsdk`）；下载 wheel SHA-256 为 `e1d3e207995ac60e2bf3350086777df1ba15669a41c6dcfb81c0d896cbb17fcb`。
+- SDK 能发现 1 个 Gemini 335，但在读取设备信息/打开 USB 时返回 Access denied（SDK status 113）；当前用户不属于 `video` 组，`/dev/video0` 至 `/dev/video7` 为 `root:video`。
+- 采集适配器按 fail-closed 规则写出了零样本 `failed_incomplete` manifest；证据为 `artifacts/evidence/p0_capture_preflight_20260829T024616Z/capture_manifest.json` 和 `Log/OrbbecSDK.log.txt`。这证明权限前置条件未满足，不是相机质量、标定、同步或性能结论。
+- 继续前先由有权限的操作者配置 udev 或将用户加入 `video` 组，并重新登录；然后重复本检查和 30 秒静止采集。禁止为绕过该边界改用未配置的设备或伪造数据。
 
 ### P0：可观测性与标定基线
 

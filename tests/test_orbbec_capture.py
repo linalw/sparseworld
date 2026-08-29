@@ -8,11 +8,40 @@ import pytest
 
 from sparseworld_p0.orbbec_capture import (
     _SENSOR_NAMES,
+    _canonical_profile_payload,
     _enable_requested_streams,
     _frame_for,
     _timestamp_ns,
     capture_orbbec,
 )
+from sparseworld_p0.models import CaptureProfile
+
+
+def test_capture_profile_hash_uses_explicit_dataclass_fields_not_repr():
+    profile = CaptureProfile(
+        schema_version="p0/v1",
+        device={"serial": "SERIAL"},
+        frames={"tree": ["map"]},
+        streams={"rgb": {"resolution": "pending_measurement", "nominal_rate": "pending_measurement"}},
+        map={"origin": "local"},
+        quality_gates={},
+        time_gates={},
+        diagnostics={},
+        topology={},
+        scope={},
+    )
+    assert _canonical_profile_payload(profile) == {
+        "schema_version": "p0/v1",
+        "device": {"serial": "SERIAL"},
+        "frames": {"tree": ["map"]},
+        "streams": {"rgb": {"resolution": "pending_measurement", "nominal_rate": "pending_measurement"}},
+        "map": {"origin": "local"},
+        "quality_gates": {},
+        "time_gates": {},
+        "diagnostics": {},
+        "topology": {},
+        "scope": {},
+    }
 
 
 def test_capture_fails_closed_when_pyorbbecsdk_is_unavailable(tmp_path: Path, monkeypatch):
@@ -62,6 +91,26 @@ def test_sdk_native_load_failure_is_actionable(tmp_path: Path, monkeypatch):
     monkeypatch.setattr(builtins, "__import__", no_native)
     with pytest.raises(RuntimeError, match="pyorbbecsdk"):
         capture_orbbec({"device": {"serial": "SERIAL"}, "streams": {}}, tmp_path, 1)
+
+
+def test_sdk_device_open_permission_error_is_actionable(tmp_path: Path, monkeypatch):
+    class OBError(Exception): pass
+
+    class Context:
+        def query_devices(self):
+            class Devices:
+                def get_count(self): return 1
+                def get_device_by_index(self, index):
+                    raise OBError("usbEnumerator openUsbDevice failed!")
+            return Devices()
+
+    monkeypatch.setitem(sys.modules, "pyorbbecsdk", types.SimpleNamespace(Context=Context, __version__="2.1.2"))
+    with pytest.raises(RuntimeError, match="video-group access"):
+        capture_orbbec({"device": {"serial": "SERIAL"}, "streams": {"rgb": {"resolution": "640x480", "nominal_rate": 30}}}, tmp_path, 1)
+    manifest = json.loads((tmp_path / "capture_manifest.json").read_text(encoding="utf-8"))
+    assert manifest["status"] == "failed_incomplete"
+    assert manifest["sdk_version"] == "2.1.2"
+    assert manifest["error"]["message"] == "permission denied while opening Orbbec device"
 
 
 def test_imu_setup_uses_accel_and_gyro_config_methods_and_video_streams_are_profile_checked():
@@ -230,6 +279,63 @@ def test_capture_manifest_has_per_stream_counts_and_canonical_sample_fields(tmp_
     assert manifest["per_stream_counts"]["imu"] == 2
     assert manifest["imu_sensor_counts"] == {"accel": 1, "gyro": 1}
     assert manifest["actual_stream_profiles"]["rgb"]["width"] == 640
+    assert manifest["actual_stream_profiles"]["rgb"]["profile_validation"] == "validated"
+    assert manifest["actual_stream_profiles"]["depth"]["profile_validation"] == "pending_measurement"
+    assert manifest["actual_stream_profiles"]["imu"]["accel"]["sample_rate"] == "pending_measurement"
+    assert manifest["actual_stream_profiles"]["imu"]["gyro"]["profile"] == "sdk_default"
+
+
+def test_capture_failure_writes_failed_incomplete_manifest(tmp_path: Path, monkeypatch):
+    class Info:
+        def get_serial_number(self): return "SERIAL"
+        def get_name(self): return "Gemini 335"
+        def get_firmware_version(self): return "1.8.10"
+
+    class Device:
+        def get_device_info(self): return Info()
+
+    class Devices:
+        def get_count(self): return 1
+        def get_device_by_index(self, index): return Device()
+
+    class Context:
+        def query_devices(self): return Devices()
+
+    class Config:
+        def enable_stream(self, profile): pass
+
+    class Pipeline:
+        def __init__(self, device): pass
+        def get_stream_profile_list(self, sensor):
+            class Profiles:
+                def get_default_video_stream_profile(self):
+                    class Profile:
+                        def get_width(self): return 640
+                        def get_height(self): return 480
+                        def get_fps(self): return 30
+                        def get_format(self): return "RGB"
+                    return Profile()
+            return Profiles()
+        def start(self, config): pass
+        def wait_for_frames(self, timeout):
+            raise RuntimeError("device disconnected")
+        def stop(self): pass
+
+    fake = types.SimpleNamespace(
+        __version__="2.9.3", Context=Context, Config=Config, Pipeline=Pipeline,
+        OBSensorType=types.SimpleNamespace(COLOR_SENSOR="color"),
+    )
+    monkeypatch.setitem(sys.modules, "pyorbbecsdk", fake)
+    monkeypatch.setattr("sparseworld_p0.orbbec_capture.time.time_ns", lambda: 9_000_000_000)
+    monkeypatch.setattr("sparseworld_p0.orbbec_capture.time.monotonic", lambda: 0.0)
+    profile = {"device": {"serial": "SERIAL"}, "streams": {"rgb": {"resolution": "640x480", "nominal_rate": 30}}}
+    with pytest.raises(RuntimeError, match="device disconnected"):
+        capture_orbbec(profile, tmp_path, 1)
+    manifest = json.loads((tmp_path / "capture_manifest.json").read_text(encoding="utf-8"))
+    assert manifest["status"] == "failed_incomplete"
+    assert manifest["actual_stream_profiles"]["rgb"]["width"] == 640
+    assert manifest["error"]["type"] == "RuntimeError"
+    assert "device disconnected" in manifest["error"]["message"]
 
 
 def test_missing_device_timestamp_fails_closed():

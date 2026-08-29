@@ -64,3 +64,10 @@ Unknown fields and insufficient samples remain `not_measured`; no hardware measu
 ## Commit
 
 `5d609ec feat: assess P0 timing and sensor quality evidence`
+
+## Follow-up closure (2026-08-29)
+
+The non-finite timestamp/offset residual from the independent re-review was
+fixed in `be01152` and is covered by finite-value regression tests. Current
+verification is 44 tests passed; this remains offline code/fixture evidence,
+not a hardware timing or quality result.
