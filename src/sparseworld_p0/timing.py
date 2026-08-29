@@ -1,6 +1,7 @@
 """Deterministic timing analysis for normalized JSONL samples."""
 from __future__ import annotations
 from collections.abc import Mapping, Sequence
+from math import isfinite
 from statistics import median, pstdev
 from typing import Any
 
@@ -8,7 +9,11 @@ def _num(sample: Mapping[str, Any], *keys: str):
     for key in keys:
         value = sample.get(key)
         if isinstance(value, (int, float)) and not isinstance(value, bool):
-            return value
+            try:
+                if isfinite(value):
+                    return value
+            except (TypeError, ValueError, OverflowError):
+                pass
     return None
 
 def _timestamp_ns(sample: Mapping[str, Any], *, ros_header: bool = False):

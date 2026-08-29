@@ -1,4 +1,6 @@
-from sparseworld_p0.timing import analyze_stream, analyze_interstream
+import math
+
+from sparseworld_p0.timing import analyze_device_host_offset, analyze_stream, analyze_interstream
 
 
 def test_sequence_gap_rate_and_monotonicity_are_measured():
@@ -93,3 +95,42 @@ def test_zero_or_negative_timestamp_duration_fails_closed():
     ])
     assert result["status"] == "not_measured"
     assert result["nonmonotonic_timestamps"] == 1
+
+
+def test_non_finite_device_timestamps_are_not_measured():
+    for invalid in (float("nan"), float("inf"), float("-inf")):
+        result = analyze_stream([
+            {"seq": 0, "device_time_ns": 0},
+            {"seq": 1, "device_time_ns": invalid},
+        ])
+        assert result["status"] == "not_measured"
+        assert result["timestamp_count"] == 1
+        assert result["observed_rate_hz"] is None
+        assert result["jitter_s"] is None
+
+
+def test_non_finite_device_host_timestamps_are_not_offsets():
+    for field in ("device_time_ns", "host_receive_time_ns"):
+        invalid_rows = [
+            {"device_time_ns": 100, "host_receive_time_ns": 110},
+            {"device_time_ns": 200, "host_receive_time_ns": 210},
+            {"device_time_ns": 300, "host_receive_time_ns": 310},
+        ]
+        invalid_rows[1][field] = float("nan")
+        invalid_result = analyze_device_host_offset({"depth": invalid_rows})
+        assert invalid_result["status"] == "measured"
+        assert invalid_result["sample_count"] == 2
+        assert all(math.isfinite(value) for value in invalid_result["offsets_ns"])
+        assert invalid_result["median_abs_ns"] == 10
+        assert invalid_result["max_abs_ns"] == 10
+
+    for invalid in (float("nan"), float("inf"), float("-inf")):
+        result = analyze_device_host_offset({"depth": [
+            {"device_time_ns": invalid, "host_receive_time_ns": 110},
+            {"device_time_ns": 200, "host_receive_time_ns": invalid},
+        ]})
+        assert result["status"] == "not_measured"
+        assert result["sample_count"] == 0
+        assert result["offsets_ns"] == []
+        assert result["median_abs_ns"] is None
+        assert result["max_abs_ns"] is None
