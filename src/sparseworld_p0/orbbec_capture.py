@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import json
+import hashlib
+from math import isfinite
+import re
 import time
 from pathlib import Path
 from typing import Any, Mapping
@@ -11,9 +14,8 @@ from typing import Any, Mapping
 _SENSOR_NAMES = {
     "rgb": "COLOR_SENSOR",
     "depth": "DEPTH_SENSOR",
-    "left": "IR_LEFT_SENSOR",
-    "right": "IR_RIGHT_SENSOR",
-    "imu": "ACCEL_SENSOR",
+    "left": "LEFT_IR_SENSOR",
+    "right": "RIGHT_IR_SENSOR",
 }
 
 
@@ -33,7 +35,7 @@ def capture_orbbec(profile: Any, output_dir: str | Path, duration_s: float) -> d
         raise RuntimeError("capture refused: profile device.serial is required")
     try:
         import pyorbbecsdk as sdk
-    except (ImportError, ModuleNotFoundError) as error:
+    except (ImportError, ModuleNotFoundError, OSError) as error:
         raise RuntimeError(
             "capture refused: pyorbbecsdk is unavailable; install the checksum-recorded Orbbec SDK Python binding first"
         ) from error
@@ -51,7 +53,7 @@ def capture_orbbec(profile: Any, output_dir: str | Path, duration_s: float) -> d
             raise RuntimeError(f"capture refused: SDK returned serial {actual_serial!r}, expected {serial!r}")
         pipeline = sdk.Pipeline(device)
         config = sdk.Config()
-        active_streams = _enable_requested_streams(sdk, pipeline, config, streams)
+        active_streams, actual_profiles = _enable_requested_streams(sdk, pipeline, config, streams)
         pipeline.start(config)
     except PermissionError as error:
         raise RuntimeError("capture refused: permission denied while opening Orbbec device; verify video-group access after a new login") from error
@@ -66,8 +68,9 @@ def capture_orbbec(profile: Any, output_dir: str | Path, duration_s: float) -> d
         samples_path = output / "timestamps.jsonl"
         diagnostics = _section(profile, "diagnostics")
         window_s = diagnostics.get("window_seconds", 30)
-        max_samples = max(1, int(float(window_s) * max(1, len(active_streams)) * 120))
-        frame_count = 0
+        max_samples = max(1, int(float(window_s) * 120))
+        per_stream_limit = {name: max_samples for name in active_streams}
+        per_stream_counts = {name: 0 for name in active_streams}
         started_ns = time.time_ns()
         deadline = time.monotonic() + float(duration_s)
         with samples_path.open("w", encoding="utf-8") as handle:
@@ -76,20 +79,22 @@ def capture_orbbec(profile: Any, output_dir: str | Path, duration_s: float) -> d
                 host_timestamp_ns = time.time_ns()
                 if frames is None:
                     continue
-                for name in active_streams:
-                    frame = _frame_for(frames, name)
+                emitted = 0
+                for name, sensor, frame in _frames_for(frames, active_streams):
                     if frame is None:
                         raise RuntimeError(f"capture refused: requested {name} stream produced no frame")
-                    if frame_count >= max_samples:
+                    if per_stream_counts[name] >= per_stream_limit[name]:
                         continue
-                    row = {
-                        "stream": name,
-                        "host_timestamp_ns": host_timestamp_ns,
-                        "device_timestamp": _call_first(frame, "get_timestamp", "timestamp"),
-                        "sdk_frame_number": _call_first(frame, "get_frame_number", "frame_number"),
-                    }
+                    row = _normalise_frame(name, sensor, frame, host_timestamp_ns)
                     handle.write(json.dumps(row, sort_keys=True) + "\n")
-                    frame_count += 1
+                    per_stream_counts[name] += 1
+                    emitted += 1
+                if emitted == 0 and any(per_stream_counts[name] == 0 for name in active_streams):
+                    raise RuntimeError("capture refused: requested streams produced no retained samples")
+        if any(per_stream_counts[name] == 0 for name in active_streams):
+            raise RuntimeError("capture refused: one or more requested streams produced no retained samples")
+        stopped_ns = time.time_ns()
+        profile_payload = json.dumps(_plain(profile), sort_keys=True, separators=(",", ":"), default=str).encode()
         manifest = {
             "schema_version": "p0/orbbec-capture/v1",
             "status": "captured_unassessed",
@@ -99,11 +104,17 @@ def capture_orbbec(profile: Any, output_dir: str | Path, duration_s: float) -> d
             "sdk_version": getattr(sdk, "__version__", "unknown"),
             "requested_streams": sorted(streams),
             "active_streams": active_streams,
+            "actual_stream_profiles": actual_profiles,
+            "profile_sha256": hashlib.sha256(profile_payload).hexdigest(),
             "started_host_timestamp_ns": started_ns,
+            "stopped_host_timestamp_ns": stopped_ns,
             "duration_s_requested": duration_s,
             "timestamp_file": samples_path.name,
-            "timestamp_samples_written": frame_count,
-            "diagnostics": {"storage": diagnostics.get("storage"), "window_seconds": window_s, "max_timestamp_samples": max_samples},
+            "timestamp_samples_written": sum(per_stream_counts.values()),
+            "per_stream_counts": per_stream_counts,
+            "imu_sensor_counts": {sensor: sum(1 for line in samples_path.read_text(encoding="utf-8").splitlines() if json.loads(line).get("sensor") == sensor) for sensor in ("accel", "gyro")},
+            "timestamp_contract": {"device_time_field": "device_time_ns", "host_time_field": "host_receive_time_ns", "device_unit": "nanoseconds", "source": "Frame.get_timestamp_us multiplied by 1000"},
+            "diagnostics": {"storage": diagnostics.get("storage"), "window_seconds": window_s, "max_timestamp_samples_per_stream": max_samples},
             "interpretation": "capture evidence only; calibration, synchronization, and performance remain unassessed until raw outputs are reviewed",
         }
         (output / "capture_manifest.json").write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -139,14 +150,24 @@ def _device_with_serial(context: Any, serial: str) -> Any | None:
     return None
 
 
-def _enable_requested_streams(sdk: Any, pipeline: Any, config: Any, streams: Mapping[str, Any]) -> list[str]:
+def _enable_requested_streams(sdk: Any, pipeline: Any, config: Any, streams: Mapping[str, Any]) -> tuple[list[str], dict[str, Any]]:
     active: list[str] = []
+    actual: dict[str, Any] = {}
     for name, requested in streams.items():
         if not isinstance(requested, Mapping):
             raise RuntimeError(f"capture refused: stream {name!r} configuration must be a mapping")
         if not requested.get("resolution") or not requested.get("nominal_rate"):
             raise RuntimeError(f"capture refused: stream {name!r} must declare resolution and nominal_rate")
         sensor_name = _SENSOR_NAMES.get(name)
+        if name == "imu":
+            try:
+                config.enable_accel_stream()
+                config.enable_gyro_stream()
+            except Exception as error:
+                raise RuntimeError("capture refused: IMU requires enable_accel_stream and enable_gyro_stream") from error
+            active.append(name)
+            actual[name] = {"accel": "enabled", "gyro": "enabled", "profile_validation": "pending_measurement"}
+            continue
         if sensor_name is None:
             raise RuntimeError(f"capture refused: unsupported requested stream {name!r}")
         sensor_type = getattr(sdk.OBSensorType, sensor_name, None)
@@ -155,17 +176,22 @@ def _enable_requested_streams(sdk: Any, pipeline: Any, config: Any, streams: Map
         try:
             profiles = pipeline.get_stream_profile_list(sensor_type)
             profile = profiles.get_default_video_stream_profile()
+            actual_profile = _profile_description(profile)
+            _validate_requested_profile(name, requested, actual_profile)
             config.enable_stream(profile)
+        except RuntimeError:
+            raise
         except Exception as error:
             raise RuntimeError(f"capture refused: requested {name} stream is unavailable") from error
         active.append(name)
-    return active
+        actual[name] = actual_profile
+    return active, actual
 
 
 def _frame_for(frames: Any, name: str) -> Any:
     methods = {
         "rgb": ("get_color_frame",), "depth": ("get_depth_frame",),
-        "left": ("get_ir_frame", "get_left_ir_frame"), "right": ("get_right_ir_frame",),
+        "left": ("get_left_ir_frame", "get_ir_frame"), "right": ("get_right_ir_frame",),
         "imu": ("get_accel_frame",),
     }[name]
     for method in methods:
@@ -175,6 +201,62 @@ def _frame_for(frames: Any, name: str) -> Any:
             if value is not None:
                 return value
     return None
+
+
+def _frames_for(frames: Any, active_streams: list[str]):
+    for name in active_streams:
+        if name == "imu":
+            yield "imu", "accel", _call_first(frames, "get_accel_frame", "accel_frame")
+            yield "imu", "gyro", _call_first(frames, "get_gyro_frame", "gyro_frame")
+        else:
+            yield name, None, _frame_for(frames, name)
+
+
+def _timestamp_ns(frame: Any) -> int | None:
+    value = _call_first(frame, "get_timestamp_us")
+    if isinstance(value, (int, float)) and not isinstance(value, bool) and isfinite(value):
+        return int(value * 1000)
+    value = _call_first(frame, "get_timestamp")
+    if isinstance(value, (int, float)) and not isinstance(value, bool) and isfinite(value):
+        return int(value * 1_000_000)
+    return None
+
+
+def _normalise_frame(stream: str, sensor: str | None, frame: Any, host_timestamp_ns: int) -> dict[str, Any]:
+    device_time_ns = _timestamp_ns(frame)
+    if device_time_ns is None:
+        raise RuntimeError("capture refused: device timestamp is unavailable")
+    return {
+        "stream": stream,
+        "sensor": sensor,
+        "device_time_ns": device_time_ns,
+        "host_receive_time_ns": host_timestamp_ns,
+        "sdk_frame_number": _call_first(frame, "get_frame_number", "get_index", "frame_number", "index"),
+    }
+
+
+def _profile_description(profile: Any) -> dict[str, Any]:
+    return {"width": _call_first(profile, "get_width", "width"), "height": _call_first(profile, "get_height", "height"), "fps": _call_first(profile, "get_fps", "fps"), "format": str(_call_first(profile, "get_format", "format"))}
+
+
+def _validate_requested_profile(name: str, requested: Mapping[str, Any], actual: Mapping[str, Any]) -> None:
+    resolution = requested.get("resolution")
+    rate = requested.get("nominal_rate")
+    if resolution != "pending_measurement":
+        match = re.fullmatch(r"\s*(\d+)x(\d+)\s*", str(resolution))
+        if not match or (actual.get("width"), actual.get("height")) != (int(match.group(1)), int(match.group(2))):
+            raise RuntimeError(f"capture refused: {name} profile resolution does not match requested {resolution!r}")
+    if rate != "pending_measurement":
+        try: expected = float(rate)
+        except (TypeError, ValueError): raise RuntimeError(f"capture refused: {name} nominal_rate is invalid")
+        if actual.get("fps") is None or float(actual["fps"]) != expected:
+            raise RuntimeError(f"capture refused: {name} profile fps does not match requested {rate!r}")
+
+
+def _plain(value: Any) -> Any:
+    if isinstance(value, Mapping): return {str(k): _plain(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)): return [_plain(v) for v in value]
+    return value
 
 
 def _call_first(obj: Any, *names: str) -> Any:

@@ -1,9 +1,18 @@
 import builtins
+import json
+import sys
+import types
 from pathlib import Path
 
 import pytest
 
-from sparseworld_p0.orbbec_capture import capture_orbbec
+from sparseworld_p0.orbbec_capture import (
+    _SENSOR_NAMES,
+    _enable_requested_streams,
+    _frame_for,
+    _timestamp_ns,
+    capture_orbbec,
+)
 
 
 def test_capture_fails_closed_when_pyorbbecsdk_is_unavailable(tmp_path: Path, monkeypatch):
@@ -17,3 +26,215 @@ def test_capture_fails_closed_when_pyorbbecsdk_is_unavailable(tmp_path: Path, mo
     monkeypatch.setattr(builtins, "__import__", no_sdk)
     with pytest.raises(RuntimeError, match="pyorbbecsdk"):
         capture_orbbec({"device": {"serial": "SERIAL"}, "streams": {}}, tmp_path, 1)
+
+
+def test_gemini_sensor_names_and_canonical_timestamp_conversion():
+    assert _SENSOR_NAMES["left"] == "LEFT_IR_SENSOR"
+    assert _SENSOR_NAMES["right"] == "RIGHT_IR_SENSOR"
+
+    class Frame:
+        def get_timestamp_us(self):
+            return 1234
+
+    assert _timestamp_ns(Frame()) == 1_234_000
+
+
+def test_nonfinite_sdk_timestamp_is_rejected_and_left_ir_prefers_left_frame():
+    class BadFrame:
+        def get_timestamp_us(self): return float("nan")
+
+    class Frames:
+        def get_ir_frame(self): return "generic"
+        def get_left_ir_frame(self): return "left"
+
+    assert _timestamp_ns(BadFrame()) is None
+    assert _frame_for(Frames(), "left") == "left"
+
+
+def test_sdk_native_load_failure_is_actionable(tmp_path: Path, monkeypatch):
+    real_import = builtins.__import__
+
+    def no_native(name, *args, **kwargs):
+        if name == "pyorbbecsdk":
+            raise OSError("libobsensor.so: cannot open shared object file")
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", no_native)
+    with pytest.raises(RuntimeError, match="pyorbbecsdk"):
+        capture_orbbec({"device": {"serial": "SERIAL"}, "streams": {}}, tmp_path, 1)
+
+
+def test_imu_setup_uses_accel_and_gyro_config_methods_and_video_streams_are_profile_checked():
+    calls = []
+
+    class Config:
+        def enable_accel_stream(self):
+            calls.append("accel")
+
+        def enable_gyro_stream(self):
+            calls.append("gyro")
+
+        def enable_stream(self, profile):
+            calls.append(("video", profile))
+
+    class SensorType:
+        COLOR_SENSOR = "color"
+        DEPTH_SENSOR = "depth"
+        LEFT_IR_SENSOR = "left_ir"
+        RIGHT_IR_SENSOR = "right_ir"
+        ACCEL_SENSOR = "accel_sensor"
+        GYRO_SENSOR = "gyro_sensor"
+
+    class Profile:
+        def get_width(self): return 640
+        def get_height(self): return 480
+        def get_fps(self): return 30
+        def get_format(self): return "RGB"
+
+    class Profiles:
+        def get_default_video_stream_profile(self): return Profile()
+
+    class Pipeline:
+        def get_stream_profile_list(self, sensor):
+            return Profiles()
+
+    sdk = types.SimpleNamespace(OBSensorType=SensorType)
+    active, actual = _enable_requested_streams(
+        sdk,
+        Pipeline(),
+        Config(),
+        {
+            "rgb": {"resolution": "640x480", "nominal_rate": 30},
+            "depth": {"resolution": "pending_measurement", "nominal_rate": "pending_measurement"},
+            "left": {"resolution": "pending_measurement", "nominal_rate": "pending_measurement"},
+            "right": {"resolution": "pending_measurement", "nominal_rate": "pending_measurement"},
+            "imu": {"resolution": "pending_measurement", "nominal_rate": "pending_measurement"},
+        },
+    )
+    assert active == ["rgb", "depth", "left", "right", "imu"]
+    assert "accel" in calls and "gyro" in calls
+    assert actual["rgb"]["width"] == 640
+    assert actual["rgb"]["height"] == 480
+
+
+def test_concrete_profile_mismatch_fails_closed():
+    class SensorType:
+        COLOR_SENSOR = "color"
+
+    class Profile:
+        def get_width(self): return 640
+        def get_height(self): return 480
+        def get_fps(self): return 30
+        def get_format(self): return "RGB"
+
+    class Profiles:
+        def get_default_video_stream_profile(self): return Profile()
+
+    class Pipeline:
+        def get_stream_profile_list(self, sensor): return Profiles()
+
+    class Config:
+        def enable_stream(self, profile): pass
+
+    with pytest.raises(RuntimeError, match="resolution"):
+        _enable_requested_streams(
+            types.SimpleNamespace(OBSensorType=SensorType),
+            Pipeline(), Config(),
+            {"rgb": {"resolution": "320x240", "nominal_rate": 30}},
+        )
+
+
+def test_capture_manifest_has_per_stream_counts_and_canonical_sample_fields(tmp_path: Path, monkeypatch):
+    # The fake SDK is intentionally small but follows the official v2 API names.
+    class Info:
+        def get_serial_number(self): return "SERIAL"
+        def get_name(self): return "Gemini 335"
+        def get_firmware_version(self): return "1.8.10"
+
+    class Frame:
+        def __init__(self, index, timestamp_us): self.index, self.timestamp_us = index, timestamp_us
+        def get_timestamp_us(self): return self.timestamp_us
+        def get_index(self): return self.index
+
+    class Frames:
+        def __init__(self): self.index = 0
+        def _frame(self):
+            self.index += 1
+            return Frame(self.index, self.index * 1000)
+        def get_color_frame(self): return self._frame()
+        def get_depth_frame(self): return self._frame()
+        def get_left_ir_frame(self): return self._frame()
+        def get_right_ir_frame(self): return self._frame()
+        def get_accel_frame(self): return self._frame()
+        def get_gyro_frame(self): return self._frame()
+
+    class Device:
+        def get_device_info(self): return Info()
+
+    class Devices:
+        def get_count(self): return 1
+        def get_device_by_index(self, index): return Device()
+
+    class Context:
+        def query_devices(self): return Devices()
+
+    class Profile:
+        def get_width(self): return 640
+        def get_height(self): return 480
+        def get_fps(self): return 30
+        def get_format(self): return "RGB"
+
+    class Profiles:
+        def get_default_video_stream_profile(self): return Profile()
+
+    class Config:
+        def enable_stream(self, profile): pass
+        def enable_accel_stream(self): pass
+        def enable_gyro_stream(self): pass
+
+    class Pipeline:
+        def __init__(self, device): self.frames = Frames()
+        def get_stream_profile_list(self, sensor): return Profiles()
+        def start(self, config): pass
+        def wait_for_frames(self, timeout): return self.frames
+        def stop(self): pass
+
+    fake = types.SimpleNamespace(
+        __version__="2.9.3", Context=Context, Config=Config, Pipeline=Pipeline,
+        OBSensorType=types.SimpleNamespace(
+            COLOR_SENSOR="color", DEPTH_SENSOR="depth", LEFT_IR_SENSOR="left", RIGHT_IR_SENSOR="right",
+            ACCEL_SENSOR="accel", GYRO_SENSOR="gyro",
+        ),
+    )
+    monkeypatch.setitem(sys.modules, "pyorbbecsdk", fake)
+    monkeypatch.setattr("sparseworld_p0.orbbec_capture.time.monotonic", lambda: 0.0)
+    monkeypatch.setattr("sparseworld_p0.orbbec_capture.time.time_ns", lambda: 9_000_000_000)
+    # One loop iteration is enough; the implementation must still stop cleanly.
+    ticks = iter([0.0, 0.0, 2.0])
+    monkeypatch.setattr("sparseworld_p0.orbbec_capture.time.monotonic", lambda: next(ticks))
+    profile = {
+        "device": {"serial": "SERIAL"},
+        "streams": {
+            "rgb": {"resolution": "640x480", "nominal_rate": 30},
+            "depth": {"resolution": "pending_measurement", "nominal_rate": "pending_measurement"},
+            "left": {"resolution": "pending_measurement", "nominal_rate": "pending_measurement"},
+            "right": {"resolution": "pending_measurement", "nominal_rate": "pending_measurement"},
+            "imu": {"resolution": "pending_measurement", "nominal_rate": "pending_measurement"},
+        },
+        "diagnostics": {"window_seconds": 10, "storage": "bounded_local_dense"},
+    }
+    manifest = capture_orbbec(profile, tmp_path, 1)
+    rows = [json.loads(line) for line in (tmp_path / "timestamps.jsonl").read_text().splitlines()]
+    assert rows and {"device_time_ns", "host_receive_time_ns", "sdk_frame_number"} <= rows[0].keys()
+    assert all("device_timestamp" not in row and "host_timestamp_ns" not in row for row in rows)
+    assert manifest["per_stream_counts"]["imu"] == 2
+    assert manifest["imu_sensor_counts"] == {"accel": 1, "gyro": 1}
+    assert manifest["actual_stream_profiles"]["rgb"]["width"] == 640
+
+
+def test_missing_device_timestamp_fails_closed():
+    class Frame:
+        def get_timestamp(self): return None
+    with pytest.raises(RuntimeError, match="device timestamp"):
+        from sparseworld_p0.orbbec_capture import _normalise_frame
+        _normalise_frame("rgb", None, Frame(), 123)

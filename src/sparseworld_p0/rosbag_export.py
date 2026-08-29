@@ -54,7 +54,7 @@ def _rosbag_rows(path: Path) -> Iterable[dict[str, Any]]:
         raise RuntimeError("rosbag export refused: ROS 2 rosbag2_py, rclpy, and rosidl_runtime_py are required") from error
     try:
         reader = rosbag2_py.SequentialReader()
-        reader.open(rosbag2_py.StorageOptions(uri=str(path), storage_id=""), rosbag2_py.ConverterOptions("", ""))
+        reader.open(rosbag2_py.StorageOptions(uri=str(path), storage_id="mcap"), rosbag2_py.ConverterOptions("", ""))
         topics = {item.name: item for item in reader.get_all_topics_and_types()}
         while reader.has_next():
             topic, data, recorded_timestamp_ns = reader.read_next()
