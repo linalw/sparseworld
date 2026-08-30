@@ -17,7 +17,13 @@ streams:
   depth: {resolution: 848x480, nominal_rate: 30, format: Y16}
   left: {resolution: 848x480, nominal_rate: 30, format: Y8}
   right: {resolution: 848x480, nominal_rate: 30, format: Y8}
-  imu: {resolution: pending_measurement, nominal_rate: pending_measurement}
+  imu:
+    resolution: native
+    nominal_rate: 200
+    accel_sample_rate: SAMPLE_RATE_200_HZ
+    accel_full_scale_range: ACCEL_FS_4g
+    gyro_sample_rate: SAMPLE_RATE_200_HZ
+    gyro_full_scale_range: FS_1000dps
 map:
   origin: local_initialization_without_external_datum
   units: SI

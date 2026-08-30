@@ -166,6 +166,83 @@ def test_imu_setup_uses_accel_and_gyro_config_methods_and_video_streams_are_prof
     assert actual["rgb"]["height"] == 480
 
 
+def test_imu_provenance_records_sdk_default_rate_and_full_scale_when_available():
+    class SensorType:
+        ACCEL_SENSOR = "accel"
+        GYRO_SENSOR = "gyro"
+
+    class Enum:
+        def __init__(self, name): self.name = name
+        def __str__(self): return self.name
+
+    class Profile:
+        def __init__(self, sensor): self.sensor = sensor
+        def as_accel_stream_profile(self): return self
+        def as_gyro_stream_profile(self): return self
+        def get_sample_rate(self): return Enum("SAMPLE_RATE_200_HZ")
+        def get_full_scale_range(self): return Enum("ACCEL_FS_4g" if self.sensor == "accel" else "FS_1000dps")
+
+    class Profiles:
+        def __init__(self, sensor): self.sensor = sensor
+        def get_stream_profile_by_index(self, index): return Profile(self.sensor)
+        def get_count(self): return 1
+
+    class Pipeline:
+        def get_stream_profile_list(self, sensor): return Profiles(sensor)
+
+    class Config:
+        def enable_accel_stream(self): pass
+        def enable_gyro_stream(self): pass
+
+    active, actual = _enable_requested_streams(
+        types.SimpleNamespace(OBSensorType=SensorType), Pipeline(), Config(),
+        {"imu": {"resolution": "pending_measurement", "nominal_rate": "pending_measurement"}},
+    )
+    assert active == ["imu"]
+    assert actual["imu"]["accel"]["sample_rate"] == "SAMPLE_RATE_200_HZ"
+    assert actual["imu"]["accel"]["full_scale_range"] == "ACCEL_FS_4g"
+    assert actual["imu"]["gyro"]["full_scale_range"] == "FS_1000dps"
+    assert actual["imu"]["profile_validation"] == "validated"
+
+
+def test_imu_streams_use_explicit_profile_when_frozen_in_request():
+    calls = []
+
+    class SensorType:
+        ACCEL_SENSOR = "accel"
+        GYRO_SENSOR = "gyro"
+
+    class Enum:
+        def __init__(self, name): self.name = name
+        def __str__(self): return self.name
+
+    class Config:
+        def enable_accel_stream(self, full_scale, sample_rate): calls.append(("accel", full_scale.name, sample_rate.name))
+        def enable_gyro_stream(self, full_scale, sample_rate): calls.append(("gyro", full_scale.name, sample_rate.name))
+
+    class SDK:
+        OBSensorType = SensorType
+        OBAccelFullScaleRange = type("A", (), {"ACCEL_FS_4g": Enum("ACCEL_FS_4g")})
+        OBGyroFullScaleRange = type("G", (), {"FS_1000dps": Enum("FS_1000dps")})
+        OBGyroSampleRate = type("R", (), {"SAMPLE_RATE_200_HZ": Enum("SAMPLE_RATE_200_HZ")})
+
+    class Pipeline:
+        def get_stream_profile_list(self, sensor):
+            class Profiles:
+                def get_stream_profile_by_index(self, index): raise RuntimeError("not used")
+            return Profiles()
+
+    active, _ = _enable_requested_streams(SDK, Pipeline(), Config(), {
+        "imu": {
+            "resolution": "native", "nominal_rate": 200,
+            "accel_sample_rate": "SAMPLE_RATE_200_HZ", "accel_full_scale_range": "ACCEL_FS_4g",
+            "gyro_sample_rate": "SAMPLE_RATE_200_HZ", "gyro_full_scale_range": "FS_1000dps",
+        }
+    })
+    assert active == ["imu"]
+    assert calls == [("accel", "ACCEL_FS_4g", "SAMPLE_RATE_200_HZ"), ("gyro", "FS_1000dps", "SAMPLE_RATE_200_HZ")]
+
+
 def test_concrete_profile_mismatch_fails_closed():
     class SensorType:
         COLOR_SENSOR = "color"

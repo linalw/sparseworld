@@ -184,16 +184,17 @@ def _enable_requested_streams(sdk: Any, pipeline: Any, config: Any, streams: Map
         sensor_name = _SENSOR_NAMES.get(name)
         if name == "imu":
             try:
-                config.enable_accel_stream()
-                config.enable_gyro_stream()
+                _enable_imu_stream(config, sdk, requested, "accel")
+                _enable_imu_stream(config, sdk, requested, "gyro")
             except Exception as error:
                 raise RuntimeError("capture refused: IMU requires enable_accel_stream and enable_gyro_stream") from error
             active.append(name)
-            actual[name] = {
-                "accel": _imu_profile_provenance(requested, "accel"),
-                "gyro": _imu_profile_provenance(requested, "gyro"),
-                "profile_validation": "pending_measurement",
+            imu_profiles = {
+                "accel": _imu_profile_provenance(sdk, pipeline, requested, "accel"),
+                "gyro": _imu_profile_provenance(sdk, pipeline, requested, "gyro"),
             }
+            imu_pending = any(item["sample_rate"] == "pending_measurement" or item["full_scale_range"] == "pending_measurement" for item in imu_profiles.values())
+            actual[name] = {**imu_profiles, "profile_validation": "pending_measurement" if imu_pending else "validated"}
             continue
         if sensor_name is None:
             raise RuntimeError(f"capture refused: unsupported requested stream {name!r}")
@@ -213,6 +214,22 @@ def _enable_requested_streams(sdk: Any, pipeline: Any, config: Any, streams: Map
         active.append(name)
         actual[name] = actual_profile
     return active, actual
+
+
+def _enable_imu_stream(config: Any, sdk: Any, requested: Mapping[str, Any], sensor: str) -> None:
+    method = getattr(config, f"enable_{sensor}_stream")
+    rate_name = requested.get(f"{sensor}_sample_rate")
+    scale_name = requested.get(f"{sensor}_full_scale_range")
+    if not (isinstance(rate_name, str) and isinstance(scale_name, str)):
+        method()
+        return
+    enum_type = getattr(sdk, "OBGyroSampleRate", None) if sensor == "accel" else getattr(sdk, "OBGyroSampleRate", None)
+    scale_type = getattr(sdk, "OBAccelFullScaleRange", None) if sensor == "accel" else getattr(sdk, "OBGyroFullScaleRange", None)
+    rate = getattr(enum_type, rate_name, None) if enum_type is not None else None
+    scale = getattr(scale_type, scale_name, None) if scale_type is not None else None
+    if rate is None or scale is None:
+        raise RuntimeError(f"capture refused: unsupported {sensor} IMU profile {scale_name}/{rate_name}")
+    method(scale, rate)
 
 
 def _frame_for(frames: Any, name: str) -> Any:
@@ -311,16 +328,37 @@ def _canonical_profile_payload(profile: Any) -> dict[str, Any]:
     raise TypeError("profile must be a mapping or dataclass")
 
 
-def _imu_profile_provenance(requested: Mapping[str, Any], sensor: str) -> dict[str, Any]:
-    """Record requested IMU provenance without claiming SDK rates were measured."""
-    rate = requested.get(f"{sensor}_rate", requested.get("nominal_rate"))
+def _imu_profile_provenance(sdk: Any, pipeline: Any, requested: Mapping[str, Any], sensor: str) -> dict[str, Any]:
+    """Record the selected default IMU profile when the SDK exposes it."""
+    rate = requested.get(f"{sensor}_sample_rate", requested.get(f"{sensor}_rate", requested.get("nominal_rate")))
     scale = requested.get(f"{sensor}_full_scale_range", "pending_measurement")
-    return {
+    result = {
         "profile": "sdk_default",
         "sample_rate": "pending_measurement",
         "requested_sample_rate": rate,
         "full_scale_range": scale,
     }
+    sensor_type_name = "ACCEL_SENSOR" if sensor == "accel" else "GYRO_SENSOR"
+    sensor_type = getattr(getattr(sdk, "OBSensorType", None), sensor_type_name, None)
+    try:
+        profiles = pipeline.get_stream_profile_list(sensor_type)
+        profile = profiles.get_stream_profile_by_index(0)
+        profile = _call_first(profile, f"as_{sensor}_stream_profile") or profile
+        sample_rate = _call_first(profile, "get_sample_rate", "sample_rate")
+        full_scale = _call_first(profile, "get_full_scale_range", "full_scale_range")
+        if sample_rate is not None:
+            result["sample_rate"] = _enum_name(sample_rate)
+        if full_scale is not None:
+            result["full_scale_range"] = _enum_name(full_scale)
+    except Exception:
+        # Profile provenance stays pending; capture can still fail closed when
+        # the requested stream produces no samples in the bounded window.
+        pass
+    return result
+
+
+def _enum_name(value: Any) -> str:
+    return str(getattr(value, "name", value))
 
 
 def _write_failure_manifest(

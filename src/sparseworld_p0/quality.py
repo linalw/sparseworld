@@ -2,6 +2,7 @@
 from __future__ import annotations
 import hashlib, json
 from collections.abc import Mapping, Sequence
+from math import pi
 from typing import Any
 from .timing import analyze_device_host_offset, analyze_interstream, analyze_stream
 
@@ -29,15 +30,48 @@ def _fraction_from_counts(rows):
     return (sum(vals) / len(vals) if vals else None, len(vals))
 
 
-def _saturation_fraction(rows, vector_keys, limit):
+def _saturation_fraction(rows, vector_keys, limit, sensor=None):
     if limit is None or limit <= 0:
         return None, 0
     flags = []
     for row in rows:
+        if sensor is not None and (not isinstance(row, Mapping) or row.get("sensor") != sensor):
+            continue
         vec = next((row.get(k) for k in vector_keys if isinstance(row.get(k), (list, tuple))), None)
+        if vec is None:
+            candidate = row.get("imu_value") if isinstance(row, Mapping) else None
+            if isinstance(candidate, Mapping):
+                vec = candidate.values()
         if vec:
             flags.append(any(abs(float(v)) >= limit for v in vec if isinstance(v, (int,float))))
     return (sum(flags) / len(flags), len(flags)) if flags else (None, 0)
+
+
+def _full_scale_observation(rows, sensor, full_scale):
+    """Summarize normalized IMU magnitude against the SDK-declared range."""
+    if full_scale is None or full_scale <= 0:
+        return {"value": None, "sample_count": 0, "full_scale": None}
+    values = []
+    for row in rows:
+        if not isinstance(row, Mapping) or row.get("sensor") != sensor:
+            continue
+        vector = row.get("imu_value")
+        if not isinstance(vector, Mapping):
+            continue
+        components = [value for value in vector.values() if isinstance(value, (int, float)) and not isinstance(value, bool)]
+        if components:
+            values.append(max(abs(float(value)) for value in components) / full_scale)
+    return {"value": sum(values) / len(values) if values else None, "sample_count": len(values), "full_scale": full_scale}
+
+
+def _imu_full_scales(profile):
+    stream = profile.streams.get("imu", {}) if hasattr(profile, "streams") else {}
+    accel = stream.get("accel_full_scale_range") if isinstance(stream, Mapping) else None
+    gyro = stream.get("gyro_full_scale_range") if isinstance(stream, Mapping) else None
+    # SDK values are m/s^2 for accel and rad/s for gyro; convert declared dps.
+    accel_scale = 4.0 * 9.80665 if accel == "ACCEL_FS_4g" else None
+    gyro_scale = 1000.0 * pi / 180.0 if gyro == "FS_1000dps" else None
+    return accel_scale, gyro_scale
 
 def _threshold(profile, name, *aliases):
     gates = profile.quality_gates
@@ -90,9 +124,9 @@ def assess(profile, samples: Mapping[str, Sequence[Mapping[str, Any]]]) -> dict[
     gyro_limit, _ = _threshold(profile, "gyro_saturation", "maximum", "max", "limit", "max_abs")
     accel_limit, _ = _threshold(profile, "acceleration_saturation", "maximum", "max", "limit", "max_abs")
     if gyro_v is None:
-        gyro_v, gyro_n = _saturation_fraction(samples.get("imu", []), ("gyro", "angular_velocity"), gyro_limit)
+        gyro_v, gyro_n = _saturation_fraction(samples.get("imu", []), ("gyro", "angular_velocity"), gyro_limit, sensor="gyro")
     if accel_v is None:
-        accel_v, accel_n = _saturation_fraction(samples.get("imu", []), ("acceleration", "linear_acceleration"), accel_limit)
+        accel_v, accel_n = _saturation_fraction(samples.get("imu", []), ("acceleration", "linear_acceleration"), accel_limit, sensor="accel")
     # Explicit boolean saturation flags are accepted when fractions are absent.
     if gyro_v is None and gyro_n == 0:
         flags=[bool(r.get("gyro_saturated")) for r in samples.get("imu", []) if "gyro_saturated" in r]
@@ -105,6 +139,11 @@ def assess(profile, samples: Mapping[str, Sequence[Mapping[str, Any]]]) -> dict[
       "blur": _gate(blur_v, _threshold(profile,"blur","minimum","min")[0], minimum=True, count=blur_n),
       "gyro_saturation": _gate(gyro_v, _threshold(profile,"gyro_saturation","maximum","max")[0], minimum=False, count=gyro_n),
       "acceleration_saturation": _gate(accel_v, _threshold(profile,"acceleration_saturation","maximum","max")[0], minimum=False, count=accel_n),
+    }
+    accel_scale, gyro_scale = _imu_full_scales(profile)
+    observations = {
+        "acceleration_full_scale_fraction": _full_scale_observation(samples.get("imu", []), "accel", accel_scale),
+        "gyro_full_scale_fraction": _full_scale_observation(samples.get("imu", []), "gyro", gyro_scale),
     }
     device_host_offset = analyze_device_host_offset(samples)
     offset_value = device_host_offset["max_abs_ns"]
@@ -123,4 +162,5 @@ def assess(profile, samples: Mapping[str, Sequence[Mapping[str, Any]]]) -> dict[
                        "format": "normalized_jsonl", "tool": "sparseworld-p0", "tool_version": "0.1.0",
                        "criterion": "deterministic_sha256_of_canonical_samples"},
             "source_sha256":source_hash, "timing":timing, "interstream":inter,
+            "observations": observations,
             "device_host_offset":device_host_offset, "gates":gates}

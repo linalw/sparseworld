@@ -52,6 +52,44 @@ def test_quality_analyzes_interleaved_imu_sensors_as_independent_streams(tmp_pat
     assert assessment["timing"]["imu.gyro"]["nonmonotonic_timestamps"] == 0
 
 
+def test_quality_consumes_normalized_imu_value_for_sensor_saturation(tmp_path):
+    profile_path = tmp_path / "profile.yaml"
+    source = (Path(__file__).parents[1] / "config" / "p0_capture_profile.yaml").read_text()
+    profile_path.write_text(source.replace(
+        "quality_gates:\n", "quality_gates:\n  gyro_saturation: {maximum: 10.0}\n  acceleration_saturation: {maximum: 10.0}\n"
+    ))
+    assessment = assess(load_profile(profile_path), {
+        "imu": [
+            {"sensor": "accel", "device_time_ns": 100, "imu_value": {"x": 0.0, "y": 0.0, "z": 9.8}},
+            {"sensor": "gyro", "device_time_ns": 110, "imu_value": {"x": 0.0, "y": 0.0, "z": 0.1}},
+            {"sensor": "accel", "device_time_ns": 200, "imu_value": {"x": 0.0, "y": 0.0, "z": 20.0}},
+            {"sensor": "gyro", "device_time_ns": 210, "imu_value": {"x": 0.0, "y": 0.0, "z": 20.0}},
+        ],
+    })
+    assert assessment["gates"]["acceleration_saturation"]["value"] == 0.5
+    assert assessment["gates"]["acceleration_saturation"]["sample_count"] == 2
+    assert assessment["gates"]["gyro_saturation"]["value"] == 0.5
+    assert assessment["gates"]["gyro_saturation"]["sample_count"] == 2
+
+
+def test_quality_uses_frozen_imu_full_scale_for_normalized_saturation_observation(tmp_path):
+    assessment = assess(_profile(tmp_path), {
+        "imu": [
+            {"sensor": "accel", "device_time_ns": 100, "imu_value": {"x": 0.0, "y": 0.0, "z": 9.8}},
+            {"sensor": "accel", "device_time_ns": 200, "imu_value": {"x": 0.0, "y": 0.0, "z": 9.8}},
+            {"sensor": "gyro", "device_time_ns": 110, "imu_value": {"x": 0.0, "y": 0.0, "z": 20.0}},
+            {"sensor": "gyro", "device_time_ns": 210, "imu_value": {"x": 0.0, "y": 0.0, "z": 0.1}},
+        ],
+    })
+    assert assessment["observations"]["acceleration_full_scale_fraction"]["value"] == 9.8 / (4 * 9.80665)
+    assert assessment["observations"]["acceleration_full_scale_fraction"]["sample_count"] == 2
+    import math
+    expected_gyro = ((20.0 / (1000.0 * math.pi / 180.0)) + (0.1 / (1000.0 * math.pi / 180.0))) / 2
+    assert assessment["observations"]["gyro_full_scale_fraction"]["value"] == expected_gyro
+    assert assessment["observations"]["gyro_full_scale_fraction"]["sample_count"] == 2
+    assert assessment["gates"]["gyro_saturation"]["status"] == "not_measured"
+
+
 def test_explicit_profile_thresholds_can_fail_quality_gates(tmp_path):
     profile_path = tmp_path / "profile.yaml"
     source = (Path(__file__).parents[1] / "config" / "p0_capture_profile.yaml").read_text()

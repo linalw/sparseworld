@@ -43,3 +43,11 @@ It contains active-profile intrinsics plus depth→RGB and IR transforms, but is
 not a checkerboard recalibration and does not measure camera→IMU, base→camera,
 or clock offset. The prior Access-denied preflight remains preserved as
 historical evidence.
+
+The frozen IMU request is accel `SAMPLE_RATE_200_HZ` / `ACCEL_FS_4g` and gyro
+`SAMPLE_RATE_200_HZ` / `FS_1000dps`, verified by
+`artifacts/evidence/p0_explicit_imu_profile_validated_20260830T070442Z/`.
+The SDK payload uses m/s² for acceleration and rad/s for angular velocity; the
+assessment reports short-window maximum-axis/full-scale occupancy as an
+observation, not an acceptance result. Clock alignment, calibration residuals,
+and project-level saturation thresholds remain pending.
