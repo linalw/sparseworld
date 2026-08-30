@@ -1,0 +1,134 @@
+{
+  "active_streams": [
+    "rgb",
+    "depth",
+    "left",
+    "right",
+    "imu"
+  ],
+  "actual_stream_profiles": {
+    "depth": {
+      "format": "OBFormat.Y16",
+      "fps": 30,
+      "height": 480,
+      "profile_validation": "validated",
+      "width": 848
+    },
+    "imu": {
+      "accel": {
+        "full_scale_range": "ACCEL_FS_4g",
+        "profile": "sdk_default",
+        "requested_sample_rate": "SAMPLE_RATE_200_HZ",
+        "sample_rate": "SAMPLE_RATE_200_HZ"
+      },
+      "gyro": {
+        "full_scale_range": "FS_1000dps",
+        "profile": "sdk_default",
+        "requested_sample_rate": "SAMPLE_RATE_200_HZ",
+        "sample_rate": "SAMPLE_RATE_200_HZ"
+      },
+      "profile_validation": "validated"
+    },
+    "left": {
+      "format": "OBFormat.Y8",
+      "fps": 30,
+      "height": 480,
+      "profile_validation": "validated",
+      "width": 848
+    },
+    "rgb": {
+      "format": "OBFormat.MJPG",
+      "fps": 30,
+      "height": 720,
+      "profile_validation": "validated",
+      "width": 1280
+    },
+    "right": {
+      "format": "OBFormat.Y8",
+      "fps": 30,
+      "height": 480,
+      "profile_validation": "validated",
+      "width": 848
+    }
+  },
+  "diagnostics": {
+    "max_timestamp_samples_per_stream": 3600,
+    "storage": "bounded_local_dense",
+    "window_seconds": 30
+  },
+  "duration_s_requested": 30,
+  "firmware": "1.4.60",
+  "frame_number_diagnostics": {
+    "depth": {
+      "duplicate_frame_numbers": [],
+      "frame_number_count": 886,
+      "missing_frame_numbers": 13,
+      "out_of_order_frame_numbers": 0
+    },
+    "imu.accel": {
+      "duplicate_frame_numbers": [],
+      "frame_number_count": 1800,
+      "missing_frame_numbers": 4,
+      "out_of_order_frame_numbers": 0
+    },
+    "imu.gyro": {
+      "duplicate_frame_numbers": [],
+      "frame_number_count": 1800,
+      "missing_frame_numbers": 4,
+      "out_of_order_frame_numbers": 0
+    },
+    "left": {
+      "duplicate_frame_numbers": [],
+      "frame_number_count": 886,
+      "missing_frame_numbers": 13,
+      "out_of_order_frame_numbers": 0
+    },
+    "rgb": {
+      "duplicate_frame_numbers": [],
+      "frame_number_count": 885,
+      "missing_frame_numbers": 0,
+      "out_of_order_frame_numbers": 0
+    },
+    "right": {
+      "duplicate_frame_numbers": [],
+      "frame_number_count": 886,
+      "missing_frame_numbers": 13,
+      "out_of_order_frame_numbers": 0
+    }
+  },
+  "imu_sensor_counts": {
+    "accel": 1800,
+    "gyro": 1800
+  },
+  "interpretation": "capture evidence only; calibration, synchronization, and performance remain unassessed until raw outputs are reviewed",
+  "model": "Orbbec Gemini 335",
+  "per_stream_counts": {
+    "depth": 886,
+    "imu": 3600,
+    "left": 886,
+    "rgb": 885,
+    "right": 886
+  },
+  "profile_sha256": "fbedc5f15e891af147b560ac12c386e22c35dc8f905e340718275992493e851e",
+  "requested_streams": [
+    "depth",
+    "imu",
+    "left",
+    "rgb",
+    "right"
+  ],
+  "schema_version": "p0/orbbec-capture/v1",
+  "sdk_version": "2.1.2",
+  "serial": "CP0F4630001M",
+  "started_host_timestamp_ns": 1788077979066817274,
+  "status": "captured_unassessed",
+  "stopped_host_timestamp_ns": 1788078009075583077,
+  "timestamp_contract": {
+    "device_time_field": "device_time_ns",
+    "device_unit": "nanoseconds",
+    "host_time_field": "host_receive_time_ns",
+    "source": "Frame.get_timestamp_us multiplied by 1000"
+  },
+  "timestamp_file": "timestamps.jsonl",
+  "timestamp_samples_written": 7143
+}

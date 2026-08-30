@@ -51,3 +51,20 @@ ros2 bag play artifacts/rosbags/<run-id> --clock
 Replay does not establish SLAM, ATE/RPE, navigation, semantic, or safety
 performance. Every quality/calibration/time gate remains `not_measured` until
 raw evidence is reviewed.
+
+## User-space diagnostic MCAP fallback
+
+When ROS 2 and the official Orbbec driver are unavailable, the optional
+`.[mcap]` Python extra can package existing normalized SDK timestamp rows into
+a ROS 2 MCAP container using `rosbags`. This produces exactly one topic,
+`/sparseworld/p0/normalized_sample` of type `std_msgs/msg/String`; each message
+is the canonical JSON of one pre-existing SDK row, recorded at that row's host
+receive time. It deliberately does **not** synthesize camera images,
+camera-info, TF, QoS, message headers, or missing frames.
+
+Use this only for user-space container-readability and timestamp-diagnostic
+replay. It is not an Orbbec ROS-driver bag and cannot satisfy the required ROS
+topic/TF/camera-info preflight, hardware synchronization, calibration, SLAM,
+or navigation evidence. Preserve the resulting MCAP, `metadata.yaml`, source
+JSONL hash, MCAP hash, tool versions, and this interpretation alongside the
+capture evidence.

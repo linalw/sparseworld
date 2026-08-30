@@ -4,7 +4,7 @@ import hashlib, json
 from collections.abc import Mapping, Sequence
 from math import pi
 from typing import Any
-from .timing import analyze_device_host_offset, analyze_interstream, analyze_stream
+from .timing import analyze_device_host_clock_relation, analyze_device_host_offset, analyze_interstream, analyze_stream
 
 def _metric(rows, keys):
     vals=[]
@@ -101,7 +101,7 @@ def _gate(value, threshold, *, minimum=True, count=0, minimum_samples=2):
     passed = value >= threshold if minimum else value <= threshold
     return {"status":"pass" if passed else "fail", "value":value, "threshold":threshold, "sample_count":count, "criterion":criterion}
 
-def assess(profile, samples: Mapping[str, Sequence[Mapping[str, Any]]]) -> dict[str, Any]:
+def assess(profile, samples: Mapping[str, Sequence[Mapping[str, Any]]], capture_metadata: Mapping[str, Any] | None = None) -> dict[str, Any]:
     canonical = json.dumps(samples, sort_keys=True, separators=(",", ":"), ensure_ascii=False, default=str).encode()
     source_hash = hashlib.sha256(canonical).hexdigest()
     timing = {name: analyze_stream(rows) for name, rows in sorted(samples.items())}
@@ -146,6 +146,7 @@ def assess(profile, samples: Mapping[str, Sequence[Mapping[str, Any]]]) -> dict[
         "gyro_full_scale_fraction": _full_scale_observation(samples.get("imu", []), "gyro", gyro_scale),
     }
     device_host_offset = analyze_device_host_offset(samples)
+    device_host_clock_relation = analyze_device_host_clock_relation(samples)
     offset_value = device_host_offset["max_abs_ns"]
     gates["device_host_offset"] = _gate(
         offset_value, _time_threshold(profile, "device_host_offset"), minimum=False,
@@ -157,10 +158,14 @@ def assess(profile, samples: Mapping[str, Sequence[Mapping[str, Any]]]) -> dict[
             gates[name] = {"status": "not_measured", "value": None, "sample_count": 0}
     statuses = [entry.get("status") for entry in gates.values()]
     overall = "fail" if "fail" in statuses else ("pass" if statuses and all(s == "pass" for s in statuses) else "not_measured")
-    return {"schema_version":"p0/assessment/v1", "status": overall,
+    result = {"schema_version":"p0/assessment/v1", "status": overall,
             "source": {"raw": "normalized JSONL samples supplied to assess", "sha256": source_hash,
                        "format": "normalized_jsonl", "tool": "sparseworld-p0", "tool_version": "0.1.0",
                        "criterion": "deterministic_sha256_of_canonical_samples"},
             "source_sha256":source_hash, "timing":timing, "interstream":inter,
             "observations": observations,
+            "device_host_clock_relation": device_host_clock_relation,
             "device_host_offset":device_host_offset, "gates":gates}
+    if capture_metadata is not None:
+        result["capture"] = dict(capture_metadata)
+    return result

@@ -502,6 +502,22 @@ def test_normalise_y16_depth_frame_records_nonzero_valid_fraction():
     assert row["depth_valid_fraction"] == 0.5
 
 
+def test_capture_manifest_records_frame_number_gap_diagnostics(tmp_path: Path, monkeypatch):
+    from sparseworld_p0.orbbec_capture import _frame_number_diagnostics
+
+    rows = [
+        {"stream": "depth", "sensor": None, "sdk_frame_number": 10},
+        {"stream": "depth", "sensor": None, "sdk_frame_number": 12},
+        {"stream": "depth", "sensor": None, "sdk_frame_number": 12},
+        {"stream": "imu", "sensor": "accel", "sdk_frame_number": 4},
+        {"stream": "imu", "sensor": "accel", "sdk_frame_number": 3},
+    ]
+    result = _frame_number_diagnostics(rows)
+    assert result["depth"]["missing_frame_numbers"] == 1
+    assert result["depth"]["duplicate_frame_numbers"] == [12]
+    assert result["imu.accel"]["out_of_order_frame_numbers"] == 1
+
+
 def test_capture_failure_writes_failed_incomplete_manifest(tmp_path: Path, monkeypatch):
     class Info:
         def get_serial_number(self): return "SERIAL"

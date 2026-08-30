@@ -115,6 +115,9 @@ def capture_orbbec(profile: Any, output_dir: str | Path, duration_s: float) -> d
             raise RuntimeError("capture refused: one or more requested streams produced no retained samples")
         stopped_ns = time.time_ns()
         profile_payload = json.dumps(_canonical_profile_payload(profile), sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()
+        frame_diagnostics = _frame_number_diagnostics(
+            [json.loads(line) for line in samples_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+        )
         manifest = {
             "schema_version": "p0/orbbec-capture/v1",
             "status": "captured_unassessed",
@@ -133,6 +136,7 @@ def capture_orbbec(profile: Any, output_dir: str | Path, duration_s: float) -> d
             "timestamp_samples_written": sum(per_stream_counts.values()),
             "per_stream_counts": per_stream_counts,
             "imu_sensor_counts": {sensor: sum(1 for line in samples_path.read_text(encoding="utf-8").splitlines() if json.loads(line).get("sensor") == sensor) for sensor in ("accel", "gyro")},
+            "frame_number_diagnostics": frame_diagnostics,
             "timestamp_contract": {"device_time_field": "device_time_ns", "host_time_field": "host_receive_time_ns", "device_unit": "nanoseconds", "source": "Frame.get_timestamp_us multiplied by 1000"},
             "diagnostics": {"storage": diagnostics.get("storage"), "window_seconds": window_s, "max_timestamp_samples_per_stream": max_samples},
             "interpretation": "capture evidence only; calibration, synchronization, and performance remain unassessed until raw outputs are reviewed",
@@ -305,6 +309,41 @@ def _depth_valid_fraction(frame: Any) -> float | None:
     total = len(payload) // 2
     valid = sum(payload[index] != 0 or payload[index + 1] != 0 for index in values)
     return valid / total
+
+
+def _frame_number_diagnostics(rows: list[Mapping[str, Any]]) -> dict[str, dict[str, Any]]:
+    """Summarize SDK frame-number gaps without synthesizing missing samples."""
+    grouped: dict[str, list[int]] = {}
+    for row in rows:
+        if not isinstance(row, Mapping):
+            continue
+        value = row.get("sdk_frame_number")
+        if isinstance(value, bool):
+            continue
+        try:
+            frame_number = int(value)
+        except (TypeError, ValueError, OverflowError):
+            continue
+        stream = row.get("stream")
+        if not isinstance(stream, str) or not stream:
+            continue
+        sensor = row.get("sensor")
+        key = f"{stream}.{sensor}" if isinstance(sensor, str) and sensor else stream
+        grouped.setdefault(key, []).append(frame_number)
+
+    result: dict[str, dict[str, Any]] = {}
+    for key, values in sorted(grouped.items()):
+        unique = sorted(set(values))
+        missing = sum(max(0, right - left - 1) for left, right in zip(unique, unique[1:]))
+        duplicates = sorted({value for value in values if values.count(value) > 1})
+        out_of_order = sum(right < left for left, right in zip(values, values[1:]))
+        result[key] = {
+            "frame_number_count": len(values),
+            "missing_frame_numbers": missing,
+            "duplicate_frame_numbers": duplicates,
+            "out_of_order_frame_numbers": out_of_order,
+        }
+    return result
 
 
 def _profile_description(profile: Any) -> dict[str, Any]:

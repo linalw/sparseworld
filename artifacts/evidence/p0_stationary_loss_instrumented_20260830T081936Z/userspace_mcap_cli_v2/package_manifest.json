@@ -1,0 +1,13 @@
+{
+  "interpretation": "user-space diagnostic replay container; not an Orbbec ROS driver bag and not a calibration, synchronization, or performance result",
+  "mcap_path": "artifacts/evidence/p0_stationary_loss_instrumented_20260830T081936Z/userspace_mcap_cli_v2/userspace_mcap_cli_v2.mcap",
+  "mcap_sha256": "d6f75d7a938687de8b6df82bdd4e5bb6e2304be37ae748e706cf1bdc1fda1a89",
+  "message_count": 7143,
+  "message_type": "std_msgs/msg/String",
+  "output_dir": "artifacts/evidence/p0_stationary_loss_instrumented_20260830T081936Z/userspace_mcap_cli_v2",
+  "schema_version": "p0/normalized-samples-mcap/v1",
+  "source_jsonl": "artifacts/evidence/p0_stationary_loss_instrumented_20260830T081936Z/timestamps.jsonl",
+  "source_jsonl_sha256": "e26740118c3e9d9ab01657f0a24ad351aa7a59bc6074faba2938f2fd9e273680",
+  "status": "packaged_unassessed",
+  "topic": "/sparseworld/p0/normalized_sample"
+}

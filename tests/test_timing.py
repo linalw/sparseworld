@@ -1,6 +1,6 @@
 import math
 
-from sparseworld_p0.timing import analyze_device_host_offset, analyze_stream, analyze_interstream
+from sparseworld_p0.timing import analyze_device_host_offset, analyze_device_host_clock_relation, analyze_stream, analyze_interstream
 
 
 def test_sequence_gap_rate_and_monotonicity_are_measured():
@@ -134,3 +134,27 @@ def test_non_finite_device_host_timestamps_are_not_offsets():
         assert result["offsets_ns"] == []
         assert result["median_abs_ns"] is None
         assert result["max_abs_ns"] is None
+
+
+def test_device_host_offset_rejects_incompatible_clock_domains():
+    result = analyze_device_host_offset({"depth": [
+        {"device_time_ns": 100_000_000_000, "host_receive_time_ns": 1_788_000_000_000_000_000},
+        {"device_time_ns": 100_100_000_000, "host_receive_time_ns": 1_788_000_000_000_010_000},
+    ]})
+    assert result["status"] == "not_measured"
+    assert result["reason"] == "clock_domain_mismatch"
+    assert result["sample_count"] == 0
+    assert result["offsets_ns"] == []
+
+
+def test_device_host_clock_relation_reports_elapsed_rate_without_absolute_offset():
+    result = analyze_device_host_clock_relation({"depth": [
+        {"device_time_ns": 1_000, "host_receive_time_ns": 10_000},
+        {"device_time_ns": 2_000, "host_receive_time_ns": 20_100},
+        {"device_time_ns": 3_000, "host_receive_time_ns": 30_200},
+    ]})
+    assert result["depth"]["status"] == "measured"
+    assert result["depth"]["device_duration_ns"] == 2_000
+    assert result["depth"]["host_duration_ns"] == 20_200
+    assert result["depth"]["relative_rate"] == 10.1
+    assert result["depth"]["absolute_offset_ns"] is None

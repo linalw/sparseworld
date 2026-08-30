@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 from pathlib import Path
 from typing import Any, Iterable, Mapping
 
@@ -30,6 +31,71 @@ def export_rosbag_timestamps(bag_path: str | Path, output_jsonl: str | Path) -> 
         raise
     except Exception as error:
         raise RuntimeError(f"rosbag export refused: {type(error).__name__}: {error}") from error
+
+
+def package_normalized_samples_mcap(source_jsonl: str | Path, output_dir: str | Path) -> dict[str, Any]:
+    """Package normalized SDK samples into a user-space ROS 2 MCAP container.
+
+    This is a diagnostic replay container, not an Orbbec ROS driver recording:
+    each original JSON row is serialized as ``std_msgs/msg/String`` on one
+    explicitly named topic.  No image, TF, camera-info, or missing sample is
+    synthesized.  The optional ``rosbags`` dependency is imported lazily so
+    SDK-only installations remain usable.
+    """
+    source, destination = Path(source_jsonl), Path(output_dir)
+    try:
+        from rosbags.rosbag2 import StoragePlugin, Writer
+        from rosbags.typesys import Stores, get_typestore
+    except (ImportError, ModuleNotFoundError) as error:
+        raise RuntimeError("MCAP packaging refused: install the optional rosbags dependency") from error
+    try:
+        typestore = get_typestore(Stores.ROS2_HUMBLE)
+        message_type = "std_msgs/msg/String"
+        message_class = typestore.types[message_type]
+        rows: list[dict[str, Any]] = []
+        for line_number, line in enumerate(source.read_text(encoding="utf-8").splitlines(), start=1):
+            if not line.strip():
+                continue
+            raw = json.loads(line)
+            if not isinstance(raw, Mapping):
+                raise RuntimeError(f"MCAP packaging refused: line {line_number} must be an object")
+            rows.append(dict(raw))
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        bag_path = destination / f"{destination.name}.mcap"
+        with Writer(destination, version=9, storage_plugin=StoragePlugin.MCAP) as writer:
+            connection = writer.add_connection(
+                "/sparseworld/p0/normalized_sample",
+                message_type,
+                typestore=typestore,
+            )
+            for index, row in enumerate(rows):
+                timestamp = row.get("host_receive_time_ns", row.get("device_time_ns"))
+                if not isinstance(timestamp, int) or isinstance(timestamp, bool) or timestamp < 0:
+                    raise RuntimeError(f"MCAP packaging refused: line {index + 1} has no non-negative integer timestamp")
+                payload = json.dumps(row, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+                message = message_class(data=payload)
+                writer.write(connection, timestamp, typestore.serialize_cdr(message, message_type))
+        if not bag_path.is_file():
+            raise RuntimeError("MCAP packaging refused: writer did not produce the MCAP file")
+        return {
+            "schema_version": "p0/normalized-samples-mcap/v1",
+            "status": "packaged_unassessed",
+            "source_jsonl": str(source),
+            "source_jsonl_sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
+            "output_dir": str(destination),
+            "mcap_path": str(bag_path),
+            "mcap_sha256": hashlib.sha256(bag_path.read_bytes()).hexdigest(),
+            "message_count": len(rows),
+            "topic": "/sparseworld/p0/normalized_sample",
+            "message_type": message_type,
+            "interpretation": "user-space diagnostic replay container; not an Orbbec ROS driver bag and not a calibration, synchronization, or performance result",
+        }
+    except PermissionError as error:
+        raise RuntimeError("MCAP packaging refused: permission denied") from error
+    except RuntimeError:
+        raise
+    except Exception as error:
+        raise RuntimeError(f"MCAP packaging refused: {type(error).__name__}: {error}") from error
 
 
 def _fixture_rows(path: Path) -> Iterable[dict[str, Any]]:

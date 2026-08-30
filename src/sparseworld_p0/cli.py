@@ -11,6 +11,7 @@ from .discovery import discover_environment
 from .profile import load_profile
 from .quality import assess
 from .reporting import render_report
+from .rosbag_export import package_normalized_samples_mcap
 
 
 def main() -> int:
@@ -23,6 +24,9 @@ def main() -> int:
     assess_parser.add_argument("--profile", required=True, type=Path)
     assess_parser.add_argument("--capture-dir", required=True, type=Path)
     assess_parser.add_argument("--output", required=True, type=Path)
+    package_parser = subparsers.add_parser("package-mcap", help="package normalized SDK samples into a user-space MCAP diagnostic container")
+    package_parser.add_argument("--capture-dir", required=True, type=Path)
+    package_parser.add_argument("--output", required=True, type=Path)
     args = parser.parse_args()
     if args.command == "discover":
         from datetime import datetime, timezone
@@ -51,6 +55,24 @@ def main() -> int:
             if not isinstance(row, dict) or not isinstance(row.get("stream"), str):
                 raise ValueError(f"assessment refused: invalid sample at line {line_number}")
             samples.setdefault(row["stream"], []).append(row)
-        render_report(assess(profile, samples), args.output)
+        capture_metadata = None
+        manifest_path = Path(args.capture_dir) / "capture_manifest.json"
+        if manifest_path.is_file():
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            if not isinstance(manifest, dict):
+                raise ValueError("assessment refused: capture manifest must be an object")
+            capture_metadata = dict(manifest)
+            capture_metadata["manifest_sha256"] = hashlib.sha256(manifest_path.read_bytes()).hexdigest()
+        render_report(assess(profile, samples, capture_metadata=capture_metadata), args.output)
+        return 0
+    if args.command == "package-mcap":
+        result = package_normalized_samples_mcap(args.capture_dir / "timestamps.jsonl", args.output)
+        payload = json.dumps(result, indent=2, sort_keys=True) + "\n"
+        metadata_path = args.output / "package_manifest.json"
+        metadata_path.write_text(payload, encoding="utf-8")
+        digest = hashlib.sha256(payload.encode("utf-8")).hexdigest()
+        metadata_path.with_suffix(metadata_path.suffix + ".sha256").write_text(
+            f"{digest}  {metadata_path.name}\n", encoding="utf-8"
+        )
         return 0
     return 2

@@ -153,3 +153,27 @@ def test_cli_assess_capture_directory_writes_deterministic_report(tmp_path, monk
     assert (output / "assessment.json").is_file()
     assert (output / "assessment.md").is_file()
     assert (output / "assessment.json.sha256").is_file()
+
+
+def test_cli_assess_includes_capture_manifest_and_frame_loss_evidence(tmp_path, monkeypatch):
+    from sparseworld_p0 import cli
+
+    capture = tmp_path / "capture"
+    capture.mkdir()
+    (capture / "timestamps.jsonl").write_text(
+        json.dumps({"stream": "depth", "device_time_ns": 1}) + "\n"
+        + json.dumps({"stream": "depth", "device_time_ns": 2}) + "\n",
+        encoding="utf-8",
+    )
+    (capture / "capture_manifest.json").write_text(json.dumps({
+        "status": "captured_unassessed",
+        "frame_number_diagnostics": {"depth": {"missing_frame_numbers": 3}},
+    }) + "\n", encoding="utf-8")
+    output = tmp_path / "assessment"
+    profile = Path(__file__).parents[1] / "config" / "p0_capture_profile.yaml"
+    monkeypatch.setattr(sys, "argv", ["sparseworld-p0", "assess", "--profile", str(profile), "--capture-dir", str(capture), "--output", str(output)])
+    assert cli.main() == 0
+    assessment = json.loads((output / "assessment.json").read_text(encoding="utf-8"))
+    assert assessment["capture"]["status"] == "captured_unassessed"
+    assert assessment["capture"]["frame_number_diagnostics"]["depth"]["missing_frame_numbers"] == 3
+    assert len(assessment["capture"]["manifest_sha256"]) == 64

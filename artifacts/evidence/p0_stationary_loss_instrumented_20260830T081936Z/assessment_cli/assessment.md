@@ -1,0 +1,23 @@
+# P0 Timing and Quality Assessment
+
+Source SHA-256: `03547685cb53c2456b39d5206371aec25cda6951ad8871a3d6f88486a5ace514`
+
+| Gate | Status | Value |
+|---|---|---|
+| acceleration_saturation | not_measured | None |
+| blur | not_measured | None |
+| depth_valid_fraction | not_measured | 0.45031404393287605 |
+| device_host_offset | not_measured | 1.7878797630853156e+18 |
+| gyro_saturation | not_measured | None |
+| hand_carried_supervised_route | not_measured | None |
+| stationary_calibration | not_measured | None |
+
+Timing:
+
+- depth: status=measured, rate=29.56377022023407, missing=None, nonmonotonic=0
+- imu: status=not_measured, rate=None, missing=None, nonmonotonic=1800
+- imu.accel: status=measured, rate=199.011817874556, missing=None, nonmonotonic=0
+- imu.gyro: status=measured, rate=199.011817874556, missing=None, nonmonotonic=0
+- left: status=measured, rate=29.56377022023407, missing=None, nonmonotonic=0
+- rgb: status=measured, rate=29.9982377306445, missing=None, nonmonotonic=0
+- right: status=measured, rate=29.56377022023407, missing=None, nonmonotonic=0

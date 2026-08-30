@@ -114,7 +114,45 @@ def analyze_device_host_offset(samples_by_stream):
         for sample in rows:
             if not isinstance(sample, Mapping): continue
             device, host = _num(sample, "device_time_ns"), _num(sample, "host_receive_time_ns")
-            if device is not None and host is not None: offsets.append(float(host)-float(device))
+            # SDK device timestamps are commonly monotonic-since-boot while
+            # host_receive_time_ns is UTC epoch.  Without an explicit shared
+            # clock-domain declaration, subtracting them creates a meaningless
+            # epoch-sized pseudo-offset.
+            if device is not None and host is not None:
+                if abs(float(host) - float(device)) > 10_000_000_000_000:
+                    continue
+                offsets.append(float(host)-float(device))
     absolute = [abs(value) for value in offsets]
-    return {"status":"measured" if offsets else "not_measured", "offsets_ns":offsets, "sample_count":len(offsets),
+    return {"status":"measured" if offsets else "not_measured", "reason": None if offsets else "clock_domain_mismatch", "offsets_ns":offsets, "sample_count":len(offsets),
             "median_abs_ns":median(absolute) if absolute else None, "max_abs_ns":max(absolute) if absolute else None}
+
+
+def analyze_device_host_clock_relation(samples_by_stream):
+    """Compare elapsed device and host clocks without assuming a shared epoch."""
+    result = {}
+    for name, rows in sorted(samples_by_stream.items()):
+        pairs = []
+        for row in rows:
+            if not isinstance(row, Mapping):
+                continue
+            device = _num(row, "device_time_ns")
+            host = _num(row, "host_receive_time_ns")
+            if device is not None and host is not None:
+                pairs.append((float(device), float(host)))
+        if len(pairs) < 2:
+            result[name] = {"status": "not_measured", "sample_count": len(pairs), "absolute_offset_ns": None}
+            continue
+        device_duration = pairs[-1][0] - pairs[0][0]
+        host_duration = pairs[-1][1] - pairs[0][1]
+        if device_duration <= 0 or host_duration <= 0:
+            result[name] = {"status": "not_measured", "sample_count": len(pairs), "absolute_offset_ns": None}
+            continue
+        result[name] = {
+            "status": "measured",
+            "sample_count": len(pairs),
+            "device_duration_ns": int(device_duration),
+            "host_duration_ns": int(host_duration),
+            "relative_rate": host_duration / device_duration,
+            "absolute_offset_ns": None,
+        }
+    return result

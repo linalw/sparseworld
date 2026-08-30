@@ -94,6 +94,9 @@
 - 已完成权限恢复后的 30 秒采集；下一步是按 `CALIBRATION_AND_TIME_SYNC.md` 完成标定/同步检查，并按 `INDOOR_ROSBAG_PROTOCOL.md` 采集可回放 rosbag。当前采集证据仍标记为 `captured_unassessed`。
 - 已完成冻结 IMU profile 的 5 秒硬件复核：accel 200 Hz/`ACCEL_FS_4g`、gyro 200 Hz/`FS_1000dps`；证据位于 `artifacts/evidence/p0_explicit_imu_profile_validated_20260830T070442Z/`，profile SHA-256 为 `fbedc5f15e891af147b560ac12c386e22c35dc8f905e340718275992493e851e`。这仍是 profile/可观测性证据，不是标定或同步通过。
 - `sparseworld-p0 assess` 已对 `p0_depth_quality_capture_20260830T072043Z` 重新生成确定性报告，报告 SHA-256 为 `c771ece64d5c08a68271ddb4823083dad1cbfbc55f4bb698f0c76a3c857f9a9e`；平均深度有效率为 `0.4509053164`（134 帧），总体 `not_measured`。最新软件验证为 54 个测试通过、`pip check` 无损坏依赖。
+- 已完成 30 秒带 frame-number 缺口诊断的重复静止采集：`artifacts/evidence/p0_stationary_loss_instrumented_20260830T081936Z/`。manifest SHA-256 为 `5d1d2a850423038ad606e9127e89df9ef16f08b6ab4c9174c4242953567a73c7`，绑定的 assessment SHA-256 为 `c04e2b83c259f3580a288953b15e821df863de6f832f6ac7c5dd2db7345c3851`。depth/left/right 各记录 13 个 ID 缺口，accel/gyro 各 4 个，RGB 为 0；无重复或乱序。这量化了传输风险，并不构成帧率、同步、标定或性能通过。
+- 最终重评估已启用时钟域保护：`assessment_final_clock_relation/assessment.json` 将 device-monotonic 与 host-UTC 的直接相减标记为 `clock_domain_mismatch`，不再输出伪偏移值；最终报告 SHA-256 为 `50a629fedc686d69b6f2a184d257886aa5ac35ca7c779f2defe8a2d460f0b825`。报告保留 elapsed-clock 相对速率诊断，但绝对偏移仍为 null。
+- 当前环境快照 `artifacts/evidence/p0_environment_20260830T093000Z.json` 记录 RTX 5090、`video` 组、Gemini 335 和 SDK 2.1.2；`ros2` 仍未安装。用户态 `rosbags`/`mcap` 只能提供规范化诊断容器，不能替代官方 ROS 2/Orbbec driver 路线。
 
 ### P0：可观测性与标定基线
 
