@@ -253,13 +253,22 @@ def _normalise_frame(stream: str, sensor: str | None, frame: Any, host_timestamp
     device_time_ns = _timestamp_ns(frame)
     if device_time_ns is None:
         raise RuntimeError("capture refused: device timestamp is unavailable")
-    return {
+    row = {
         "stream": stream,
         "sensor": sensor,
         "device_time_ns": device_time_ns,
         "host_receive_time_ns": host_timestamp_ns,
         "sdk_frame_number": _call_first(frame, "get_frame_number", "get_index", "frame_number", "index"),
     }
+    if stream == "imu":
+        value = _call_first(frame, "get_value")
+        components = {axis: getattr(value, axis, None) for axis in ("x", "y", "z")}
+        if all(isinstance(component, (int, float)) and not isinstance(component, bool) and isfinite(component) for component in components.values()):
+            row["imu_value"] = {axis: float(component) for axis, component in components.items()}
+        temperature = _call_first(frame, "get_temperature", "temperature")
+        if isinstance(temperature, (int, float)) and not isinstance(temperature, bool) and isfinite(temperature):
+            row["temperature_c"] = float(temperature)
+    return row
 
 
 def _profile_description(profile: Any) -> dict[str, Any]:
@@ -269,7 +278,8 @@ def _profile_description(profile: Any) -> dict[str, Any]:
 def _validate_requested_profile(name: str, requested: Mapping[str, Any], actual: Mapping[str, Any]) -> str:
     resolution = requested.get("resolution")
     rate = requested.get("nominal_rate")
-    pending = resolution == "pending_measurement" or rate == "pending_measurement"
+    requested_format = requested.get("format")
+    pending = resolution == "pending_measurement" or rate == "pending_measurement" or requested_format == "pending_measurement"
     if resolution != "pending_measurement":
         match = re.fullmatch(r"\s*(\d+)x(\d+)\s*", str(resolution))
         if not match or (actual.get("width"), actual.get("height")) != (int(match.group(1)), int(match.group(2))):
@@ -279,6 +289,10 @@ def _validate_requested_profile(name: str, requested: Mapping[str, Any], actual:
         except (TypeError, ValueError): raise RuntimeError(f"capture refused: {name} nominal_rate is invalid")
         if actual.get("fps") is None or float(actual["fps"]) != expected:
             raise RuntimeError(f"capture refused: {name} profile fps does not match requested {rate!r}")
+    if requested_format not in (None, "pending_measurement"):
+        actual_format = str(actual.get("format", "")).removeprefix("OBFormat.")
+        if actual_format != str(requested_format):
+            raise RuntimeError(f"capture refused: {name} profile format does not match requested {requested_format!r}")
     return "pending_measurement" if pending else "validated"
 
 

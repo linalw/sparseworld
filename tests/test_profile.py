@@ -48,7 +48,7 @@ def test_validation_rejects_missing_gate_keys(tmp_path: Path) -> None:
 
 def test_validation_rejects_stream_without_required_fields(tmp_path: Path) -> None:
     source = Path(__file__).parents[1] / "config" / "p0_capture_profile.yaml"
-    text = source.read_text(encoding="utf-8").replace("  rgb: {resolution: pending_measurement, nominal_rate: pending_measurement}", "  rgb: {resolution: pending_measurement}")
+    text = source.read_text(encoding="utf-8").replace("  rgb: {resolution: 1280x720, nominal_rate: 30, format: MJPG}", "  rgb: {resolution: 1280x720, format: MJPG}")
     path = tmp_path / "profile.yaml"
     path.write_text(text, encoding="utf-8")
     errors = validate_profile(load_profile(path))

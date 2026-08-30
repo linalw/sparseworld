@@ -13,10 +13,10 @@ frames:
   intrinsics: pending_measurement
   extrinsics: pending_measurement
 streams:
-  rgb: {resolution: pending_measurement, nominal_rate: pending_measurement}
-  depth: {resolution: pending_measurement, nominal_rate: pending_measurement}
-  left: {resolution: pending_measurement, nominal_rate: pending_measurement}
-  right: {resolution: pending_measurement, nominal_rate: pending_measurement}
+  rgb: {resolution: 1280x720, nominal_rate: 30, format: MJPG}
+  depth: {resolution: 848x480, nominal_rate: 30, format: Y16}
+  left: {resolution: 848x480, nominal_rate: 30, format: Y8}
+  right: {resolution: 848x480, nominal_rate: 30, format: Y8}
   imu: {resolution: pending_measurement, nominal_rate: pending_measurement}
 map:
   origin: local_initialization_without_external_datum

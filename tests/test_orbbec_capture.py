@@ -193,6 +193,33 @@ def test_concrete_profile_mismatch_fails_closed():
         )
 
 
+def test_concrete_profile_format_mismatch_fails_closed():
+    class SensorType:
+        COLOR_SENSOR = "color"
+
+    class Profile:
+        def get_width(self): return 640
+        def get_height(self): return 480
+        def get_fps(self): return 30
+        def get_format(self): return "MJPG"
+
+    class Profiles:
+        def get_default_video_stream_profile(self): return Profile()
+
+    class Pipeline:
+        def get_stream_profile_list(self, sensor): return Profiles()
+
+    class Config:
+        def enable_stream(self, profile): pass
+
+    with pytest.raises(RuntimeError, match="format"):
+        _enable_requested_streams(
+            types.SimpleNamespace(OBSensorType=SensorType),
+            Pipeline(), Config(),
+            {"rgb": {"resolution": "640x480", "nominal_rate": 30, "format": "Y16"}},
+        )
+
+
 def test_capture_manifest_has_per_stream_counts_and_canonical_sample_fields(tmp_path: Path, monkeypatch):
     # The fake SDK is intentionally small but follows the official v2 API names.
     class Info:
@@ -368,6 +395,23 @@ def test_capture_accumulates_async_framesets_instead_of_failing_on_missing_strea
     assert manifest["status"] == "captured_unassessed"
     assert all(manifest["per_stream_counts"][name] > 0 for name in ("rgb", "depth", "left", "right", "imu"))
     assert manifest["imu_sensor_counts"] == {"accel": 1, "gyro": 1}
+
+
+def test_normalise_imu_frame_records_value_temperature_and_sensor_type():
+    class Value:
+        x, y, z = 1.0, -2.0, 9.8
+
+    class Frame:
+        def get_timestamp_us(self): return 1234
+        def get_index(self): return 7
+        def get_value(self): return Value()
+        def get_temperature(self): return 26.5
+
+    from sparseworld_p0.orbbec_capture import _normalise_frame
+    row = _normalise_frame("imu", "accel", Frame(), 9_000)
+    assert row["sensor"] == "accel"
+    assert row["imu_value"] == {"x": 1.0, "y": -2.0, "z": 9.8}
+    assert row["temperature_c"] == 26.5
 
 
 def test_capture_failure_writes_failed_incomplete_manifest(tmp_path: Path, monkeypatch):
