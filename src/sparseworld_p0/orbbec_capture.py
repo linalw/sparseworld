@@ -100,15 +100,17 @@ def capture_orbbec(profile: Any, output_dir: str | Path, duration_s: float) -> d
                 emitted = 0
                 for name, sensor, frame in _frames_for(frames, active_streams):
                     if frame is None:
-                        raise RuntimeError(f"capture refused: requested {name} stream produced no frame")
+                        # Gemini 335 may return video and IMU frames in separate
+                        # FrameSets.  A missing frame here only means it was not
+                        # delivered in this SDK batch; capture completeness is
+                        # checked across the full bounded window below.
+                        continue
                     if per_stream_counts[name] >= per_stream_limit[name]:
                         continue
                     row = _normalise_frame(name, sensor, frame, host_timestamp_ns)
                     handle.write(json.dumps(row, sort_keys=True) + "\n")
                     per_stream_counts[name] += 1
                     emitted += 1
-                if emitted == 0 and any(per_stream_counts[name] == 0 for name in active_streams):
-                    raise RuntimeError("capture refused: requested streams produced no retained samples")
         if any(per_stream_counts[name] == 0 for name in active_streams):
             raise RuntimeError("capture refused: one or more requested streams produced no retained samples")
         stopped_ns = time.time_ns()

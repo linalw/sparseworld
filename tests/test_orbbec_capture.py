@@ -285,6 +285,91 @@ def test_capture_manifest_has_per_stream_counts_and_canonical_sample_fields(tmp_
     assert manifest["actual_stream_profiles"]["imu"]["gyro"]["profile"] == "sdk_default"
 
 
+def test_capture_accumulates_async_framesets_instead_of_failing_on_missing_stream(tmp_path: Path, monkeypatch):
+    """SDK may deliver video and IMU frames in separate FrameSets."""
+    class Info:
+        def get_serial_number(self): return "SERIAL"
+        def get_name(self): return "Gemini 335"
+        def get_firmware_version(self): return "1.8.10"
+
+    class Frame:
+        def __init__(self, index): self.index = index
+        def get_timestamp_us(self): return self.index * 1000
+        def get_index(self): return self.index
+
+    class Frames:
+        def __init__(self, index, present):
+            self.index, self.present = index, present
+        def _get(self, name):
+            return Frame(self.index) if name in self.present else None
+        def get_color_frame(self): return self._get("rgb")
+        def get_depth_frame(self): return self._get("depth")
+        def get_left_ir_frame(self): return self._get("left")
+        def get_right_ir_frame(self): return self._get("right")
+        def get_accel_frame(self): return self._get("accel")
+        def get_gyro_frame(self): return self._get("gyro")
+
+    class InfoDevice:
+        def get_device_info(self): return Info()
+
+    class Devices:
+        def get_count(self): return 1
+        def get_device_by_index(self, index): return InfoDevice()
+
+    class Context:
+        def query_devices(self): return Devices()
+
+    class Profile:
+        def get_width(self): return 640
+        def get_height(self): return 480
+        def get_fps(self): return 30
+        def get_format(self): return "RGB"
+
+    class Profiles:
+        def get_default_video_stream_profile(self): return Profile()
+
+    class Config:
+        def enable_stream(self, profile): pass
+        def enable_accel_stream(self): pass
+        def enable_gyro_stream(self): pass
+
+    class Pipeline:
+        def __init__(self, device): self.calls = 0
+        def get_stream_profile_list(self, sensor): return Profiles()
+        def start(self, config): pass
+        def wait_for_frames(self, timeout):
+            self.calls += 1
+            # First set contains video only; second set contains depth/IR and IMU.
+            return Frames(self.calls, {"rgb"} if self.calls == 1 else {"depth", "left", "right", "accel", "gyro"})
+        def stop(self): pass
+
+    fake = types.SimpleNamespace(
+        __version__="2.9.3", Context=Context, Config=Config, Pipeline=Pipeline,
+        OBSensorType=types.SimpleNamespace(
+            COLOR_SENSOR="color", DEPTH_SENSOR="depth", LEFT_IR_SENSOR="left", RIGHT_IR_SENSOR="right",
+        ),
+    )
+    monkeypatch.setitem(sys.modules, "pyorbbecsdk", fake)
+    ticks = iter([0.0, 0.0, 0.0, 2.0])
+    monkeypatch.setattr("sparseworld_p0.orbbec_capture.time.monotonic", lambda: next(ticks))
+    monkeypatch.setattr("sparseworld_p0.orbbec_capture.time.time_ns", lambda: 9_000_000_000)
+    profile = {
+        "device": {"serial": "SERIAL"},
+        "streams": {
+            "rgb": {"resolution": "640x480", "nominal_rate": 30},
+            "depth": {"resolution": "pending_measurement", "nominal_rate": "pending_measurement"},
+            "left": {"resolution": "pending_measurement", "nominal_rate": "pending_measurement"},
+            "right": {"resolution": "pending_measurement", "nominal_rate": "pending_measurement"},
+            "imu": {"resolution": "pending_measurement", "nominal_rate": "pending_measurement"},
+        },
+        "diagnostics": {"window_seconds": 10, "storage": "bounded_local_dense"},
+    }
+    manifest = capture_orbbec(profile, tmp_path, 1)
+    assert manifest["status"] == "captured_unassessed"
+    assert all(manifest["per_stream_counts"][name] > 0 for name in ("rgb", "depth", "left", "right", "imu"))
+    assert manifest["imu_sensor_counts"] == {"accel": 1, "gyro": 1}
+
+
 def test_capture_failure_writes_failed_incomplete_manifest(tmp_path: Path, monkeypatch):
     class Info:
         def get_serial_number(self): return "SERIAL"

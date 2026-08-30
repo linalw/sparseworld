@@ -22,3 +22,12 @@ This is a concept/prototype design verification, not a hardware acceptance test.
 | SDK binding installation/import | `artifacts/evidence/p0_sdk_preflight_20260829T024616Z.json` (sidecar SHA-256 verified); `pyorbbecsdk2==2.1.2`; `import pyorbbecsdk` succeeded in `sparseworld`; wheel SHA-256 `e1d3e207995ac60e2bf3350086777df1ba15669a41c6dcfb81c0d896cbb17fcb` | Software dependency available | Does not prove device access or capture |
 | Gemini 335 SDK open preflight | `artifacts/evidence/p0_capture_preflight_20260829T024616Z/capture_manifest.json` (status `failed_incomplete`, zero samples); `Log/OrbbecSDK.log.txt` (Access denied, status 113) | Failed closed before stream start | Permission/configuration blocker; not a sensor-quality or performance result |
 | Adapter audit hardening | `c1118fa` plus current tests; deterministic profile payload, pending profile markers, IMU provenance, partial-capture manifest, actionable SDK access errors | Covered by automated tests | Mock/fixture coverage only; real streams still pending |
+
+## P0 execution evidence (2026-08-30)
+
+| Check | Evidence | Result | Boundary |
+|---|---|---|---|
+| User/device access | `id -nG` includes `video`; `/dev/video0`…`/dev/video7` are `root:video` | Access prerequisite satisfied for this session | Does not validate calibration or performance |
+| Asynchronous FrameSet handling | `src/sparseworld_p0/orbbec_capture.py`; regression `test_capture_accumulates_async_framesets_instead_of_failing_on_missing_stream` | 45 automated tests pass; missing streams in one SDK batch no longer cause premature failure | Completeness is still enforced at end of bounded window |
+| 30 s Gemini 335 stationary SDK capture | `artifacts/evidence/p0_stationary_capture_20260830T044323Z_async_window/capture_manifest.json`; raw `timestamps.jsonl`; SDK log additions in `Log/OrbbecSDK.log.txt` | `captured_unassessed`; serial `CP0F4630001M`, FW `1.4.60`, SDK `2.1.2`; RGB 884, depth 887, left 887, right 887, IMU 3600 samples | Timestamp-only evidence; no calibration, rosbag, or hardware performance claim |
+| Initial timestamp assessment | `artifacts/evidence/p0_stationary_capture_20260830T044323Z_async_window/quality_assessment.json` (SHA-256 `6c7d2ec343af087f0803d89fc4df0f80c450197168c8ddfe0cfdebee6805ebe5`) | RGB 29.998 Hz; depth/IR 29.663 Hz; video device timestamps monotonic; overall `not_measured` | IMU accel/gyro currently share `stream=imu` and interleave, so IMU monotonicity and synchronization gates remain unresolved |

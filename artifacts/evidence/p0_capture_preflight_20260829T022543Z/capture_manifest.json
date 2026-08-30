@@ -1,0 +1,28 @@
+{
+  "active_streams": [],
+  "actual_stream_profiles": {},
+  "error": {
+    "message": "permission denied while opening Orbbec device",
+    "type": "OBError"
+  },
+  "firmware": null,
+  "interpretation": "capture failed or was incomplete; no calibration, synchronization, or performance result is implied",
+  "model": null,
+  "per_stream_counts": {},
+  "profile_sha256": "5f66241dfe8af89ed21b05897aadce788509637357a9fc9946ebff6a65db82c2",
+  "requested_streams": [
+    "depth",
+    "imu",
+    "left",
+    "rgb",
+    "right"
+  ],
+  "schema_version": "p0/orbbec-capture/v1",
+  "sdk_version": "2.1.2",
+  "serial": "CP0F4630001M",
+  "started_host_timestamp_ns": null,
+  "status": "failed_incomplete",
+  "stopped_host_timestamp_ns": 1787970709445063769,
+  "timestamp_file": "timestamps.jsonl",
+  "timestamp_samples_written": 0
+}

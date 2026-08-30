@@ -1,0 +1,84 @@
+{
+  "active_streams": [
+    "rgb",
+    "depth",
+    "left",
+    "right",
+    "imu"
+  ],
+  "actual_stream_profiles": {
+    "depth": {
+      "format": "OBFormat.Y16",
+      "fps": 30,
+      "height": 480,
+      "profile_validation": "pending_measurement",
+      "width": 848
+    },
+    "imu": {
+      "accel": {
+        "full_scale_range": "pending_measurement",
+        "profile": "sdk_default",
+        "requested_sample_rate": "pending_measurement",
+        "sample_rate": "pending_measurement"
+      },
+      "gyro": {
+        "full_scale_range": "pending_measurement",
+        "profile": "sdk_default",
+        "requested_sample_rate": "pending_measurement",
+        "sample_rate": "pending_measurement"
+      },
+      "profile_validation": "pending_measurement"
+    },
+    "left": {
+      "format": "OBFormat.Y8",
+      "fps": 30,
+      "height": 480,
+      "profile_validation": "pending_measurement",
+      "width": 848
+    },
+    "rgb": {
+      "format": "OBFormat.MJPG",
+      "fps": 30,
+      "height": 720,
+      "profile_validation": "pending_measurement",
+      "width": 1280
+    },
+    "right": {
+      "format": "OBFormat.Y8",
+      "fps": 30,
+      "height": 480,
+      "profile_validation": "pending_measurement",
+      "width": 848
+    }
+  },
+  "error": {
+    "message": "capture refused: requested rgb stream produced no frame",
+    "type": "RuntimeError"
+  },
+  "firmware": "1.4.60",
+  "interpretation": "capture failed or was incomplete; no calibration, synchronization, or performance result is implied",
+  "model": "Orbbec Gemini 335",
+  "per_stream_counts": {
+    "depth": 0,
+    "imu": 0,
+    "left": 0,
+    "rgb": 0,
+    "right": 0
+  },
+  "profile_sha256": "5f66241dfe8af89ed21b05897aadce788509637357a9fc9946ebff6a65db82c2",
+  "requested_streams": [
+    "depth",
+    "imu",
+    "left",
+    "rgb",
+    "right"
+  ],
+  "schema_version": "p0/orbbec-capture/v1",
+  "sdk_version": "2.1.2",
+  "serial": "CP0F4630001M",
+  "started_host_timestamp_ns": 1788063957770148860,
+  "status": "failed_incomplete",
+  "stopped_host_timestamp_ns": 1788063958301251104,
+  "timestamp_file": "timestamps.jsonl",
+  "timestamp_samples_written": 0
+}
