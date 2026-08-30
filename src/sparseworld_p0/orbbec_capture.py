@@ -227,7 +227,11 @@ def _enable_imu_stream(config: Any, sdk: Any, requested: Mapping[str, Any], sens
     if not (isinstance(rate_name, str) and isinstance(scale_name, str)):
         method()
         return
-    enum_type = getattr(sdk, "OBGyroSampleRate", None) if sensor == "accel" else getattr(sdk, "OBGyroSampleRate", None)
+    if sensor == "accel":
+        # Older SDK builds expose only the gyro-named enum (same underlying values).
+        enum_type = getattr(sdk, "OBAccelSampleRate", None) or getattr(sdk, "OBGyroSampleRate", None)
+    else:
+        enum_type = getattr(sdk, "OBGyroSampleRate", None)
     scale_type = getattr(sdk, "OBAccelFullScaleRange", None) if sensor == "accel" else getattr(sdk, "OBGyroFullScaleRange", None)
     rate = getattr(enum_type, rate_name, None) if enum_type is not None else None
     scale = getattr(scale_type, scale_name, None) if scale_type is not None else None

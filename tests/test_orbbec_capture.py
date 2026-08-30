@@ -9,6 +9,7 @@ import pytest
 from sparseworld_p0.orbbec_capture import (
     _SENSOR_NAMES,
     _canonical_profile_payload,
+    _enable_imu_stream,
     _enable_requested_streams,
     _frame_for,
     _timestamp_ns,
@@ -241,6 +242,30 @@ def test_imu_streams_use_explicit_profile_when_frozen_in_request():
     })
     assert active == ["imu"]
     assert calls == [("accel", "ACCEL_FS_4g", "SAMPLE_RATE_200_HZ"), ("gyro", "FS_1000dps", "SAMPLE_RATE_200_HZ")]
+
+
+def test_imu_accel_prefers_accel_sample_rate_enum():
+    calls = []
+
+    class Enum:
+        def __init__(self, name): self.name = name
+
+    class Config:
+        def enable_accel_stream(self, full_scale, sample_rate): calls.append(sample_rate.name)
+        def enable_gyro_stream(self): pass
+
+    class SDK:
+        OBAccelFullScaleRange = type("A", (), {"ACCEL_FS_4g": Enum("ACCEL_FS_4g")})
+        OBGyroFullScaleRange = type("G", (), {"FS_1000dps": Enum("FS_1000dps")})
+        OBAccelSampleRate = type("AR", (), {"SAMPLE_RATE_200_HZ": Enum("accel-200")})
+        OBGyroSampleRate = type("GR", (), {"SAMPLE_RATE_200_HZ": Enum("gyro-200")})
+
+    _enable_imu_stream(
+        Config(), SDK,
+        {"accel_sample_rate": "SAMPLE_RATE_200_HZ", "accel_full_scale_range": "ACCEL_FS_4g"},
+        "accel",
+    )
+    assert calls == ["accel-200"]
 
 
 def test_concrete_profile_mismatch_fails_closed():
