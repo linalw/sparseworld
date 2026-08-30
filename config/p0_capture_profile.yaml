@@ -4,8 +4,8 @@ device:
   model: Gemini 335
   usb_vid_pid: "2bc5:0800"
   serial: CP0F4630001M
-  v4l_by_id: "current USB device exposes video0-video5"
-  firmware: pending_measurement
+  v4l_by_id: "current USB device exposes video0-video7"
+  firmware: "1.4.60"
 frames:
   tree: [map, odom, base_link, camera_link, camera_optical_frame]
   imu_parent: base_link
