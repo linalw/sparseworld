@@ -1,5 +1,7 @@
 from pathlib import Path
 import hashlib
+import json
+import sys
 from sparseworld_p0.profile import load_profile
 from sparseworld_p0.quality import assess
 from sparseworld_p0.reporting import render_report
@@ -132,3 +134,22 @@ def test_report_sidecar_contains_checksum_of_exact_json_content(tmp_path):
     out = render_report(assessment, tmp_path)
     payload = out["json"].read_bytes()
     assert out["sha256"].read_text() == f"{hashlib.sha256(payload).hexdigest()}  assessment.json\n"
+
+
+def test_cli_assess_capture_directory_writes_deterministic_report(tmp_path, monkeypatch):
+    from sparseworld_p0 import cli
+
+    capture = tmp_path / "capture"
+    capture.mkdir()
+    (capture / "timestamps.jsonl").write_text(
+        json.dumps({"stream": "depth", "device_time_ns": 1, "depth_valid_fraction": 0.5}) + "\n"
+        + json.dumps({"stream": "depth", "device_time_ns": 2, "depth_valid_fraction": 0.5}) + "\n",
+        encoding="utf-8",
+    )
+    output = tmp_path / "assessment"
+    profile = Path(__file__).parents[1] / "config" / "p0_capture_profile.yaml"
+    monkeypatch.setattr(sys, "argv", ["sparseworld-p0", "assess", "--profile", str(profile), "--capture-dir", str(capture), "--output", str(output)])
+    assert cli.main() == 0
+    assert (output / "assessment.json").is_file()
+    assert (output / "assessment.md").is_file()
+    assert (output / "assessment.json.sha256").is_file()

@@ -8,6 +8,9 @@ import json
 from pathlib import Path
 
 from .discovery import discover_environment
+from .profile import load_profile
+from .quality import assess
+from .reporting import render_report
 
 
 def main() -> int:
@@ -16,6 +19,10 @@ def main() -> int:
     discover = subparsers.add_parser("discover", help="collect read-only environment evidence")
     discover.add_argument("--output", required=True, type=Path)
     discover.add_argument("--collected-at-utc")
+    assess_parser = subparsers.add_parser("assess", help="assess an existing capture directory")
+    assess_parser.add_argument("--profile", required=True, type=Path)
+    assess_parser.add_argument("--capture-dir", required=True, type=Path)
+    assess_parser.add_argument("--output", required=True, type=Path)
     args = parser.parse_args()
     if args.command == "discover":
         from datetime import datetime, timezone
@@ -32,5 +39,18 @@ def main() -> int:
         output.with_suffix(output.suffix + ".sha256").write_text(
             f"{digest}  {output.name}\n", encoding="utf-8"
         )
+        return 0
+    if args.command == "assess":
+        profile = load_profile(args.profile)
+        samples: dict[str, list[dict[str, object]]] = {}
+        source = Path(args.capture_dir) / "timestamps.jsonl"
+        for line_number, line in enumerate(source.read_text(encoding="utf-8").splitlines(), start=1):
+            if not line.strip():
+                continue
+            row = json.loads(line)
+            if not isinstance(row, dict) or not isinstance(row.get("stream"), str):
+                raise ValueError(f"assessment refused: invalid sample at line {line_number}")
+            samples.setdefault(row["stream"], []).append(row)
+        render_report(assess(profile, samples), args.output)
         return 0
     return 2

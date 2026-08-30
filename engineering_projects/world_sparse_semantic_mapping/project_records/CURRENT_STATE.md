@@ -1,6 +1,6 @@
 # Current State — world_sparse_semantic_mapping
 
-- Updated: 2026-08-30T04:43:23Z
+- Updated: 2026-08-30T08:30:00Z
 - Status: proposal_ready; prototype_validation_pending
 - Next action: run calibration/time-sync checks and the repeatable indoor rosbag protocol; calibration, synchronization, and performance gates remain pending
 - Continuation package: `project_records/NEW_CONVERSATION_HANDOFF.md` contains the new-task context, evidence boundary, and P0/P1 checklist
@@ -20,3 +20,6 @@
 - IMU is now explicitly frozen and hardware-verified at accel `SAMPLE_RATE_200_HZ` / `ACCEL_FS_4g` and gyro `SAMPLE_RATE_200_HZ` / `FS_1000dps`. Evidence: `artifacts/evidence/p0_explicit_imu_profile_validated_20260830T070442Z/`; the final profile hash is `fbedc5f15e891af147b560ac12c386e22c35dc8f905e340718275992493e851e`.
 - That 5-second static sample has monotonic per-sensor timestamps: RGB 30.150 Hz, depth/left/right 28.116 Hz, accel/gyro 187.863 Hz. Average maximum-axis full-scale occupancy is 0.2481 accel and 0.0006466 gyro. These are short-window observations only; no project quality, timing-synchronization, calibration, or performance gate is passed.
 - The capture adapter now passes explicit IMU profile parameters to the SDK and marks the IMU profile `validated` only when the SDK returns matching rate and range. Final evidence at `artifacts/evidence/p0_explicit_imu_profile_validated_20260830T070442Z/` records accel/gyro 900 samples each and finite payload values for the full window.
+- The reproducible CLI assessment was rerun from the depth-quality capture using the frozen profile. Report: `artifacts/evidence/p0_depth_quality_capture_20260830T072043Z/assessment_cli_20260830T083000Z/assessment.json` (SHA-256 `c771ece64d5c08a68271ddb4823083dad1cbfbc55f4bb698f0c76a3c857f9a9e`). It reports mean `depth_valid_fraction=0.4509053164` over 134 depth samples; RGB/depth/IR and per-sensor IMU timestamps are monotonic. Overall status remains `not_measured`; the large device/host epoch difference is retained as an unresolved clock-model observation, not a synchronization result.
+- Verification rerun on 2026-08-30: `conda run -n sparseworld pytest -q` -> 54 passed; `conda run -n sparseworld pip check` -> no broken requirements. No ROS 2/rosbag2/MCAP installation or hardware acceptance gate has been added.
+- P0 risk retained: the SDK log records output FrameSet queue drops and depth payload-size mismatch drops during these short captures. The 27.50 Hz depth/IR observation is therefore not a 30 Hz acceptance result; frame-loss instrumentation and a repeat capture are required before any frequency, loss, or synchronization threshold can be frozen.

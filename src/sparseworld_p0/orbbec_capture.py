@@ -285,7 +285,26 @@ def _normalise_frame(stream: str, sensor: str | None, frame: Any, host_timestamp
         temperature = _call_first(frame, "get_temperature", "temperature")
         if isinstance(temperature, (int, float)) and not isinstance(temperature, bool) and isfinite(temperature):
             row["temperature_c"] = float(temperature)
+    if stream == "depth":
+        valid_fraction = _depth_valid_fraction(frame)
+        if valid_fraction is not None:
+            row["depth_valid_fraction"] = valid_fraction
     return row
+
+
+def _depth_valid_fraction(frame: Any) -> float | None:
+    """Return the non-zero fraction for a raw little-endian Y16 depth frame."""
+    data = _call_first(frame, "get_data", "data")
+    try:
+        payload = bytes(data)
+    except (TypeError, ValueError):
+        return None
+    if not payload or len(payload) % 2:
+        return None
+    values = range(0, len(payload), 2)
+    total = len(payload) // 2
+    valid = sum(payload[index] != 0 or payload[index + 1] != 0 for index in values)
+    return valid / total
 
 
 def _profile_description(profile: Any) -> dict[str, Any]:

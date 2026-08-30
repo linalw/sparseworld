@@ -92,6 +92,8 @@
 - 采集适配器按 fail-closed 规则写出了零样本 `failed_incomplete` manifest；证据为 `artifacts/evidence/p0_capture_preflight_20260829T024616Z/capture_manifest.json` 和 `Log/OrbbecSDK.log.txt`。这证明权限前置条件未满足，不是相机质量、标定、同步或性能结论。
 - 历史权限阻塞已经解除并完成了权限恢复后的 30 秒静止采集；禁止为绕过后续 ROS/标定前置条件改用未配置的设备或伪造数据。
 - 已完成权限恢复后的 30 秒采集；下一步是按 `CALIBRATION_AND_TIME_SYNC.md` 完成标定/同步检查，并按 `INDOOR_ROSBAG_PROTOCOL.md` 采集可回放 rosbag。当前采集证据仍标记为 `captured_unassessed`。
+- 已完成冻结 IMU profile 的 5 秒硬件复核：accel 200 Hz/`ACCEL_FS_4g`、gyro 200 Hz/`FS_1000dps`；证据位于 `artifacts/evidence/p0_explicit_imu_profile_validated_20260830T070442Z/`，profile SHA-256 为 `fbedc5f15e891af147b560ac12c386e22c35dc8f905e340718275992493e851e`。这仍是 profile/可观测性证据，不是标定或同步通过。
+- `sparseworld-p0 assess` 已对 `p0_depth_quality_capture_20260830T072043Z` 重新生成确定性报告，报告 SHA-256 为 `c771ece64d5c08a68271ddb4823083dad1cbfbc55f4bb698f0c76a3c857f9a9e`；平均深度有效率为 `0.4509053164`（134 帧），总体 `not_measured`。最新软件验证为 54 个测试通过、`pip check` 无损坏依赖。
 
 ### P0：可观测性与标定基线
 

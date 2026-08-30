@@ -491,6 +491,17 @@ def test_normalise_imu_frame_records_value_temperature_and_sensor_type():
     assert row["temperature_c"] == 26.5
 
 
+def test_normalise_y16_depth_frame_records_nonzero_valid_fraction():
+    class Frame:
+        def get_timestamp_us(self): return 1234
+        def get_index(self): return 7
+        def get_data(self): return bytes([0, 0, 1, 0, 2, 0, 0, 0])
+
+    from sparseworld_p0.orbbec_capture import _normalise_frame
+    row = _normalise_frame("depth", None, Frame(), 9_000)
+    assert row["depth_valid_fraction"] == 0.5
+
+
 def test_capture_failure_writes_failed_incomplete_manifest(tmp_path: Path, monkeypatch):
     class Info:
         def get_serial_number(self): return "SERIAL"
