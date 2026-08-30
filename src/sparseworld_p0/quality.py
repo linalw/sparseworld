@@ -71,6 +71,15 @@ def assess(profile, samples: Mapping[str, Sequence[Mapping[str, Any]]]) -> dict[
     canonical = json.dumps(samples, sort_keys=True, separators=(",", ":"), ensure_ascii=False, default=str).encode()
     source_hash = hashlib.sha256(canonical).hexdigest()
     timing = {name: analyze_stream(rows) for name, rows in sorted(samples.items())}
+    # The adapter stores accel and gyro under one logical ``imu`` stream, but
+    # SDK delivery interleaves their timestamps.  Analyze each sensor clock
+    # independently while retaining the aggregate entry for compatibility.
+    imu_rows = samples.get("imu", [])
+    if imu_rows:
+        for sensor in ("accel", "gyro"):
+            selected = [row for row in imu_rows if isinstance(row, Mapping) and row.get("sensor") == sensor]
+            if selected:
+                timing[f"imu.{sensor}"] = analyze_stream(selected)
     policy = profile.time_gates.get("timestamp_pairing_policy") if hasattr(profile, "time_gates") else None
     policy = policy if isinstance(policy, str) and policy != "pending_measurement" else None
     inter = analyze_interstream(samples, pairing_policy=policy)

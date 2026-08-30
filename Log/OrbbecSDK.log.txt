@@ -741,3 +741,195 @@
 [08/30 12:43:56.954981][warning][25631][VideoSensor.cpp:214] [CP0F4630001M] This frame will be dropped because jpg format verification failure! @Color [**1 logs in 740ms, last: 12:43:56.214580**]
 [08/30 12:43:56.955181][warning][25632][VideoSensor.cpp:226] [CP0F4630001M] This frame will be dropped because the data size does not match the expectation! size=392959, expected=814080 @Depth [**3 logs in 740ms, last: 12:43:56.215253**]
 [08/30 12:43:56.956935][warning][25630][Pipeline.cpp:324] [CP0F4630001M] Output frameset queue is full, drop oldest frameset! [**2 logs in 851ms, last: 12:43:56.105421**]
+[08/30 13:33:32.801936][info][27890][HostTimestampProvider.cpp:36] Update clock type to: realtime(0)
+[08/30 13:33:32.880371][info][27890][LinuxUsbPal.cpp:334] Create PollingDeviceWatcher!
+[08/30 13:33:32.880395][info][27890][DeviceManager.cpp:25] Current found device(s): (1)
+[08/30 13:33:32.880400][info][27890][DeviceManager.cpp:34] 	- Name: Gemini 335, PID: 0x0800, SN/ID: CP0F4630001M, Connection: USB3.2
+[08/30 13:33:32.880404][info][27890][DeviceManager.cpp:463] Enable net device enumeration: true
+[08/30 13:33:33.889087][info][27890][DeviceManager.cpp:25] Current device(s) list: (1)
+[08/30 13:33:33.889115][info][27890][DeviceManager.cpp:34] 	- Name: Gemini 335, PID: 0x0800, SN/ID: CP0F4630001M, Connection: USB3.2
+[08/30 13:33:33.890413][info][27890][G330Device.cpp:630] UVCAutoRebootOnFault=true for device: Gemini 335
+[08/30 13:33:33.891717][info][27890][DeviceBase.cpp:742] key: AppSlot,value:1
+[08/30 13:33:33.891726][info][27890][DeviceBase.cpp:742] key: HwType,value:R1
+[08/30 13:33:33.891728][info][27890][DeviceBase.cpp:742] key: HwVer,value:V1.1
+[08/30 13:33:33.891730][info][27890][DeviceBase.cpp:742] key: IspFwVer,value:20241125
+[08/30 13:33:33.891732][info][27890][DeviceBase.cpp:742] key: IspNeedVer,value:20241125
+[08/30 13:33:33.891734][info][27890][DeviceBase.cpp:742] key: PresetVer,value:1.2.2
+[08/30 13:33:34.051713][warning][27890][PropertyServer.cpp:55] [CP0F4630001M] Property not found to register callback, propertyId: 5525
+[08/30 13:33:34.051799][warning][27890][PropertyServer.cpp:55] [CP0F4630001M] Property not found to register callback, propertyId: 277
+[08/30 13:33:34.052166][warning][27890][PropertyConfigHandler.hpp:53] Unsupported property '223', skipping getting, return nullvalue
+[08/30 13:33:34.079439][warning][27890][PropertyConfigHandler.hpp:95] Exporting property '190' while stream is not active; the value may differ from what will be applied after streaming starts
+[08/30 13:33:34.080840][warning][27890][PresetHandler.cpp:337] Exporting ROI property '1061' while stream is not active; the value may differ from what will be applied after streaming starts
+[08/30 13:33:34.081472][warning][27890][PresetHandler.cpp:710] Exporting disparity search properties while stream is not active; the values may differ from what will be applied after streaming starts
+[08/30 13:33:34.082549][warning][27890][PropertyConfigHandler.hpp:53] Unsupported property '5525', skipping getting, return nullvalue
+[08/30 13:33:34.114790][warning][27890][PropertyConfigHandler.hpp:95] Exporting property '189' while stream is not active; the value may differ from what will be applied after streaming starts
+[08/30 13:33:34.115824][warning][27890][PropertyConfigHandler.hpp:53] Unsupported property '259', skipping getting, return nullvalue
+[08/30 13:33:34.115832][warning][27890][PropertyConfigHandler.hpp:53] Unsupported property '277', skipping getting, return nullvalue
+[08/30 13:33:34.115979][warning][27890][PresetHandler.cpp:337] Exporting ROI property '1060' while stream is not active; the value may differ from what will be applied after streaming starts
+[08/30 13:33:34.116073][info][27890][DeviceManager.cpp:200] Device created successfully! Name: Gemini 335, PID: 0x0800, SN/ID: CP0F4630001M FW: 1.4.60
+[08/30 13:33:34.116126][info][27890][Pipeline.cpp:54] [CP0F4630001M] Pipeline created with device: {name: Gemini 335, sn: CP0F4630001M}, @0x61F413629CA0
+[08/30 13:33:34.116273][info][27890][Pipeline.cpp:228] [CP0F4630001M] Check and set config done!
+[08/30 13:33:34.116393][info][27890][Pipeline.cpp:266] [CP0F4630001M] Try to start streams!
+[08/30 13:33:34.116397][info][27890][VideoSensor.cpp:61] [CP0F4630001M] Try to start stream: {type: Depth, format: Y16, width: 848, height: 480, fps: 30}
+[08/30 13:33:34.116402][info][27890][SensorBase.cpp:216] [CP0F4630001M] Stream state changed from STOPPED to STARTING@Depth
+[08/30 13:33:34.116404][info][27890][VideoSensor.cpp:130] [CP0F4630001M] Start backend stream: {type: Depth, format: Z16, width: 848, height: 480, fps: 30}
+[08/30 13:33:34.117249][info][27890][VideoSensor.cpp:61] [CP0F4630001M] Try to start stream: {type: Color, format: MJPG, width: 1280, height: 720, fps: 30}
+[08/30 13:33:34.117256][info][27890][SensorBase.cpp:216] [CP0F4630001M] Stream state changed from STOPPED to STARTING@Color
+[08/30 13:33:34.117257][info][27890][VideoSensor.cpp:130] [CP0F4630001M] Start backend stream: {type: Color, format: MJPG, width: 1280, height: 720, fps: 30}
+[08/30 13:33:34.118141][info][27890][Pipeline.cpp:293] [CP0F4630001M] Start streams done!
+[08/30 13:33:34.118142][info][27890][Pipeline.cpp:250] [CP0F4630001M] Pipeline start done!
+[08/30 13:33:34.205633][info][27924][SensorBase.cpp:216] [CP0F4630001M] Stream state changed from STARTING to STREAMING@Depth
+[08/30 13:33:34.649230][info][27926][SensorBase.cpp:216] [CP0F4630001M] Stream state changed from STARTING to STREAMING@Color
+[08/30 13:33:34.649759][warning][27930][Pipeline.cpp:324] [CP0F4630001M] Output frameset queue is full, drop oldest frameset!
+[08/30 13:33:34.734736][info][27890][Pipeline.cpp:367] [CP0F4630001M] Try to stop pipeline!
+[08/30 13:33:34.734741][info][27890][Pipeline.cpp:343] [CP0F4630001M] Try to stop streams!
+[08/30 13:33:34.734751][info][27890][SensorBase.cpp:216] [CP0F4630001M] Stream state changed from STREAMING to STOPPING@Color
+[08/30 13:33:34.778642][info][27890][SensorBase.cpp:216] [CP0F4630001M] Stream state changed from STOPPING to STOPPED@Color
+[08/30 13:33:34.778865][info][27890][Pipeline.cpp:357] [CP0F4630001M] Sensor stream stopped, sensorType=Color
+[08/30 13:33:34.778871][info][27890][SensorBase.cpp:216] [CP0F4630001M] Stream state changed from STREAMING to STOPPING@Depth
+[08/30 13:33:34.830202][info][27890][SensorBase.cpp:216] [CP0F4630001M] Stream state changed from STOPPING to STOPPED@Depth
+[08/30 13:33:34.830536][info][27890][Pipeline.cpp:357] [CP0F4630001M] Sensor stream stopped, sensorType=Depth
+[08/30 13:33:34.830540][info][27890][Pipeline.cpp:363] [CP0F4630001M] Stop streams done!
+[08/30 13:33:34.830735][info][27890][Pipeline.cpp:393] [CP0F4630001M] Stop pipeline done!
+[08/30 13:33:34.840504][info][27890][Pipeline.cpp:65] [CP0F4630001M] Pipeline destroyed! @0x61F413629CA0
+[08/30 13:33:34.840729][info][27890][SensorBase.cpp:53] [CP0F4630001M] SensorBase is destroyed
+[08/30 13:33:34.841907][info][27890][ObLibuvcDevicePort.cpp:87] uvc_close done.
+[08/30 13:33:34.841909][info][27890][ObLibuvcDevicePort.cpp:88] ~ObLibuvcDevicePort done
+[08/30 13:33:34.842018][info][27890][SensorBase.cpp:53] [CP0F4630001M] SensorBase is destroyed
+[08/30 13:33:34.847760][info][27890][ObLibuvcDevicePort.cpp:87] uvc_close done.
+[08/30 13:33:34.847768][info][27890][ObLibuvcDevicePort.cpp:88] ~ObLibuvcDevicePort done
+[08/30 13:33:34.912278][warning][27931][Pipeline.cpp:324] [CP0F4630001M] Output frameset queue is full, drop oldest frameset! [**4 logs in 262ms, last: 13:33:34.715183**]
+[08/30 13:34:13.755513][info][28018][HostTimestampProvider.cpp:36] Update clock type to: realtime(0)
+[08/30 13:34:13.835984][info][28018][LinuxUsbPal.cpp:334] Create PollingDeviceWatcher!
+[08/30 13:34:13.836004][info][28018][DeviceManager.cpp:25] Current found device(s): (1)
+[08/30 13:34:13.836008][info][28018][DeviceManager.cpp:34] 	- Name: Gemini 335, PID: 0x0800, SN/ID: CP0F4630001M, Connection: USB3.2
+[08/30 13:34:13.836012][info][28018][DeviceManager.cpp:463] Enable net device enumeration: true
+[08/30 13:34:14.853563][info][28018][DeviceManager.cpp:25] Current device(s) list: (1)
+[08/30 13:34:14.853591][info][28018][DeviceManager.cpp:34] 	- Name: Gemini 335, PID: 0x0800, SN/ID: CP0F4630001M, Connection: USB3.2
+[08/30 13:34:14.855726][info][28018][G330Device.cpp:630] UVCAutoRebootOnFault=true for device: Gemini 335
+[08/30 13:34:14.856756][info][28018][DeviceBase.cpp:742] key: AppSlot,value:1
+[08/30 13:34:14.856760][info][28018][DeviceBase.cpp:742] key: HwType,value:R1
+[08/30 13:34:14.856762][info][28018][DeviceBase.cpp:742] key: HwVer,value:V1.1
+[08/30 13:34:14.856763][info][28018][DeviceBase.cpp:742] key: IspFwVer,value:20241125
+[08/30 13:34:14.856765][info][28018][DeviceBase.cpp:742] key: IspNeedVer,value:20241125
+[08/30 13:34:14.856767][info][28018][DeviceBase.cpp:742] key: PresetVer,value:1.2.2
+[08/30 13:34:15.016142][warning][28018][PropertyServer.cpp:55] [CP0F4630001M] Property not found to register callback, propertyId: 5525
+[08/30 13:34:15.016194][warning][28018][PropertyServer.cpp:55] [CP0F4630001M] Property not found to register callback, propertyId: 277
+[08/30 13:34:15.016468][warning][28018][PropertyConfigHandler.hpp:53] Unsupported property '223', skipping getting, return nullvalue
+[08/30 13:34:15.032164][warning][28018][PropertyConfigHandler.hpp:95] Exporting property '190' while stream is not active; the value may differ from what will be applied after streaming starts
+[08/30 13:34:15.033336][warning][28018][PresetHandler.cpp:337] Exporting ROI property '1061' while stream is not active; the value may differ from what will be applied after streaming starts
+[08/30 13:34:15.033922][warning][28018][PresetHandler.cpp:710] Exporting disparity search properties while stream is not active; the values may differ from what will be applied after streaming starts
+[08/30 13:34:15.034760][warning][28018][PropertyConfigHandler.hpp:53] Unsupported property '5525', skipping getting, return nullvalue
+[08/30 13:34:15.064028][warning][28018][PropertyConfigHandler.hpp:95] Exporting property '189' while stream is not active; the value may differ from what will be applied after streaming starts
+[08/30 13:34:15.064751][warning][28018][PropertyConfigHandler.hpp:53] Unsupported property '259', skipping getting, return nullvalue
+[08/30 13:34:15.064753][warning][28018][PropertyConfigHandler.hpp:53] Unsupported property '277', skipping getting, return nullvalue
+[08/30 13:34:15.064911][warning][28018][PresetHandler.cpp:337] Exporting ROI property '1060' while stream is not active; the value may differ from what will be applied after streaming starts
+[08/30 13:34:15.064990][info][28018][DeviceManager.cpp:200] Device created successfully! Name: Gemini 335, PID: 0x0800, SN/ID: CP0F4630001M FW: 1.4.60
+[08/30 13:34:15.065033][info][28018][Pipeline.cpp:54] [CP0F4630001M] Pipeline created with device: {name: Gemini 335, sn: CP0F4630001M}, @0x5EF646D9DC00
+[08/30 13:34:15.065106][info][28018][Pipeline.cpp:228] [CP0F4630001M] Check and set config done!
+[08/30 13:34:15.065222][info][28018][Pipeline.cpp:266] [CP0F4630001M] Try to start streams!
+[08/30 13:34:15.065225][info][28018][VideoSensor.cpp:61] [CP0F4630001M] Try to start stream: {type: Depth, format: Y16, width: 848, height: 480, fps: 30}
+[08/30 13:34:15.065229][info][28018][SensorBase.cpp:216] [CP0F4630001M] Stream state changed from STOPPED to STARTING@Depth
+[08/30 13:34:15.065231][info][28018][VideoSensor.cpp:130] [CP0F4630001M] Start backend stream: {type: Depth, format: Z16, width: 848, height: 480, fps: 30}
+[08/30 13:34:15.066046][info][28018][VideoSensor.cpp:61] [CP0F4630001M] Try to start stream: {type: Color, format: MJPG, width: 1280, height: 720, fps: 30}
+[08/30 13:34:15.066049][info][28018][SensorBase.cpp:216] [CP0F4630001M] Stream state changed from STOPPED to STARTING@Color
+[08/30 13:34:15.066050][info][28018][VideoSensor.cpp:130] [CP0F4630001M] Start backend stream: {type: Color, format: MJPG, width: 1280, height: 720, fps: 30}
+[08/30 13:34:15.066940][info][28018][Pipeline.cpp:293] [CP0F4630001M] Start streams done!
+[08/30 13:34:15.066940][info][28018][Pipeline.cpp:250] [CP0F4630001M] Pipeline start done!
+[08/30 13:34:15.154791][info][28061][SensorBase.cpp:216] [CP0F4630001M] Stream state changed from STARTING to STREAMING@Depth
+[08/30 13:34:15.598503][info][28063][SensorBase.cpp:216] [CP0F4630001M] Stream state changed from STARTING to STREAMING@Color
+[08/30 13:34:15.598985][warning][28076][Pipeline.cpp:324] [CP0F4630001M] Output frameset queue is full, drop oldest frameset!
+[08/30 13:34:15.657443][info][28018][Pipeline.cpp:367] [CP0F4630001M] Try to stop pipeline!
+[08/30 13:34:15.657447][info][28018][Pipeline.cpp:343] [CP0F4630001M] Try to stop streams!
+[08/30 13:34:15.657457][info][28018][SensorBase.cpp:216] [CP0F4630001M] Stream state changed from STREAMING to STOPPING@Color
+[08/30 13:34:15.701671][info][28018][SensorBase.cpp:216] [CP0F4630001M] Stream state changed from STOPPING to STOPPED@Color
+[08/30 13:34:15.701751][info][28018][Pipeline.cpp:357] [CP0F4630001M] Sensor stream stopped, sensorType=Color
+[08/30 13:34:15.701755][info][28018][SensorBase.cpp:216] [CP0F4630001M] Stream state changed from STREAMING to STOPPING@Depth
+[08/30 13:34:15.754129][info][28018][SensorBase.cpp:216] [CP0F4630001M] Stream state changed from STOPPING to STOPPED@Depth
+[08/30 13:34:15.754425][info][28018][Pipeline.cpp:357] [CP0F4630001M] Sensor stream stopped, sensorType=Depth
+[08/30 13:34:15.754428][info][28018][Pipeline.cpp:363] [CP0F4630001M] Stop streams done!
+[08/30 13:34:15.754794][info][28018][Pipeline.cpp:393] [CP0F4630001M] Stop pipeline done!
+[08/30 13:34:15.765456][info][28018][Pipeline.cpp:65] [CP0F4630001M] Pipeline destroyed! @0x5EF646D9DC00
+[08/30 13:34:15.765734][info][28018][SensorBase.cpp:53] [CP0F4630001M] SensorBase is destroyed
+[08/30 13:34:15.767146][info][28018][ObLibuvcDevicePort.cpp:87] uvc_close done.
+[08/30 13:34:15.767155][info][28018][ObLibuvcDevicePort.cpp:88] ~ObLibuvcDevicePort done
+[08/30 13:34:15.767279][info][28018][SensorBase.cpp:53] [CP0F4630001M] SensorBase is destroyed
+[08/30 13:34:15.771269][info][28018][ObLibuvcDevicePort.cpp:87] uvc_close done.
+[08/30 13:34:15.771277][info][28018][ObLibuvcDevicePort.cpp:88] ~ObLibuvcDevicePort done
+[08/30 13:34:15.861116][warning][28077][Pipeline.cpp:324] [CP0F4630001M] Output frameset queue is full, drop oldest frameset! [**3 logs in 262ms, last: 13:34:15.632109**]
+[08/30 13:35:37.967795][info][28161][HostTimestampProvider.cpp:36] Update clock type to: realtime(0)
+[08/30 13:35:38.047443][info][28161][LinuxUsbPal.cpp:334] Create PollingDeviceWatcher!
+[08/30 13:35:38.047474][info][28161][DeviceManager.cpp:25] Current found device(s): (1)
+[08/30 13:35:38.047478][info][28161][DeviceManager.cpp:34] 	- Name: Gemini 335, PID: 0x0800, SN/ID: CP0F4630001M, Connection: USB3.2
+[08/30 13:35:38.047482][info][28161][DeviceManager.cpp:463] Enable net device enumeration: true
+[08/30 13:35:39.050180][info][28161][DeviceManager.cpp:25] Current device(s) list: (1)
+[08/30 13:35:39.050209][info][28161][DeviceManager.cpp:34] 	- Name: Gemini 335, PID: 0x0800, SN/ID: CP0F4630001M, Connection: USB3.2
+[08/30 13:35:39.052194][info][28161][G330Device.cpp:630] UVCAutoRebootOnFault=true for device: Gemini 335
+[08/30 13:35:39.053272][info][28161][DeviceBase.cpp:742] key: AppSlot,value:1
+[08/30 13:35:39.053276][info][28161][DeviceBase.cpp:742] key: HwType,value:R1
+[08/30 13:35:39.053278][info][28161][DeviceBase.cpp:742] key: HwVer,value:V1.1
+[08/30 13:35:39.053280][info][28161][DeviceBase.cpp:742] key: IspFwVer,value:20241125
+[08/30 13:35:39.053281][info][28161][DeviceBase.cpp:742] key: IspNeedVer,value:20241125
+[08/30 13:35:39.053283][info][28161][DeviceBase.cpp:742] key: PresetVer,value:1.2.2
+[08/30 13:35:39.211881][warning][28161][PropertyServer.cpp:55] [CP0F4630001M] Property not found to register callback, propertyId: 5525
+[08/30 13:35:39.211935][warning][28161][PropertyServer.cpp:55] [CP0F4630001M] Property not found to register callback, propertyId: 277
+[08/30 13:35:39.212218][warning][28161][PropertyConfigHandler.hpp:53] Unsupported property '223', skipping getting, return nullvalue
+[08/30 13:35:39.235487][warning][28161][PropertyConfigHandler.hpp:95] Exporting property '190' while stream is not active; the value may differ from what will be applied after streaming starts
+[08/30 13:35:39.236605][warning][28161][PresetHandler.cpp:337] Exporting ROI property '1061' while stream is not active; the value may differ from what will be applied after streaming starts
+[08/30 13:35:39.237092][warning][28161][PresetHandler.cpp:710] Exporting disparity search properties while stream is not active; the values may differ from what will be applied after streaming starts
+[08/30 13:35:39.237843][warning][28161][PropertyConfigHandler.hpp:53] Unsupported property '5525', skipping getting, return nullvalue
+[08/30 13:35:39.265820][warning][28161][PropertyConfigHandler.hpp:95] Exporting property '189' while stream is not active; the value may differ from what will be applied after streaming starts
+[08/30 13:35:39.266544][warning][28161][PropertyConfigHandler.hpp:53] Unsupported property '259', skipping getting, return nullvalue
+[08/30 13:35:39.266546][warning][28161][PropertyConfigHandler.hpp:53] Unsupported property '277', skipping getting, return nullvalue
+[08/30 13:35:39.266698][warning][28161][PresetHandler.cpp:337] Exporting ROI property '1060' while stream is not active; the value may differ from what will be applied after streaming starts
+[08/30 13:35:39.266781][info][28161][DeviceManager.cpp:200] Device created successfully! Name: Gemini 335, PID: 0x0800, SN/ID: CP0F4630001M FW: 1.4.60
+[08/30 13:35:39.266831][info][28161][Pipeline.cpp:54] [CP0F4630001M] Pipeline created with device: {name: Gemini 335, sn: CP0F4630001M}, @0x634E52AD2830
+[08/30 13:35:39.317891][info][28161][Pipeline.cpp:228] [CP0F4630001M] Check and set config done!
+[08/30 13:35:39.318142][info][28161][Pipeline.cpp:266] [CP0F4630001M] Try to start streams!
+[08/30 13:35:39.318145][info][28161][VideoSensor.cpp:61] [CP0F4630001M] Try to start stream: {type: Color, format: MJPG, width: 1280, height: 720, fps: 30}
+[08/30 13:35:39.318149][info][28161][SensorBase.cpp:216] [CP0F4630001M] Stream state changed from STOPPED to STARTING@Color
+[08/30 13:35:39.318151][info][28161][VideoSensor.cpp:130] [CP0F4630001M] Start backend stream: {type: Color, format: MJPG, width: 1280, height: 720, fps: 30}
+[08/30 13:35:39.319317][info][28161][VideoSensor.cpp:61] [CP0F4630001M] Try to start stream: {type: Depth, format: Y16, width: 848, height: 480, fps: 30}
+[08/30 13:35:39.319323][info][28161][SensorBase.cpp:216] [CP0F4630001M] Stream state changed from STOPPED to STARTING@Depth
+[08/30 13:35:39.319325][info][28161][VideoSensor.cpp:130] [CP0F4630001M] Start backend stream: {type: Depth, format: Z16, width: 848, height: 480, fps: 30}
+[08/30 13:35:39.320429][info][28161][VideoSensor.cpp:61] [CP0F4630001M] Try to start stream: {type: Left IR, format: Y8, width: 848, height: 480, fps: 30}
+[08/30 13:35:39.320436][info][28161][SensorBase.cpp:216] [CP0F4630001M] Stream state changed from STOPPED to STARTING@LeftIR
+[08/30 13:35:39.320438][info][28161][VideoSensor.cpp:130] [CP0F4630001M] Start backend stream: {type: Left IR, format: Y8, width: 848, height: 480, fps: 30}
+[08/30 13:35:39.321431][info][28161][VideoSensor.cpp:61] [CP0F4630001M] Try to start stream: {type: Right IR, format: Y8, width: 848, height: 480, fps: 30}
+[08/30 13:35:39.321433][info][28161][SensorBase.cpp:216] [CP0F4630001M] Stream state changed from STOPPED to STARTING@RightIR
+[08/30 13:35:39.321435][info][28161][VideoSensor.cpp:130] [CP0F4630001M] Start backend stream: {type: Right IR, format: BA81, width: 848, height: 480, fps: 30}
+[08/30 13:35:39.322440][info][28161][Pipeline.cpp:293] [CP0F4630001M] Start streams done!
+[08/30 13:35:39.322441][info][28161][Pipeline.cpp:250] [CP0F4630001M] Pipeline start done!
+[08/30 13:35:39.409332][info][28219][SensorBase.cpp:216] [CP0F4630001M] Stream state changed from STARTING to STREAMING@LeftIR
+[08/30 13:35:39.409415][info][28221][SensorBase.cpp:216] [CP0F4630001M] Stream state changed from STARTING to STREAMING@RightIR
+[08/30 13:35:39.410740][info][28217][SensorBase.cpp:216] [CP0F4630001M] Stream state changed from STARTING to STREAMING@Depth
+[08/30 13:35:39.853969][info][28215][SensorBase.cpp:216] [CP0F4630001M] Stream state changed from STARTING to STREAMING@Color
+[08/30 13:35:39.854540][warning][28230][Pipeline.cpp:324] [CP0F4630001M] Output frameset queue is full, drop oldest frameset!
+[08/30 13:35:39.904526][info][28161][Pipeline.cpp:367] [CP0F4630001M] Try to stop pipeline!
+[08/30 13:35:39.904532][info][28161][Pipeline.cpp:343] [CP0F4630001M] Try to stop streams!
+[08/30 13:35:39.904542][info][28161][SensorBase.cpp:216] [CP0F4630001M] Stream state changed from STREAMING to STOPPING@RightIR
+[08/30 13:35:39.957965][info][28161][SensorBase.cpp:216] [CP0F4630001M] Stream state changed from STOPPING to STOPPED@RightIR
+[08/30 13:35:39.958308][info][28161][Pipeline.cpp:357] [CP0F4630001M] Sensor stream stopped, sensorType=RightIR
+[08/30 13:35:39.958314][info][28161][SensorBase.cpp:216] [CP0F4630001M] Stream state changed from STREAMING to STOPPING@LeftIR
+[08/30 13:35:39.966886][warning][28217][VideoSensor.cpp:226] [CP0F4630001M] This frame will be dropped because the data size does not match the expectation! size=261852, expected=814080 @Depth
+[08/30 13:35:40.012740][info][28161][SensorBase.cpp:216] [CP0F4630001M] Stream state changed from STOPPING to STOPPED@LeftIR
+[08/30 13:35:40.013491][info][28161][Pipeline.cpp:357] [CP0F4630001M] Sensor stream stopped, sensorType=LeftIR
+[08/30 13:35:40.013520][info][28161][SensorBase.cpp:216] [CP0F4630001M] Stream state changed from STREAMING to STOPPING@Depth
+[08/30 13:35:40.068345][info][28161][SensorBase.cpp:216] [CP0F4630001M] Stream state changed from STOPPING to STOPPED@Depth
+[08/30 13:35:40.068781][info][28161][Pipeline.cpp:357] [CP0F4630001M] Sensor stream stopped, sensorType=Depth
+[08/30 13:35:40.068803][info][28161][SensorBase.cpp:216] [CP0F4630001M] Stream state changed from STREAMING to STOPPING@Color
+[08/30 13:35:40.113720][info][28161][SensorBase.cpp:216] [CP0F4630001M] Stream state changed from STOPPING to STOPPED@Color
+[08/30 13:35:40.114071][info][28161][Pipeline.cpp:357] [CP0F4630001M] Sensor stream stopped, sensorType=Color
+[08/30 13:35:40.114074][info][28161][Pipeline.cpp:363] [CP0F4630001M] Stop streams done!
+[08/30 13:35:40.114274][info][28161][Pipeline.cpp:393] [CP0F4630001M] Stop pipeline done!
+[08/30 13:35:40.124627][info][28161][Pipeline.cpp:65] [CP0F4630001M] Pipeline destroyed! @0x634E52AD2830
+[08/30 13:35:40.124699][info][28161][SensorBase.cpp:53] [CP0F4630001M] SensorBase is destroyed
+[08/30 13:35:40.125428][info][28161][ObLibuvcDevicePort.cpp:87] uvc_close done.
+[08/30 13:35:40.125428][info][28161][ObLibuvcDevicePort.cpp:88] ~ObLibuvcDevicePort done
+[08/30 13:35:40.125452][info][28161][SensorBase.cpp:53] [CP0F4630001M] SensorBase is destroyed
+[08/30 13:35:40.125471][info][28161][SensorBase.cpp:53] [CP0F4630001M] SensorBase is destroyed
+[08/30 13:35:40.125499][info][28161][SensorBase.cpp:53] [CP0F4630001M] SensorBase is destroyed
+[08/30 13:35:40.125895][info][28161][ObLibuvcDevicePort.cpp:87] uvc_close done.
+[08/30 13:35:40.125895][info][28161][ObLibuvcDevicePort.cpp:88] ~ObLibuvcDevicePort done
+[08/30 13:35:40.127989][warning][28264][VideoSensor.cpp:226] [CP0F4630001M] This frame will be dropped because the data size does not match the expectation! size=261628, expected=814080 @Depth [**3 logs in 161ms, last: 13:35:40.012595**]
+[08/30 13:35:40.128421][warning][28231][Pipeline.cpp:324] [CP0F4630001M] Output frameset queue is full, drop oldest frameset! [**3 logs in 273ms, last: 13:35:39.887605**]

@@ -90,7 +90,7 @@
 - 已在 `sparseworld` 中安装并导入 `pyorbbecsdk2==2.1.2`（导入名 `pyorbbecsdk`）；下载 wheel SHA-256 为 `e1d3e207995ac60e2bf3350086777df1ba15669a41c6dcfb81c0d896cbb17fcb`。
 - SDK 能发现 1 个 Gemini 335；历史运行曾因 Access denied（SDK status 113）失败。当前用户已属于 `video` 组，`/dev/video0` 至 `/dev/video7` 为 `root:video`；2026-08-30 已完成真实组合流时间戳采集。
 - 采集适配器按 fail-closed 规则写出了零样本 `failed_incomplete` manifest；证据为 `artifacts/evidence/p0_capture_preflight_20260829T024616Z/capture_manifest.json` 和 `Log/OrbbecSDK.log.txt`。这证明权限前置条件未满足，不是相机质量、标定、同步或性能结论。
-- 继续前先由有权限的操作者配置 udev 或将用户加入 `video` 组，并重新登录；然后重复本检查和 30 秒静止采集。禁止为绕过该边界改用未配置的设备或伪造数据。
+- 历史权限阻塞已经解除并完成了权限恢复后的 30 秒静止采集；禁止为绕过后续 ROS/标定前置条件改用未配置的设备或伪造数据。
 - 已完成权限恢复后的 30 秒采集；下一步是按 `CALIBRATION_AND_TIME_SYNC.md` 完成标定/同步检查，并按 `INDOOR_ROSBAG_PROTOCOL.md` 采集可回放 rosbag。当前采集证据仍标记为 `captured_unassessed`。
 
 ### P0：可观测性与标定基线

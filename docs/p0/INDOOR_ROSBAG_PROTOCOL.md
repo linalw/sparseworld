@@ -7,10 +7,12 @@ record metadata before opening streams.
 ## Preflight and stationary check
 
 Run `ros2 launch orbbec_camera gemini_330_series.launch.py --show-args` and
-inspect arguments before any stream. Confirm RGB, depth, left/right IR,
-camera-info, IMU, and TF topics plus QoS match the profile. Record 30 seconds
-stationary with the camera on a stable surface; monitor dropped frames,
-timestamps, exposure/blur, depth validity, and IMU saturation.
+inspect arguments before any stream once ROS 2 and the matching driver are
+installed. On this host `ros2` is currently unavailable, so this preflight is
+blocked and no ROS bag is claimed. The SDK-only stationary timestamp capture is
+separate evidence; it does not substitute for ROS topics, camera-info, TF, QoS,
+or MCAP replay. Confirm RGB, depth, left/right IR, camera-info, IMU, and TF
+topics plus QoS match the profile before recording.
 
 ## Exact route
 

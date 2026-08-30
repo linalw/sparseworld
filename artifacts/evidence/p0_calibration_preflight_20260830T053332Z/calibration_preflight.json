@@ -1,0 +1,14 @@
+{
+  "captured_utc": "2026-08-30T05:33:34Z",
+  "error": {
+    "message": "only length-1 arrays can be converted to Python scalars",
+    "type": "TypeError"
+  },
+  "firmware": "1.4.60",
+  "model": "Orbbec Gemini 335",
+  "schema_version": "p0/orbbec-calibration-preflight/v1",
+  "sdk_version": "2.1.2",
+  "serial": "CP0F4630001M",
+  "serial_requested": "CP0F4630001M",
+  "status": "failed_incomplete"
+}

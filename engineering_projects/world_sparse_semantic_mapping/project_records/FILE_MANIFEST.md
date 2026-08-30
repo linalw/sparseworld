@@ -9,11 +9,11 @@ into this static record manifest.
 
 | File | SHA-256 | Bytes |
 |---|---|---:|
-| `project_records/CURRENT_STATE.md` | `a61d79f26b4992d7699107ea45b50a12bdc2ee17f795069584ab17f89277367b` | 2140 |
+| `project_records/CURRENT_STATE.md` | `38d6f2ea2a493c1f0a599ef4fdafed4e19137aafbcf7e1e4029f97adbf54a449` | 2858 |
 | `project_records/DECISIONS.md` | `0b5362874647429f2d8ba79f7f7bc46f2ca1313598b154091a6eff1d2defd4f9` | 2606 |
 | `project_records/ERRORS.md` | `cd5c386a7c242c5995744f1b93763d1cad5228c3e53a70bcf8e25c10da22e426` | 1365 |
-| `project_records/events.jsonl` | `acd773648e06c959388ccf90211a3aef2860d60cdb95cb2c11c9374a519962cd` | 2498 |
-| `project_records/HANDOFF.md` | `5abb0a4a41d6eb1eed8fca15e37b518b5bc061cf704c2507e23e5724d34331e8` | 2241 |
-| `project_records/NEW_CONVERSATION_HANDOFF.md` | `02df129a7e081cd4c0043d788f63396961d5f66656546aa5d5c205848f35f37a` | 12745 |
+| `project_records/events.jsonl` | `265222d0e2bdd9ea4ab6d5d780b337d8fb50e5ad3ce2328fa77362f2ee0a52ae` | 3074 |
+| `project_records/HANDOFF.md` | `a947081e66d2b7d2c391c1498053df96f179c23ce0a09648f7de8e5e4753abb4` | 2249 |
+| `project_records/NEW_CONVERSATION_HANDOFF.md` | `f9a07a669427f626cd7dc35ccfb3df1da5d85a57746d55e591f50e372fabfd82` | 12729 |
 | `project_records/ROUTING.md` | `04ed15b474034078099ea7edc16e38845d66391a8cf7504bd828f87c55778643` | 854 |
-| `project_records/VERIFICATION.md` | `a6dc1787bc9736d4277477318524fc0680c5308d20969ff1e3756223d27af7cf` | 5547 |
+| `project_records/VERIFICATION.md` | `fe86ff6786a5c404a044b89094e4956541b4647f2dffc71dbe84bfd51b2a0746` | 6810 |

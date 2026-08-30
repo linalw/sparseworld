@@ -1,0 +1,208 @@
+{
+  "captured_utc": "2026-08-30T05:35:40Z",
+  "extrinsics": {
+    "depth_to_rgb": {
+      "rotation_row_major": [
+        [
+          0.999993085861206,
+          0.0032731767278164625,
+          -0.0017705275677144527
+        ],
+        [
+          -0.0032747965306043625,
+          0.9999942183494568,
+          -0.0009126634686253965
+        ],
+        [
+          0.001767529989592731,
+          0.0009184552473016083,
+          0.9999980330467224
+        ]
+      ],
+      "translation_mm": [
+        -13.97895336151123,
+        -0.017501726746559143,
+        -1.8740884065628052
+      ]
+    },
+    "left_ir_to_depth": {
+      "rotation_row_major": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "translation_mm": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "left_ir_to_right_ir": {
+      "rotation_row_major": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "translation_mm": [
+        -50.46739959716797,
+        0.0,
+        0.0
+      ]
+    },
+    "right_ir_to_depth": {
+      "rotation_row_major": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "translation_mm": [
+        50.46739959716797,
+        0.0,
+        0.0
+      ]
+    }
+  },
+  "firmware": "1.4.60",
+  "interpretation": "Factory SDK intrinsics and available profile transforms were read for active default profiles. This is not a checkerboard recalibration, camera-IMU calibration, base-camera measurement, or a time-synchronization result.",
+  "model": "Orbbec Gemini 335",
+  "parameter_source": "device SDK factory parameters",
+  "schema_version": "p0/orbbec-factory-calibration/v1",
+  "sdk_version": "2.1.2",
+  "serial": "CP0F4630001M",
+  "serial_requested": "CP0F4630001M",
+  "status": "measured_sdk_factory_parameters",
+  "streams": {
+    "depth": {
+      "distortion": {
+        "k1": 0.0,
+        "k2": 0.0,
+        "k3": 0.0,
+        "model": "OBCameraDistortionModel.BROWN_CONRADY",
+        "p1": 0.0,
+        "p2": 0.0
+      },
+      "intrinsic": {
+        "cx": 423.0062561035156,
+        "cy": 237.35000610351562,
+        "fx": 413.25946044921875,
+        "fy": 413.25946044921875,
+        "height": 480,
+        "width": 848
+      },
+      "profile": {
+        "format": "OBFormat.Y16",
+        "fps": 30,
+        "height": 480,
+        "width": 848
+      }
+    },
+    "left_ir": {
+      "distortion": {
+        "k1": 0.0,
+        "k2": 0.0,
+        "k3": 0.0,
+        "model": "OBCameraDistortionModel.BROWN_CONRADY",
+        "p1": 0.0,
+        "p2": 0.0
+      },
+      "intrinsic": {
+        "cx": 423.0062561035156,
+        "cy": 237.35000610351562,
+        "fx": 413.25946044921875,
+        "fy": 413.25946044921875,
+        "height": 480,
+        "width": 848
+      },
+      "profile": {
+        "format": "OBFormat.Y8",
+        "fps": 30,
+        "height": 480,
+        "width": 848
+      }
+    },
+    "rgb": {
+      "distortion": {
+        "k1": 0.006633259356021881,
+        "k2": -0.04661419987678528,
+        "k3": 0.03193570300936699,
+        "model": "OBCameraDistortionModel.BROWN_CONRADY_K6",
+        "p1": -0.00012761644029524177,
+        "p2": 3.1216673960443586e-05
+      },
+      "intrinsic": {
+        "cx": 639.84521484375,
+        "cy": 358.32598876953125,
+        "fx": 691.1212158203125,
+        "fy": 691.3170166015625,
+        "height": 720,
+        "width": 1280
+      },
+      "profile": {
+        "format": "OBFormat.MJPG",
+        "fps": 30,
+        "height": 720,
+        "width": 1280
+      }
+    },
+    "right_ir": {
+      "distortion": {
+        "k1": 0.0,
+        "k2": 0.0,
+        "k3": 0.0,
+        "model": "OBCameraDistortionModel.BROWN_CONRADY",
+        "p1": 0.0,
+        "p2": 0.0
+      },
+      "intrinsic": {
+        "cx": 423.0062561035156,
+        "cy": 237.35000610351562,
+        "fx": 413.25946044921875,
+        "fy": 413.25946044921875,
+        "height": 480,
+        "width": 848
+      },
+      "profile": {
+        "format": "OBFormat.Y8",
+        "fps": 30,
+        "height": 480,
+        "width": 848
+      }
+    }
+  }
+}

@@ -37,6 +37,21 @@ def test_quality_metrics_and_report_are_deterministic(tmp_path):
     assert out["json"].read_text() == first
 
 
+def test_quality_analyzes_interleaved_imu_sensors_as_independent_streams(tmp_path):
+    assessment = assess(_profile(tmp_path), {
+        "imu": [
+            {"sensor": "accel", "device_time_ns": 100},
+            {"sensor": "gyro", "device_time_ns": 110},
+            {"sensor": "accel", "device_time_ns": 200},
+            {"sensor": "gyro", "device_time_ns": 210},
+        ],
+    })
+    assert assessment["timing"]["imu.accel"]["status"] == "measured"
+    assert assessment["timing"]["imu.accel"]["nonmonotonic_timestamps"] == 0
+    assert assessment["timing"]["imu.gyro"]["status"] == "measured"
+    assert assessment["timing"]["imu.gyro"]["nonmonotonic_timestamps"] == 0
+
+
 def test_explicit_profile_thresholds_can_fail_quality_gates(tmp_path):
     profile_path = tmp_path / "profile.yaml"
     source = (Path(__file__).parents[1] / "config" / "p0_capture_profile.yaml").read_text()

@@ -14336,6 +14336,30 @@
       "status": "not_measured",
       "timestamp_count": 3600
     },
+    "imu.accel": {
+      "duplicate_sequences": [],
+      "jitter_s": 0.0019498455166910272,
+      "missing_sequences": null,
+      "monotonic": true,
+      "nonmonotonic_timestamps": 0,
+      "observed_rate_hz": 194.36864367292807,
+      "out_of_order_sequences": 0,
+      "sample_count": 1800,
+      "status": "measured",
+      "timestamp_count": 1800
+    },
+    "imu.gyro": {
+      "duplicate_sequences": [],
+      "jitter_s": 0.0019498455166910272,
+      "missing_sequences": null,
+      "monotonic": true,
+      "nonmonotonic_timestamps": 0,
+      "observed_rate_hz": 194.36864367292807,
+      "out_of_order_sequences": 0,
+      "sample_count": 1800,
+      "status": "measured",
+      "timestamp_count": 1800
+    },
     "left": {
       "duplicate_sequences": [],
       "jitter_s": 0.010448427553033957,

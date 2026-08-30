@@ -34,11 +34,12 @@ allowed.
 `pyorbbecsdk2==2.1.2` is installed and importable in `sparseworld`; its wheel
 SHA-256 is `e1d3e207995ac60e2bf3350086777df1ba15669a41c6dcfb81c0d896cbb17fcb`.
 ROS 2 Humble/rosbag2/MCAP/tf2 tools, `v4l-utils`, and the matching Orbbec ROS
-driver are still unavailable. On 2026-08-29, an SDK preflight found one Gemini
-335 but failed before stream start with USB Access denied (status 113). The
-`video` group is not present in the current login groups (`ubuntu adm cdrom sudo
-dip plugdev lpadmin lxd sambashare`); `/dev/video*` is owned by `root:video`.
-Adding approved udev or group access requires a new login before recording can
-resume. See `artifacts/evidence/p0_capture_preflight_20260829T024616Z/` and
-`Log/OrbbecSDK.log.txt`. No hardware calibration or timing measurement is
-claimed.
+driver are still unavailable (`ros2` is not on PATH on Ubuntu 22.04.5). A
+2026-08-30 SDK run found one Gemini 335 and completed a 30-second timestamp
+capture after `video`-group access became effective. The factory SDK parameter
+snapshot is recorded at
+`artifacts/evidence/p0_calibration_factory_20260830T053537Z/factory_calibration.json`.
+It contains active-profile intrinsics plus depth→RGB and IR transforms, but is
+not a checkerboard recalibration and does not measure camera→IMU, base→camera,
+or clock offset. The prior Access-denied preflight remains preserved as
+historical evidence.
