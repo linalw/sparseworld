@@ -8,6 +8,7 @@ import json
 from pathlib import Path
 
 from .discovery import discover_environment
+from .calibration import assess_calibration_evidence, render_calibration_report
 from .profile import load_profile
 from .quality import assess
 from .reporting import render_report
@@ -27,6 +28,9 @@ def main() -> int:
     package_parser = subparsers.add_parser("package-mcap", help="package normalized SDK samples into a user-space MCAP diagnostic container")
     package_parser.add_argument("--capture-dir", required=True, type=Path)
     package_parser.add_argument("--output", required=True, type=Path)
+    calibration_parser = subparsers.add_parser("assess-calibration", help="assess hash-bound calibration/time-sync evidence")
+    calibration_parser.add_argument("--evidence", required=True, type=Path)
+    calibration_parser.add_argument("--output", required=True, type=Path)
     args = parser.parse_args()
     if args.command == "discover":
         from datetime import datetime, timezone
@@ -74,5 +78,12 @@ def main() -> int:
         metadata_path.with_suffix(metadata_path.suffix + ".sha256").write_text(
             f"{digest}  {metadata_path.name}\n", encoding="utf-8"
         )
+        return 0
+    if args.command == "assess-calibration":
+        evidence = json.loads(args.evidence.read_text(encoding="utf-8"))
+        if not isinstance(evidence, dict):
+            raise ValueError("calibration assessment refused: evidence must be an object")
+        result = assess_calibration_evidence(evidence, args.evidence.parent)
+        render_calibration_report(result, args.output)
         return 0
     return 2

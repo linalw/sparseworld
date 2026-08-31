@@ -97,6 +97,7 @@
 - 已完成 30 秒带 frame-number 缺口诊断的重复静止采集：`artifacts/evidence/p0_stationary_loss_instrumented_20260830T081936Z/`。manifest SHA-256 为 `5d1d2a850423038ad606e9127e89df9ef16f08b6ab4c9174c4242953567a73c7`，绑定的最终 clock-relation assessment SHA-256 为 `50a629fedc686d69b6f2a184d257886aa5ac35ca7c779f2defe8a2d460f0b825`。depth/left/right 各记录 13 个 ID 缺口，accel/gyro 各 4 个，RGB 为 0；无重复或乱序。这量化了传输风险，并不构成帧率、同步、标定或性能通过。
 - 最终重评估已启用时钟域保护：`assessment_final_clock_relation/assessment.json` 将 device-monotonic 与 host-UTC 的直接相减标记为 `clock_domain_mismatch`，不再输出伪偏移值；最终报告 SHA-256 为 `50a629fedc686d69b6f2a184d257886aa5ac35ca7c779f2defe8a2d460f0b825`。报告保留 elapsed-clock 相对速率诊断，但绝对偏移仍为 null。
 - 当前环境快照 `artifacts/evidence/p0_environment_20260830T093000Z.json` 记录 RTX 5090、`video` 组、Gemini 335 和 SDK 2.1.2；`ros2` 仍未安装。用户态 `rosbags`/`mcap` 只能提供规范化诊断容器，不能替代官方 ROS 2/Orbbec driver 路线。
+- 已加入 `sparseworld-p0 assess-calibration` 与 `config/p0_calibration_evidence.example.json`：它对同一 evidence 目录下的原始文件做 SHA-256 绑定，检查重投影/时钟残差、变换字段和 pairing policy；缺失数据为 `not_measured`，哈希或格式问题为 `fail`。68 个自动化测试通过，但尚无真实 checkerboard、相机-IMU/底盘外参或绝对时间偏移证据，不能将此工具测试表述为现场标定通过。
 
 ### P0：可观测性与标定基线
 

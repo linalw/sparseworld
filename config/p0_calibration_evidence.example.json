@@ -1,0 +1,44 @@
+{
+  "schema_version": "p0/calibration-evidence/v1",
+  "profile_sha256": "pending_measurement",
+  "operator": "pending_measurement",
+  "run_id": "pending_measurement",
+  "tool": {
+    "name": "pending_measurement",
+    "version": "pending_measurement"
+  },
+  "camera_intrinsics": {
+    "raw_file": "raw/camera_intrinsics.json",
+    "sha256": "pending_measurement",
+    "residual_px": null,
+    "acceptance_max_residual_px": null
+  },
+  "rgb_depth_alignment": {
+    "raw_file": "raw/rgb_depth_alignment.json",
+    "sha256": "pending_measurement",
+    "residual_px": null,
+    "acceptance_max_residual_px": null
+  },
+  "camera_imu_extrinsics": {
+    "raw_file": "raw/camera_imu_extrinsics.json",
+    "sha256": "pending_measurement",
+    "translation_m": null,
+    "rotation_xyzw": null,
+    "residual": null,
+    "acceptance_max_residual": null
+  },
+  "base_camera_transform": {
+    "raw_file": "raw/base_camera_transform.json",
+    "sha256": "pending_measurement",
+    "translation_m": null,
+    "rotation_xyzw": null
+  },
+  "device_host_clock_offset": {
+    "raw_file": "raw/device_host_clock_offset.json",
+    "sha256": "pending_measurement",
+    "pairing_policy": "pending_measurement",
+    "offset_ns": null,
+    "residual_ns": null,
+    "acceptance_max_residual_ns": null
+  }
+}

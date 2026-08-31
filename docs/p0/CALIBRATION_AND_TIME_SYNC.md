@@ -29,6 +29,26 @@ relationship cannot be reproduced. Unknown values remain `null` or
 `pending_measurement`; no interpolation or nearest-timestamp synthesis is
 allowed.
 
+## Evidence file and deterministic checker
+
+Copy `config/p0_calibration_evidence.example.json` into the run evidence
+directory, place the unedited raw outputs under that same directory, and fill
+each `raw_file` and `sha256` from the exact bytes. Then run:
+
+```bash
+sparseworld-p0 assess-calibration \
+  --evidence artifacts/evidence/<run-id>/calibration_evidence.json \
+  --output artifacts/evidence/<run-id>/calibration_assessment
+```
+
+The checker validates five gates: camera intrinsics, RGB-depth alignment,
+camera-IMU extrinsics, base-camera transform, and device-host clock offset.
+It rejects path traversal, missing/incorrect hashes, unsupported evidence
+schemas, malformed transforms, absent pairing policy, and residuals above the
+operator-declared threshold. A complete report with `pass` is still evidence
+of the declared calibration run only; it is not SLAM, navigation, or safety
+acceptance.
+
 ## Current state
 
 `pyorbbecsdk2==2.1.2` is installed and importable in `sparseworld`; its wheel
