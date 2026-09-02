@@ -1,6 +1,7 @@
 captures/
 artifacts/raw/
 artifacts/rosbags/
+.worktrees/
 artifacts/rendered/
 artifacts/diagnostics/rendered/
 rendered-diagnostics/

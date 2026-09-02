@@ -23,6 +23,12 @@ calibration = [
     "numpy>=1.24",
     "opencv-python>=4.8",
 ]
+semantic = [
+    "torch>=2.2",
+    "torchvision>=0.17",
+    "transformers>=4.45",
+    "Pillow>=10.0",
+]
 
 [project.scripts]
 sparseworld-p0 = "sparseworld_p0.cli:main"

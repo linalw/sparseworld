@@ -79,3 +79,12 @@ and immediate-stop criteria.
 
 Authoritative evidence, hashes, decisions, and unresolved risks live under
 `engineering_projects/world_sparse_semantic_mapping/project_records/`.
+
+## Automatic semantic object mapping
+
+The offline MVP command `sparseworld-p0 semantic-map` processes RGB-D frames
+with a replaceable segmentation/labeling backend, projects valid mask depth
+into 3D, and deduplicates repeated observations using spatial and semantic
+gates. See `docs/p0/SEMANTIC_OBJECT_MAPPING.md`. The fixture backend is
+deterministic test infrastructure; SAM 2, Florence-2, and SigLIP weights remain
+opt-in and unmeasured for accuracy and runtime performance.

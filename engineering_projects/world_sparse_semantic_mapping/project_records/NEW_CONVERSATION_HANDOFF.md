@@ -102,6 +102,7 @@
 - 历史 ROS 2 安装阻塞已由后续工作解除：ROS 2 Humble、rosbag2 MCAP、tf2 和官方 Orbbec driver 已安装；driver commit、设备枚举、topics/QoS/TF 预检及静止 MCAP 证据见 H-009 与 `VERIFICATION.md` rows 52–55。后续仍需人工监护下的室内路线采集。
 - ROS 2 现已安装：官方 driver 源码为 `OrbbecSDK_ROS2` `v2-main` commit `8e7cad2bfa2c4a6ac4e779be99c64e72166043af`，以系统 Python 成功构建并安装到 `/home/ubuntu/ros2_ws/install-systempy4`；使用前执行 `source /opt/ros/humble/setup.bash` 与 `source /home/ubuntu/ros2_ws/install-systempy4/setup.bash`。udev rules 已安装，`list_devices_node` 枚举 Gemini 335（serial `CP0F4630001M`、USB3.2、FW `1.4.60`）。
 - 已通过 `gemini_330_series.launch.py --show-args`，并实测 RGB/depth/左右 IR/raw、camera-info、分离 accel/gyro、`/tf_static`。官方 MCAP 静止采集在 `artifacts/rosbags/p0_ros2_stationary_20260902T111500Z/`，20,628 条消息、19.850123 s；密封证据、时间戳导出和质量摘要位于 `artifacts/evidence/p0_ros2_stationary_20260902T111500Z/`。回放 smoke test 成功。该证据仅证明容器可读、话题可录和静止时间戳可观察，不是路线、标定、同步、SLAM、导航或安全通过。
+- 自动语义物体建图 MVP 已加入：`semantic-map` CLI 处理离线 RGB-D manifest；fixture 后端可重复生成 mask/标签，深度投影得到 3D anchor，并按空间/语义门限先关联再分配 ID，防止同一位置物体重复标记。真实 SAM 2、Florence-2、SigLIP 权重尚未安装/锁定，模型精度、召回率、mask IoU、3D 误差、重复率和延迟仍未测量。
 
 ### P0：可观测性与标定基线
 

@@ -1,0 +1,33 @@
+{
+  "schema_version": "p0/semantic-model-smoke/v1",
+  "status": "integrated_unassessed",
+  "input": {
+    "image_path": "/home/ubuntu/linalw/Projects/lingbotmap/lingbot-map/imageforcalibration/4_Color.png",
+    "resolution_px": [1280, 720],
+    "scene_boundary": "checkerboard calibration image; not a labeled general-indoor semantic benchmark"
+  },
+  "runtime": {
+    "device": "NVIDIA GeForce RTX 5090",
+    "torch": "2.8.0+cu128",
+    "torchvision": "0.23.0+cu128",
+    "transformers": "5.16.1",
+    "cuda_available": true
+  },
+  "models": {
+    "mask_generation": {
+      "repository": "facebook/sam-vit-base",
+      "revision": "70c1a07f894ebb5b307fd9eaaee97b9dfc16068f",
+      "candidate_mask_count": 44,
+      "first_mask_pixels": 137140,
+      "latency_ms": 916.626
+    },
+    "image_to_text": {
+      "repository": "Salesforce/blip-image-captioning-base",
+      "revision": "82a37760796d32b1411fe092ab5d4e227313294b",
+      "first_mask_label": "checker",
+      "reported_probability": 0.5,
+      "latency_ms": 77.988
+    }
+  },
+  "interpretation": "real GPU model integration observation only; it does not measure object precision, recall, mask IoU, 3D anchor error, duplicate rate, latency distribution, SLAM, navigation, or safety"
+}
