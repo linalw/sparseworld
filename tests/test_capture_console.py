@@ -30,7 +30,7 @@ class FakeProcess:
 
 
 def test_idle_snapshot_is_explicit(tmp_path):
-    session = CaptureSession(tmp_path, process_factory=lambda argv, **kw: FakeProcess(argv))
+    session = CaptureSession(tmp_path)
     state = session.snapshot()
     assert state["state"] == "idle"
     assert state["active"] is False
@@ -63,3 +63,37 @@ def test_duration_auto_stops_and_marks_complete(tmp_path):
     session.start("short", duration_s=0.01, topics=["/tf"])
     time.sleep(0.05)
     assert session.snapshot()["state"] == "complete"
+
+
+def test_elapsed_time_is_frozen_after_stop(tmp_path):
+    session = CaptureSession(tmp_path, process_factory=lambda argv, **kw: FakeProcess(argv))
+    session.start("short", duration_s=None, topics=["/tf"])
+    time.sleep(0.01)
+    stopped = session.stop()["elapsed_s"]
+    time.sleep(0.03)
+    assert session.snapshot()["elapsed_s"] == pytest.approx(stopped, abs=0.001)
+
+
+def test_lists_completed_runs_with_manifest(tmp_path):
+    session = CaptureSession(tmp_path, process_factory=lambda argv, **kw: FakeProcess(argv))
+    session.start("route", duration_s=None, topics=["/tf"])
+    session.stop()
+    runs = session.list_runs()
+    assert len(runs) == 1
+    assert runs[0]["status"] == "stopped_unassessed"
+    assert runs[0]["manifest_path"].endswith("capture_manifest.json")
+
+
+def test_start_records_preview_status_and_command(tmp_path):
+    session = CaptureSession(tmp_path, process_factory=lambda argv, **kw: FakeProcess(argv), dry_run=True)
+    started = session.start("route", None, ["/tf"])
+    assert started["preview_status"] == "dry_run"
+    assert any("preview" in " ".join(cmd) for cmd in started["commands"])
+    session.stop()
+
+
+def test_real_capture_refuses_when_no_video_device_exists(tmp_path, monkeypatch):
+    monkeypatch.setattr("sparseworld_p0.capture_console.glob.glob", lambda _: [])
+    session = CaptureSession(tmp_path)
+    with pytest.raises(RuntimeError, match="no /dev/video"):
+        session.start("route", None, ["/tf"])

@@ -41,6 +41,34 @@ def create_app(session=None):
     def stop() -> dict[str, Any]:
         return session.stop()
 
+    @app.get("/api/runs")
+    def runs() -> list[dict[str, Any]]:
+        return session.list_runs()
+
+    @app.get("/api/runs/{run_id}")
+    def run_detail(run_id: str) -> dict[str, Any]:
+        if Path(run_id).name != run_id:
+            raise HTTPException(400, "invalid run id")
+        for run in session.list_runs():
+            if run["run_id"] == run_id:
+                root = Path(run["manifest_path"]).parent
+                run["files"] = sorted(p.name for p in root.iterdir() if p.is_file())
+                return run
+        raise HTTPException(404, "run not found")
+
+    @app.get("/api/runs/{run_id}/files/{file_name}")
+    def run_file(run_id: str, file_name: str):
+        if Path(run_id).name != run_id or Path(file_name).name != file_name:
+            raise HTTPException(400, "invalid path")
+        for run in session.list_runs():
+            if run["run_id"] == run_id:
+                root = Path(run["manifest_path"]).parent
+                candidate = root / file_name
+                if not candidate.is_file():
+                    raise HTTPException(404, "file not found")
+                return FileResponse(candidate)
+        raise HTTPException(404, "run not found")
+
     @app.get("/api/preview.mjpg")
     def preview():
         data = session.preview_jpeg()
