@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 import math
+from pathlib import Path
 from typing import Any, Mapping
 
 import numpy as np
@@ -235,3 +236,54 @@ def project_mask_depth(
         status="projected", anchor_camera_xyz=(x, y, z),
         valid_depth_pixels=valid_count, depth_valid_fraction=fraction,
     )
+
+
+def build_semantic_map(manifest: Mapping[str, Any], backend: Any) -> dict[str, Any]:
+    """Run a backend over an offline RGB-D manifest and return an audited map."""
+    if manifest.get("schema_version") != "p0/semantic-input/v1":
+        raise ValueError("semantic manifest schema_version must be p0/semantic-input/v1")
+    intrinsics = manifest.get("intrinsics")
+    frames = manifest.get("frames")
+    if not isinstance(intrinsics, Mapping) or not isinstance(frames, list):
+        raise ValueError("semantic manifest requires intrinsics and frames")
+    store = SemanticObjectStore()
+    inference_runs: list[dict[str, Any]] = []
+    rejected: list[dict[str, Any]] = []
+    for frame in frames:
+        if not isinstance(frame, Mapping):
+            raise ValueError("each semantic frame must be an object")
+        rgb = np.load(Path(frame["rgb_path"]))
+        depth = np.load(Path(frame["depth_path"]))
+        masks = backend.generate_masks(rgb)
+        for mask_instance in masks:
+            labels = backend.label(mask_instance, rgb)
+            if not labels:
+                rejected.append({"frame_id": frame.get("frame_id"), "mask_id": mask_instance.mask_id, "reason": "no_label_candidate"})
+                continue
+            projection = project_mask_depth(mask_instance.mask, depth, intrinsics, minimum_valid_pixels=int(manifest.get("minimum_valid_depth_pixels", 1)))
+            if projection.status != "projected":
+                rejected.append({"frame_id": frame.get("frame_id"), "mask_id": mask_instance.mask_id, "reason": projection.reason})
+                continue
+            anchor = _transform_point(projection.anchor_camera_xyz, frame.get("map_T_camera"), frame.get("map_frame", "map"))
+            observation = SemanticObservation(
+                frame_id=str(frame["frame_id"]), timestamp=str(frame["timestamp"]), anchor_xyz=anchor, frame=str(frame.get("map_frame", "map")),
+                class_candidates=tuple(LabelCandidate(label=item.label, probability=item.probability) for item in labels), confidence=float(labels[0].probability),
+                depth_valid_fraction=projection.depth_valid_fraction, valid_depth_pixels=projection.valid_depth_pixels,
+                model_metadata={"mask": mask_instance.model_metadata, "label": labels[0].model_metadata}, mask_area=int(np.count_nonzero(mask_instance.mask)),
+            )
+            store.upsert(observation)
+    document = store.as_document()
+    document["inference_runs"] = [{"backend": type(backend).__name__, "frames_processed": len(frames), "rejected_observations": rejected}]
+    return document
+
+
+def _transform_point(point: tuple[float, float, float], transform: Any, frame: str) -> tuple[float, float, float]:
+    if transform is None:
+        return point
+    matrix = np.asarray(transform, dtype=float)
+    if matrix.shape != (4, 4) or not np.all(np.isfinite(matrix)):
+        raise ValueError("map_T_camera must be a finite 4x4 matrix")
+    result = matrix @ np.array([*point, 1.0], dtype=float)
+    if abs(result[3]) < 1e-12:
+        raise ValueError("map_T_camera produced invalid homogeneous coordinate")
+    return tuple(float(value / result[3]) for value in result[:3])

@@ -1,7 +1,10 @@
+import json
+
 import numpy as np
 import pytest
 
-from sparseworld_p0.semantic_mapping import LabelCandidate, SemanticObjectStore, SemanticObservation, project_mask_depth
+from sparseworld_p0.semantic_backends import load_backend
+from sparseworld_p0.semantic_mapping import LabelCandidate, SemanticObjectStore, SemanticObservation, build_semantic_map, project_mask_depth
 
 
 def test_project_mask_depth_uses_median_valid_depth_and_intrinsics():
@@ -90,3 +93,33 @@ def test_store_marks_repeated_isolated_movable_observation_as_moved_without_dupl
     assert len(document["objects"]) == 1
     assert document["objects"][0]["lifecycle_status"] == "moved"
     assert document["objects"][0]["geometry"]["anchor_xyz"] == pytest.approx([0.62, 0.0, 1.0])
+
+
+def test_build_semantic_map_deduplicates_two_fixture_frames(tmp_path):
+    """Breaks if the offline pipeline creates one map object per frame."""
+    rgb1 = tmp_path / "rgb1.npy"
+    rgb2 = tmp_path / "rgb2.npy"
+    depth1 = tmp_path / "depth1.npy"
+    depth2 = tmp_path / "depth2.npy"
+    np.save(rgb1, np.zeros((2, 2, 3), dtype=np.uint8))
+    np.save(rgb2, np.zeros((2, 2, 3), dtype=np.uint8))
+    np.save(depth1, np.ones((2, 2), dtype=np.float32))
+    np.save(depth2, np.ones((2, 2), dtype=np.float32))
+    fixture = tmp_path / "fixture.json"
+    fixture.write_text(json.dumps({"masks": [{"mask": [[1, 1], [0, 0]], "labels": [{"label": "cup", "probability": 0.9}]}]}), encoding="utf-8")
+    manifest = {
+        "schema_version": "p0/semantic-input/v1",
+        "intrinsics": {"fx": 100.0, "fy": 100.0, "cx": 0.0, "cy": 0.0},
+        "frames": [
+            {"frame_id": "frame-1", "timestamp": "2026-09-02T12:00:00Z", "rgb_path": str(rgb1), "depth_path": str(depth1), "map_T_camera": np.eye(4).tolist()},
+            {"frame_id": "frame-2", "timestamp": "2026-09-02T12:00:01Z", "rgb_path": str(rgb2), "depth_path": str(depth2), "map_T_camera": np.eye(4).tolist()},
+        ],
+    }
+    backend = load_backend("fixture", {"fixture_path": str(fixture)})
+
+    document = build_semantic_map(manifest, backend)
+
+    assert len(document["objects"]) == 1
+    assert len(document["objects"][0]["evidence"]) == 2
+    assert document["objects"][0]["lifecycle_status"] == "tentative"
+    assert document["inference_runs"][0]["frames_processed"] == 2
