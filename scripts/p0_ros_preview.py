@@ -47,6 +47,9 @@ def main() -> int:
     rclpy.init(); node = Preview()
     try: rclpy.spin(node)
     except KeyboardInterrupt: pass
-    finally: node.destroy_node(); rclpy.shutdown()
+    finally:
+        node.destroy_node()
+        if rclpy.ok():
+            rclpy.shutdown()
     return 0
 if __name__ == "__main__": raise SystemExit(main())

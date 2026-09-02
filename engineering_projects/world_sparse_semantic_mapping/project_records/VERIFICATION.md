@@ -4,6 +4,10 @@
 
 The confirmed方案 A design is being implemented on `codex/live-sparse-mapping`. Keyframe gating (1 s / 0.35 m / 15°), capacity-one latest-frame semantic queue, live-vs-debug-bag command semantics, and API/UI mode fields are covered by automated tests. The reference host currently has no `rtabmap_ros` package (`ros2 pkg prefix` returned `Package not found`), so live SLAM and real-time map output remain explicitly `unavailable`; no trajectory or semantic global accuracy claim is made.
 
+RTAB-Map dependency follow-up: `ros-humble-rtabmap-ros 0.23.7` is installed and its official `rtabmap_launch/rtabmap.launch.py` arguments were verified. A 12-second motor-independent live smoke run produced RGB/depth preview files and a 3.1 MiB run-local RTAB-Map database without raw rosbag. The keyframe bridge saves only gated frames and status metadata. This does not establish ATE/RPE, synchronization, calibration, semantic precision, or navigation performance.
+
+Branch checkpoint: gated keyframe bridge, run artifact manifesting, RTAB-Map command wiring, live mode API/UI fields, and existing semantic-map CLI all pass the full 108-test suite; `pip check` is clean. Live semantic worker integration with actual model inference remains pending.
+
 ## Capture console tooling evidence (2026-09-02)
 
 The `codex/capture-console` branch adds a localhost-only FastAPI browser console (`sparseworld-p0 capture-console`) for attended Gemini 335 ROS 2 recording. It enforces one active session, preserves raw run directories and manifests on stop/failure, and labels unavailable preview or unassessed quality explicitly. `conda run -n sparseworld python -m pytest -q` passed 79 tests; `pip check` reported no broken requirements; a dry-run Uvicorn startup/shutdown on `127.0.0.1:8876` completed. This verifies software/operator workflow only. Route data, RGB-depth alignment, `map_T_camera`, time synchronization, semantic precision, SLAM, navigation, and safety gates remain `not_measured`.

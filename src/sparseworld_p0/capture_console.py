@@ -61,6 +61,16 @@ class CaptureSession:
                         break
             if out.get("started_at"):
                 out["elapsed_s"] = self._run.get("elapsed_s", max(0.0, time.time() - self._run["started_epoch"]))
+            if self._run.get("mode") == "live" and self._run.get("run_dir"):
+                status_path = Path(self._run["run_dir"]) / "live-status.json"
+                if status_path.is_file():
+                    try:
+                        live_status = json.loads(status_path.read_text(encoding="utf-8"))
+                        if isinstance(live_status, dict):
+                            out["keyframes"] = live_status
+                            out["semantic_worker"] = {"status": "pending_keyframe_integration", "queue_capacity": 1}
+                    except (OSError, json.JSONDecodeError):
+                        out["keyframes"] = {"status": "unreadable"}
             return out
 
     def list_runs(self) -> list[dict]:
@@ -117,7 +127,13 @@ class CaptureSession:
                         "rviz:=false", "approx_sync:=true", "approx_rgbd_sync:=true",
                         "depth_scale:=0.001"]
             preview_script = Path(__file__).resolve().parents[2] / "scripts" / "p0_ros_preview.py"
+            keyframe_script = Path(__file__).resolve().parents[2] / "scripts" / "p0_live_keyframe_bridge.py"
             preview_cmd = ["/usr/bin/python3", str(preview_script), "--output", str(run_dir / "preview.jpg"), "--depth-output", str(run_dir / "depth-preview.jpg")]
+            keyframe_cmd = ["/usr/bin/python3", str(keyframe_script), "--output-dir", str(run_dir / "keyframes"),
+                            "--status", str(run_dir / "live-status.json"), "--max-rate-hz", "1.0",
+                            "--min-translation-m", "0.35", "--min-rotation-deg", "15"]
+            if mode == "live":
+                self._run["keyframe_policy"] = {"max_rate_hz": 1.0, "min_translation_m": 0.35, "min_rotation_deg": 15.0, "queue_capacity": 1}
             try:
                 if not self.dry_run:
                     self._processes = [self.process_factory(self.driver_command, stdout=(run_dir / "driver.log").open("wb"), stderr=subprocess.STDOUT, start_new_session=True)]
@@ -132,6 +148,8 @@ class CaptureSession:
                             self._run["slam_error"] = "rtabmap_ros is not installed"
                     try:
                         self._processes.append(self.process_factory(preview_cmd, stdout=(run_dir / "preview.log").open("wb"), stderr=subprocess.STDOUT, start_new_session=True))
+                        if mode == "live":
+                            self._processes.append(self.process_factory(keyframe_cmd, stdout=(run_dir / "keyframe.log").open("wb"), stderr=subprocess.STDOUT, start_new_session=True))
                     except Exception as exc:
                         self._run["preview_status"] = "unavailable"
                         self._run["preview_error"] = f"{type(exc).__name__}: {exc}"
@@ -140,6 +158,7 @@ class CaptureSession:
                 commands = [self.driver_command, preview_cmd]
                 if mode == "live":
                     commands.insert(1, slam_cmd)
+                    commands.append(keyframe_cmd)
                 if mode == "capture" or debug_bag:
                     commands.insert(1, record_cmd)
                 self._run["commands"] = commands
@@ -194,4 +213,6 @@ class CaptureSession:
         self._run["elapsed_s"] = max(0.0, time.time() - self._run["started_epoch"])
         self._run["stopped_at"] = datetime.now(timezone.utc).isoformat()
         payload = {k: v for k, v in self._run.items() if k not in {"started_epoch", "preview_jpeg"}}
+        if self._run.get("mode") == "live":
+            payload["artifacts"] = {name: str(run_dir / name) for name in ("rtabmap.db", "live-status.json", "keyframes") if (run_dir / name).exists()}
         (run_dir / "capture_manifest.json").write_text(json.dumps(payload, indent=2, ensure_ascii=False, sort_keys=True) + "\n", encoding="utf-8")
