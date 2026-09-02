@@ -3,7 +3,7 @@ import sys
 import types
 from pathlib import Path
 
-from sparseworld_p0.rosbag_export import _rosbag_rows, export_rosbag_timestamps, package_normalized_samples_mcap
+from sparseworld_p0.rosbag_export import _rosbag_rows, export_rosbag_timestamps, package_normalized_samples_mcap, summarize_rosbag_timestamps
 
 
 def test_exporter_preserves_unknown_ros_sequence_as_null(tmp_path: Path):
@@ -98,3 +98,29 @@ def test_cli_package_mcap_writes_manifest_and_hash(tmp_path: Path, monkeypatch):
     manifest = json.loads((output / "package_manifest.json").read_text(encoding="utf-8"))
     assert manifest["status"] == "packaged_unassessed"
     assert (output / "package_manifest.json.sha256").is_file()
+
+
+def test_summarize_rosbag_timestamps_keeps_clock_domains_separate(tmp_path: Path):
+    source = tmp_path / "timestamps.jsonl"
+    source.write_text(
+        "\n".join(
+            json.dumps({
+                "topic": "/color",
+                "recorded_timestamp_ns": recorded,
+                "header_timestamp_ns": header,
+            })
+            for recorded, header in ((0, 10_000_000), (100_000_000, 110_000_000), (200_000_000, 210_000_000))
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    result = summarize_rosbag_timestamps(source)
+    assert result["schema_version"] == "p0/rosbag-quality/v1"
+    assert result["status"] == "not_measured"
+    row = result["topics"]["/color"]
+    assert row["message_count"] == 3
+    assert row["recorded_rate_hz"] == 10.0
+    assert row["recorded_monotonic"] is True
+    assert row["header_monotonic"] is True
+    assert row["header_minus_recorded_ms_mean"] == 10.0
+    assert result["interpretation"].startswith("diagnostic summary")

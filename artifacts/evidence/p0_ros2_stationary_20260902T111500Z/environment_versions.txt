@@ -1,0 +1,20 @@
+=== ROS package versions ===
+python3-colcon-common-extensions 0.3.0-100
+ros-humble-cv-bridge 3.2.1-1jammy.20260718.023548
+ros-humble-diagnostic-updater 4.0.7-1jammy.20260724.032411
+ros-humble-image-transport 3.1.13-1jammy.20260726.121656
+ros-humble-image-transport-plugins 2.5.5-1jammy.20260726.141602
+ros-humble-ros-base 0.10.0-1jammy.20260804.204550
+ros-humble-rosbag2 0.15.16-1jammy.20260726.135454
+ros-humble-rosbag2-storage-mcap 0.15.16-1jammy.20260726.123142
+ros-humble-tf2-tools 0.25.22-1jammy.20260804.195304
+=== Orbbec source ===
+8e7cad2bfa2c4a6ac4e779be99c64e72166043af
+v2-main
+8e7cad2bfa2c4a6ac4e779be99c64e72166043af
+fix: skip UVC backend setup for explicit Ethernet devices (#205)
+=== Host/device ===
+ubuntu adm cdrom sudo dip video plugdev lpadmin lxd sambashare
+Bus 002 Device 004: ID 2bc5:0800 Orbbec 3D Technology International, Inc Orbbec Gemini 335
+PRETTY_NAME="Ubuntu 22.04.5 LTS"
+VERSION_ID="22.04"

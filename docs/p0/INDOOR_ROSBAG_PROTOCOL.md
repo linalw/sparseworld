@@ -8,17 +8,18 @@ record metadata before opening streams.
 
 Run `ros2 launch orbbec_camera gemini_330_series.launch.py --show-args` and
 inspect arguments before any stream once ROS 2 and the matching driver are
-installed. On this host `ros2` is currently unavailable, so this preflight is
-blocked and no ROS bag is claimed. The SDK-only stationary timestamp capture is
-separate evidence; it does not substitute for ROS topics, camera-info, TF, QoS,
-or MCAP replay. Confirm RGB, depth, left/right IR, camera-info, IMU, and TF
-topics plus QoS match the profile before recording.
+installed. The preflight must confirm RGB, depth, left/right IR, camera-info,
+IMU, and TF topics plus QoS match the profile before recording. The SDK-only
+stationary timestamp capture is separate evidence; it does not substitute for
+ROS topics, camera-info, TF, QoS, or MCAP replay.
 
-Install the ROS 2 base tools with `bash scripts/p0_install_ros2_humble.sh` in a
-local terminal; it will prompt for the local sudo password. It deliberately
-does not choose an Orbbec driver version. Pin the driver to the Gemini 335
-official support-matrix revision, record its commit/package version, and rerun
-the `--show-args` preflight before opening streams.
+The ROS 2 base tools and pinned official Orbbec driver are now installed on the
+reference host. For a fresh host, `bash scripts/p0_install_ros2_humble.sh`
+remains the reviewed base installer (it prompts for local sudo and deliberately
+does not choose an Orbbec driver version). On the reference host, source
+`/opt/ros/humble/setup.bash` and
+`/home/ubuntu/ros2_ws/install-systempy4/setup.bash`, then rerun the
+`--show-args` preflight before opening streams.
 
 ## Exact route
 
@@ -39,7 +40,10 @@ Example command (adapt storage/output names only after preflight):
 ros2 bag record -o artifacts/rosbags/<run-id> \
   /camera/color/image_raw /camera/color/camera_info \
   /camera/depth/image_raw /camera/depth/camera_info \
-  /camera/left/image_raw /camera/right/image_raw /camera/imu \
+  /camera/left_ir/image_raw /camera/left_ir/camera_info \
+  /camera/right_ir/image_raw /camera/right_ir/camera_info \
+  /camera/accel/sample /camera/gyro/sample \
+  /camera/accel/imu_info /camera/gyro/imu_info /camera/device_status \
   /tf /tf_static
 ```
 

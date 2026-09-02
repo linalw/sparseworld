@@ -33,6 +33,67 @@ def export_rosbag_timestamps(bag_path: str | Path, output_jsonl: str | Path) -> 
         raise RuntimeError(f"rosbag export refused: {type(error).__name__}: {error}") from error
 
 
+def summarize_rosbag_timestamps(timestamps_jsonl: str | Path) -> dict[str, Any]:
+    """Summarize recorded/header timestamp behavior without declaring acceptance.
+
+    The two clock domains remain separate.  Header-minus-recorded values are
+    transport-latency observations only; they are not a cross-sensor sync test.
+    """
+    source = Path(timestamps_jsonl)
+    try:
+        grouped: dict[str, list[dict[str, Any]]] = {}
+        for line_number, line in enumerate(source.read_text(encoding="utf-8").splitlines(), start=1):
+            if not line.strip():
+                continue
+            row = json.loads(line)
+            if not isinstance(row, Mapping) or not isinstance(row.get("topic"), str):
+                raise RuntimeError(f"rosbag quality refused: invalid row at line {line_number}")
+            grouped.setdefault(row["topic"], []).append(dict(row))
+        topics: dict[str, dict[str, Any]] = {}
+        for topic, rows in sorted(grouped.items()):
+            recorded = [row["recorded_timestamp_ns"] for row in rows if _integer_ns(row.get("recorded_timestamp_ns"))]
+            header = [row["header_timestamp_ns"] for row in rows if _integer_ns(row.get("header_timestamp_ns"))]
+            duration_s = (recorded[-1] - recorded[0]) / 1_000_000_000 if len(recorded) > 1 else 0.0
+            latency_ms = [
+                (row["header_timestamp_ns"] - row["recorded_timestamp_ns"]) / 1_000_000
+                for row in rows
+                if _integer_ns(row.get("header_timestamp_ns")) and _integer_ns(row.get("recorded_timestamp_ns"))
+            ]
+            topics[topic] = {
+                "message_count": len(rows),
+                "recorded_timestamp_count": len(recorded),
+                "header_timestamp_count": len(header),
+                "recorded_duration_s": round(duration_s, 9),
+                "recorded_rate_hz": round((len(recorded) - 1) / duration_s, 6) if duration_s > 0 else None,
+                "recorded_monotonic": _monotonic(recorded),
+                "header_monotonic": _monotonic(header) if header else None,
+                "header_minus_recorded_ms_min": round(min(latency_ms), 6) if latency_ms else None,
+                "header_minus_recorded_ms_max": round(max(latency_ms), 6) if latency_ms else None,
+                "header_minus_recorded_ms_mean": round(sum(latency_ms) / len(latency_ms), 6) if latency_ms else None,
+            }
+        return {
+            "schema_version": "p0/rosbag-quality/v1",
+            "status": "not_measured",
+            "source_jsonl": str(source),
+            "topics": topics,
+            "interpretation": "diagnostic summary only; recorded and header clock domains remain separate and no synchronization or performance gate is accepted",
+        }
+    except PermissionError as error:
+        raise RuntimeError("rosbag quality refused: permission denied") from error
+    except RuntimeError:
+        raise
+    except Exception as error:
+        raise RuntimeError(f"rosbag quality refused: {type(error).__name__}: {error}") from error
+
+
+def _integer_ns(value: Any) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool) and value >= 0
+
+
+def _monotonic(values: list[int]) -> bool:
+    return all(next_value >= value for value, next_value in zip(values, values[1:]))
+
+
 def package_normalized_samples_mcap(source_jsonl: str | Path, output_dir: str | Path) -> dict[str, Any]:
     """Package normalized SDK samples into a user-space ROS 2 MCAP container.
 

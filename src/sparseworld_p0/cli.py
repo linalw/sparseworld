@@ -12,7 +12,7 @@ from .calibration import assess_calibration_evidence, calibrate_chessboard_intri
 from .profile import load_profile
 from .quality import assess
 from .reporting import render_report
-from .rosbag_export import package_normalized_samples_mcap
+from .rosbag_export import package_normalized_samples_mcap, summarize_rosbag_timestamps
 
 
 def main() -> int:
@@ -28,6 +28,9 @@ def main() -> int:
     package_parser = subparsers.add_parser("package-mcap", help="package normalized SDK samples into a user-space MCAP diagnostic container")
     package_parser.add_argument("--capture-dir", required=True, type=Path)
     package_parser.add_argument("--output", required=True, type=Path)
+    rosbag_quality_parser = subparsers.add_parser("assess-rosbag", help="summarize exported ROS bag timestamp diagnostics")
+    rosbag_quality_parser.add_argument("--timestamps", required=True, type=Path)
+    rosbag_quality_parser.add_argument("--output", required=True, type=Path)
     calibration_parser = subparsers.add_parser("assess-calibration", help="assess hash-bound calibration/time-sync evidence")
     calibration_parser.add_argument("--evidence", required=True, type=Path)
     calibration_parser.add_argument("--output", required=True, type=Path)
@@ -82,6 +85,15 @@ def main() -> int:
         digest = hashlib.sha256(payload.encode("utf-8")).hexdigest()
         metadata_path.with_suffix(metadata_path.suffix + ".sha256").write_text(
             f"{digest}  {metadata_path.name}\n", encoding="utf-8"
+        )
+        return 0
+    if args.command == "assess-rosbag":
+        result = summarize_rosbag_timestamps(args.timestamps)
+        payload = json.dumps(result, indent=2, sort_keys=True) + "\n"
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(payload, encoding="utf-8")
+        args.output.with_suffix(args.output.suffix + ".sha256").write_text(
+            f"{hashlib.sha256(payload.encode('utf-8')).hexdigest()}  {args.output.name}\n", encoding="utf-8"
         )
         return 0
     if args.command == "assess-calibration":

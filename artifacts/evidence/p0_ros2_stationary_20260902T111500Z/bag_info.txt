@@ -1,0 +1,23 @@
+
+Files:             p0_ros2_stationary_20260902T111500Z_0.mcap
+Bag size:          2.4 GiB
+Storage id:        mcap
+Duration:          19.850123034s
+Start:             Sep  2 2026 11:00:15.767722144 (1788318015.767722144)
+End:               Sep  2 2026 11:00:35.617845178 (1788318035.617845178)
+Messages:          20628
+Topic information: Topic: /camera/left_ir/camera_info | Type: sensor_msgs/msg/CameraInfo | Count: 595 | Serialization Format: cdr
+                   Topic: /camera/device_status | Type: orbbec_camera_msgs/msg/DeviceStatus | Count: 41 | Serialization Format: cdr
+                   Topic: /camera/gyro/sample | Type: sensor_msgs/msg/Imu | Count: 3955 | Serialization Format: cdr
+                   Topic: /camera/left_ir/image_raw | Type: sensor_msgs/msg/Image | Count: 595 | Serialization Format: cdr
+                   Topic: /camera/right_ir/camera_info | Type: sensor_msgs/msg/CameraInfo | Count: 595 | Serialization Format: cdr
+                   Topic: /camera/right_ir/image_raw | Type: sensor_msgs/msg/Image | Count: 595 | Serialization Format: cdr
+                   Topic: /camera/accel/sample | Type: sensor_msgs/msg/Imu | Count: 3958 | Serialization Format: cdr
+                   Topic: /camera/color/camera_info | Type: sensor_msgs/msg/CameraInfo | Count: 595 | Serialization Format: cdr
+                   Topic: /camera/accel/imu_info | Type: orbbec_camera_msgs/msg/IMUInfo | Count: 3958 | Serialization Format: cdr
+                   Topic: /tf | Type: tf2_msgs/msg/TFMessage | Count: 0 | Serialization Format: cdr
+                   Topic: /camera/color/image_raw | Type: sensor_msgs/msg/Image | Count: 594 | Serialization Format: cdr
+                   Topic: /camera/depth/image_raw | Type: sensor_msgs/msg/Image | Count: 595 | Serialization Format: cdr
+                   Topic: /camera/depth/camera_info | Type: sensor_msgs/msg/CameraInfo | Count: 595 | Serialization Format: cdr
+                   Topic: /camera/gyro/imu_info | Type: orbbec_camera_msgs/msg/IMUInfo | Count: 3956 | Serialization Format: cdr
+                   Topic: /tf_static | Type: tf2_msgs/msg/TFMessage | Count: 1 | Serialization Format: cdr
