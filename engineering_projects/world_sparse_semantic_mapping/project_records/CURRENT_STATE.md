@@ -2,6 +2,7 @@
 
 - Updated: 2026-09-02T11:40:00Z
 - Status: proposal_ready; prototype_validation_pending
+- A local browser capture console is implemented on branch `codex/capture-console`: `sparseworld-p0 capture-console` serves a localhost FastAPI UI for attended Gemini 335 ROS 2/rosbag recording, with safe single-session lifecycle, preserved manifests/logs, optional preview, and explicit unassessed warnings. Software evidence: 79 pytest tests passed and `pip check` is clean; a 3-second dry-run Uvicorn startup/shutdown completed. This is operator tooling evidence only and does not change hardware calibration, synchronization, SLAM, semantic, navigation, or safety acceptance.
 - Next action: complete the attended repeatable indoor route rosbag; calibration, synchronization, and performance gates remain pending
 - Continuation package: `project_records/NEW_CONVERSATION_HANDOFF.md` contains the new-task context, evidence boundary, and P0/P1 checklist
 - COLLECT_ONLY: false

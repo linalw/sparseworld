@@ -1,0 +1,65 @@
+"""FastAPI application for the local Gemini capture console."""
+from __future__ import annotations
+
+import json
+from pathlib import Path
+from typing import Any
+
+try:
+    from fastapi import FastAPI, HTTPException
+    from fastapi.responses import FileResponse, Response
+    from fastapi.staticfiles import StaticFiles
+except ImportError:  # pragma: no cover - optional runtime
+    FastAPI = None
+
+
+def create_app(session=None):
+    if FastAPI is None:
+        raise RuntimeError("capture console requires optional dependencies; install sparseworld-p0[console]")
+    if session is None:
+        from .capture_console import CaptureSession
+        session = CaptureSession("artifacts/rosbags")
+    app = FastAPI(title="SparseWorld Gemini 335 Capture Console")
+    static = Path(__file__).parent / "static"
+    app.mount("/static", StaticFiles(directory=static), name="static")
+
+    @app.get("/api/status")
+    def status() -> dict[str, Any]:
+        return session.snapshot()
+
+    @app.post("/api/start")
+    def start(payload: dict[str, Any]) -> dict[str, Any]:
+        try:
+            return session.start(payload.get("run_name", ""), payload.get("duration_s"), payload.get("topics") or [])
+        except Exception as exc:
+            from .capture_console import SessionBusyError
+            if isinstance(exc, SessionBusyError):
+                raise HTTPException(409, str(exc))
+            raise HTTPException(400, str(exc))
+
+    @app.post("/api/stop")
+    def stop() -> dict[str, Any]:
+        return session.stop()
+
+    @app.get("/api/preview.mjpg")
+    def preview():
+        data = session.preview_jpeg()
+        if data is None:
+            raise HTTPException(404, "preview_unavailable")
+        return Response(content=data, media_type="image/jpeg")
+
+    @app.get("/")
+    def index():
+        return FileResponse(static / "capture_console.html")
+
+    return app
+
+
+def mjpeg_stream(session):
+    """Yield a latest-frame MJPEG stream for simple browser clients."""
+    import time
+    while True:
+        frame = session.preview_jpeg()
+        if frame:
+            yield b"--frame\r\nContent-Type: image/jpeg\r\n\r\n" + frame + b"\r\n"
+        time.sleep(0.2)

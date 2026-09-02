@@ -1,5 +1,9 @@
 # Requirements-to-Evidence Verification
 
+## Capture console tooling evidence (2026-09-02)
+
+The `codex/capture-console` branch adds a localhost-only FastAPI browser console (`sparseworld-p0 capture-console`) for attended Gemini 335 ROS 2 recording. It enforces one active session, preserves raw run directories and manifests on stop/failure, and labels unavailable preview or unassessed quality explicitly. `conda run -n sparseworld python -m pytest -q` passed 79 tests; `pip check` reported no broken requirements; a dry-run Uvicorn startup/shutdown on `127.0.0.1:8876` completed. This verifies software/operator workflow only. Route data, RGB-depth alignment, `map_T_camera`, time synchronization, semantic precision, SLAM, navigation, and safety gates remain `not_measured`.
+
 This is a concept/prototype design verification, not a hardware acceptance test. The 2026-08-29 SDK preflight failed closed before stream start because USB device access was denied; no calibration, synchronization, rate, SLAM, navigation, or safety result is inferred.
 
 | ID | Requirement | Evidence | Status | Remaining proof |

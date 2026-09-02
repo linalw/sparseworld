@@ -39,6 +39,11 @@ def main() -> int:
     chessboard_parser.add_argument("--inner-corners", required=True, nargs=2, type=int, metavar=("COLUMNS", "ROWS"))
     chessboard_parser.add_argument("--square-size-mm", required=True, type=float)
     chessboard_parser.add_argument("--output", required=True, type=Path)
+    console_parser = subparsers.add_parser("capture-console", help="start the local attended Gemini capture console")
+    console_parser.add_argument("--host", default="127.0.0.1")
+    console_parser.add_argument("--port", default=8765, type=int)
+    console_parser.add_argument("--output-dir", default=Path("artifacts/rosbags"), type=Path)
+    console_parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
     if args.command == "discover":
         from datetime import datetime, timezone
@@ -113,5 +118,16 @@ def main() -> int:
         args.output.with_suffix(args.output.suffix + ".sha256").write_text(
             f"{hashlib.sha256(payload.encode('utf-8')).hexdigest()}  {args.output.name}\n", encoding="utf-8"
         )
+        return 0
+    if args.command == "capture-console":
+        if args.host not in {"127.0.0.1", "localhost", "::1"}:
+            raise ValueError("capture console refuses non-local host; use an authenticated reverse proxy if remote access is required")
+        try:
+            import uvicorn
+        except ImportError as exc:
+            raise RuntimeError("capture console requires optional dependencies; install sparseworld-p0[console]") from exc
+        from .capture_console import CaptureSession
+        from .capture_console_api import create_app
+        uvicorn.run(create_app(CaptureSession(args.output_dir, dry_run=args.dry_run)), host=args.host, port=args.port)
         return 0
     return 2

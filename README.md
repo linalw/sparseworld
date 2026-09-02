@@ -79,3 +79,6 @@ and immediate-stop criteria.
 
 Authoritative evidence, hashes, decisions, and unresolved risks live under
 `engineering_projects/world_sparse_semantic_mapping/project_records/`.
+# Local capture console
+
+See [`docs/p0/CAPTURE_CONSOLE.md`](docs/p0/CAPTURE_CONSOLE.md) for the Gemini 335 browser console.

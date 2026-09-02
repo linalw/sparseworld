@@ -1,0 +1,6 @@
+const $ = id => document.getElementById(id);
+function show(s){$('state').textContent = ({idle:'待机',starting:'启动中',recording:'录制中',stopping:'停止中',complete:'已完成',failed:'失败'}[s.state] || s.state); $('run-dir').textContent=s.run_dir||'—'; $('elapsed').textContent=`${Math.round(s.elapsed_s||0)} s`; $('preview-state').textContent=s.preview_available?'可用':'不可用'; const active=['starting','recording','stopping'].includes(s.state); $('start').disabled=active; $('stop').disabled=!active; const w=[]; if(!s.preview_available&&active)w.push('实时预览不可用，但不影响 rosbag 录制。'); if(s.status==='stopped_unassessed')w.push('本次数据尚未完成硬件质量评估。'); $('warnings').innerHTML=w.map(x=>`<div class="warning">${x}</div>`).join(''); }
+async function refresh(){try{show(await (await fetch('/api/status')).json())}catch(e){$('state').textContent='服务未连接';}}
+$('start').onclick=async()=>{const d=$('duration').value; const r=await fetch('/api/start',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({run_name:$('run-name').value,duration_s:d?Number(d):null,topics:[]})}); if(!r.ok)alert((await r.json()).detail||'启动失败'); refresh();};
+$('stop').onclick=async()=>{await fetch('/api/stop',{method:'POST'});refresh();};
+setInterval(refresh,1000); refresh();
