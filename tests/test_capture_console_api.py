@@ -72,3 +72,12 @@ def test_run_file_endpoint_serves_manifest_only_inside_run(tmp_path):
     assert response.status_code == 200
     assert "stopped_unassessed" in response.text
     assert client.get(f"/api/runs/{run_id}/files/../capture_manifest.json").status_code in {400, 404}
+
+
+def test_depth_preview_endpoint_returns_404_until_depth_frame_exists(tmp_path):
+    from fastapi.testclient import TestClient
+    from sparseworld_p0.capture_console import CaptureSession
+    from sparseworld_p0.capture_console_api import create_app
+
+    client = TestClient(create_app(CaptureSession(tmp_path, dry_run=True)))
+    assert client.get("/api/preview/depth.jpg").status_code == 404

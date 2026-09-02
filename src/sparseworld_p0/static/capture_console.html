@@ -5,6 +5,6 @@
 <header><div><h1>Gemini 335 室内数据采集</h1><p class="muted">本地控制台 · 物体语义地图 P0</p></div><span id="safety">不控制底盘</span></header>
 <main class="grid">
   <section class="card"><h2>设备与状态</h2><div id="state" class="state">正在连接…</div><dl><dt>运行目录</dt><dd id="run-dir">—</dd><dt>已用时间</dt><dd id="elapsed">0 s</dd><dt>预览</dt><dd id="preview-state">不可用</dd></dl><div id="warnings"></div><h2 class="history-title">已采集数据</h2><div id="runs">正在读取…</div></section>
-  <section class="card preview"><h2>实时预览</h2><div class="frames"><div><h3>RGB</h3><img id="rgb" src="/api/preview.mjpg" alt="RGB 预览"></div><div class="depth-placeholder"><h3>Depth</h3><div>深度预览将在 ROS 图像桥接可用时显示</div></div></div></section>
+  <section class="card preview"><h2>实时预览</h2><div class="frames"><div><h3>RGB</h3><img id="rgb" src="/api/preview.mjpg" alt="RGB 预览"></div><div><h3>Depth（伪彩）</h3><img id="depth" src="/api/preview/depth.jpg" alt="深度伪彩预览"><div id="depth-message" class="muted">等待深度帧…</div></div></div></section>
   <section class="card"><h2>录制控制</h2><label>路线名称<input id="run-name" value="indoor-route"></label><label>时长（秒，可留空）<input id="duration" type="number" min="1" max="86400" placeholder="手动停止"></label><label>备注<textarea id="notes" rows="4" placeholder="房间、楼层、光照、路线备注"></textarea></label><div class="buttons"><button id="start">开始录制</button><button id="stop" class="danger" disabled>停止并保存</button></div><p class="muted">停止后会保留 rosbag、日志和 manifest。质量结果仅代表采集证据，未测量项不会自动通过。</p></section>
 </main><script src="/static/capture_console.js"></script></body></html>

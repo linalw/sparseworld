@@ -47,6 +47,7 @@ class CaptureSession:
             out = dict(self._run)
             out.update(state=self._state, active=self._state in {"starting", "recording", "stopping"},
                        preview_available=(self._run.get("preview_jpeg") is not None or bool(self._run.get("run_dir") and Path(self._run["run_dir"], "preview.jpg").is_file())),
+                       depth_preview_available=bool(self._run.get("run_dir") and Path(self._run["run_dir"], "depth-preview.jpg").is_file()),
                        preview_status=self._run.get("preview_status", "unavailable"),
                        preview_error=self._run.get("preview_error"))
             if self._state == "recording":
@@ -103,7 +104,7 @@ class CaptureSession:
             self._state = "starting"
             record_cmd = ["ros2", "bag", "record", "-o", str(run_dir / "bag"), *selected]
             preview_script = Path(__file__).resolve().parents[2] / "scripts" / "p0_ros_preview.py"
-            preview_cmd = ["/usr/bin/python3", str(preview_script), "--output", str(run_dir / "preview.jpg")]
+            preview_cmd = ["/usr/bin/python3", str(preview_script), "--output", str(run_dir / "preview.jpg"), "--depth-output", str(run_dir / "depth-preview.jpg")]
             try:
                 if not self.dry_run:
                     self._processes = [

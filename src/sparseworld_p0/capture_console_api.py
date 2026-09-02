@@ -76,6 +76,14 @@ def create_app(session=None):
             raise HTTPException(404, "preview_unavailable")
         return Response(content=data, media_type="image/jpeg")
 
+    @app.get("/api/preview/depth.jpg")
+    def depth_preview():
+        run_dir = session.snapshot().get("run_dir")
+        candidate = Path(run_dir) / "depth-preview.jpg" if run_dir else None
+        if not candidate or not candidate.is_file():
+            raise HTTPException(404, "depth_preview_unavailable")
+        return FileResponse(candidate, media_type="image/jpeg")
+
     @app.get("/")
     def index():
         return FileResponse(static / "capture_console.html")

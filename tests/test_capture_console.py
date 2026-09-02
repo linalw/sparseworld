@@ -92,6 +92,15 @@ def test_start_records_preview_status_and_command(tmp_path):
     session.stop()
 
 
+def test_start_records_rgb_and_depth_preview_commands(tmp_path):
+    session = CaptureSession(tmp_path, process_factory=lambda argv, **kw: FakeProcess(argv), dry_run=True)
+    started = session.start("route", None, ["/tf"])
+    commands = [" ".join(cmd) for cmd in started["commands"]]
+    assert any("preview.jpg" in cmd for cmd in commands)
+    assert any("depth-preview.jpg" in cmd for cmd in commands)
+    session.stop()
+
+
 def test_real_capture_refuses_when_no_video_device_exists(tmp_path, monkeypatch):
     monkeypatch.setattr("sparseworld_p0.capture_console.glob.glob", lambda _: [])
     session = CaptureSession(tmp_path)

@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Best-effort ROS 2 RGB preview writer; recording never depends on it."""
+"""Best-effort ROS 2 RGB/depth preview writer; recording never depends on it."""
 from __future__ import annotations
 import argparse, os, tempfile
 from pathlib import Path
 
 def main() -> int:
-    parser = argparse.ArgumentParser(); parser.add_argument("--output", required=True); args = parser.parse_args()
+    parser = argparse.ArgumentParser(); parser.add_argument("--output", required=True); parser.add_argument("--depth-output", required=True); args = parser.parse_args()
     try:
         import rclpy
         from rclpy.node import Node
@@ -18,8 +18,9 @@ def main() -> int:
     class Preview(Node):
         def __init__(self):
             super().__init__("sparseworld_capture_preview")
-            self.bridge, self.output = CvBridge(), Path(args.output)
+            self.bridge, self.output, self.depth_output = CvBridge(), Path(args.output), Path(args.depth_output)
             self.create_subscription(Image, "/camera/color/image_raw", self.callback, 10)
+            self.create_subscription(Image, "/camera/depth/image_raw", self.depth_callback, 10)
         def callback(self, msg):
             try:
                 image = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
@@ -27,6 +28,22 @@ def main() -> int:
                 if cv2.imwrite(tmp, image): os.replace(tmp, self.output)
                 else: os.unlink(tmp)
             except Exception as exc: self.get_logger().warning(f"preview frame failed: {exc}")
+        def depth_callback(self, msg):
+            try:
+                image = self.bridge.imgmsg_to_cv2(msg, desired_encoding="passthrough")
+                import numpy as np
+                image = np.nan_to_num(image).astype("float32")
+                valid = image[image > 0]
+                if valid.size == 0: return
+                low, high = np.percentile(valid, (2, 98))
+                if high <= low: return
+                display = ((image - low) * 255.0 / (high - low)).clip(0, 255).astype("uint8")
+                display[image <= 0] = 0
+                display = cv2.applyColorMap(display, cv2.COLORMAP_TURBO)
+                fd, tmp = tempfile.mkstemp(prefix="depth-preview-", suffix=".jpg", dir=self.depth_output.parent); os.close(fd)
+                if cv2.imwrite(tmp, display): os.replace(tmp, self.depth_output)
+                else: os.unlink(tmp)
+            except Exception as exc: self.get_logger().warning(f"depth preview frame failed: {exc}")
     rclpy.init(); node = Preview()
     try: rclpy.spin(node)
     except KeyboardInterrupt: pass
