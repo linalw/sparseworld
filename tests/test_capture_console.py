@@ -132,3 +132,11 @@ def test_live_mode_uses_rtabmap_launch_with_run_local_database(tmp_path):
     assert slam[:4] == ["ros2", "launch", "rtabmap_launch", "rtabmap.launch.py"]
     assert any("database_path:=" in arg and "rtabmap.db" in arg for arg in slam)
     session.stop()
+
+
+def test_live_mode_launches_keyframe_bridge_and_reports_sparse_storage(tmp_path):
+    session = CaptureSession(tmp_path, process_factory=lambda argv, **kw: FakeProcess(argv), dry_run=True)
+    state = session.start("live", None, [], mode="live")
+    assert any("p0_live_keyframe_bridge.py" in " ".join(command) for command in state["commands"])
+    assert state["keyframe_policy"]["max_rate_hz"] == 1.0
+    session.stop()
