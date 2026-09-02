@@ -14,6 +14,12 @@ separate evidence; it does not substitute for ROS topics, camera-info, TF, QoS,
 or MCAP replay. Confirm RGB, depth, left/right IR, camera-info, IMU, and TF
 topics plus QoS match the profile before recording.
 
+Install the ROS 2 base tools with `bash scripts/p0_install_ros2_humble.sh` in a
+local terminal; it will prompt for the local sudo password. It deliberately
+does not choose an Orbbec driver version. Pin the driver to the Gemini 335
+official support-matrix revision, record its commit/package version, and rerun
+the `--show-args` preflight before opening streams.
+
 ## Exact route
 
 Use one continuous bag and the same pace throughout:

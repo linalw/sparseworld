@@ -1,0 +1,119 @@
+{
+  "accepted_view_count": 9,
+  "calibration_rms_px": 0.8819015482070428,
+  "camera_matrix": [
+    [
+      712.8033753675035,
+      0.0,
+      609.9110727064916
+    ],
+    [
+      0.0,
+      715.3971736688931,
+      350.34170362269543
+    ],
+    [
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "distortion_coefficients": [
+    0.13793575347132173,
+    -0.6094415704768529,
+    -0.00615886340819274,
+    -0.013100922491842904,
+    0.863529719039561
+  ],
+  "image_size_px": [
+    1280,
+    720
+  ],
+  "interpretation": "monocular RGB checkerboard calibration only; does not calibrate depth, stereo, IMU, base transform, clock offset, SLAM, navigation, or safety",
+  "max_reprojection_rms_px": 1.3977262763639717,
+  "mean_reprojection_rms_px": 0.8345907449710719,
+  "opencv_version": "4.11.0",
+  "pattern_inner_corners": [
+    8,
+    6
+  ],
+  "schema_version": "p0/chessboard-intrinsics/v1",
+  "source_image_directory": "/home/ubuntu/linalw/Projects/lingbotmap/lingbot-map/imageforcalibration",
+  "square_size_m": 0.02,
+  "status": "measured",
+  "view_count": 9,
+  "views": [
+    {
+      "corner_count": 48,
+      "detector": "findChessboardCornersSB",
+      "file": "1_Color.png",
+      "reprojection_rms_px": 1.3977262763639717,
+      "sha256": "00150ed4ffd817bc75ed766cdb8ab47aedb9341e74b0324905f3971c55c04154",
+      "status": "detected"
+    },
+    {
+      "corner_count": 48,
+      "detector": "findChessboardCornersSB",
+      "file": "2_Color.png",
+      "reprojection_rms_px": 1.2020642444128258,
+      "sha256": "83e32bb9dd91ea6e85568291ec15c81b80cfdec5c8d0d8e7549ad786b7018c97",
+      "status": "detected"
+    },
+    {
+      "corner_count": 48,
+      "detector": "findChessboardCornersSB",
+      "file": "3_Color.png",
+      "reprojection_rms_px": 0.7487637764745698,
+      "sha256": "2917db16862cda854ef9ecd6c8916e75cb0cc6d2810d437c08e1f19c5324934b",
+      "status": "detected"
+    },
+    {
+      "corner_count": 48,
+      "detector": "findChessboardCornersSB",
+      "file": "4_Color.png",
+      "reprojection_rms_px": 0.6171212636843336,
+      "sha256": "4c80cc36539d78ffc98a9169d3cbda4107008341bd27553da5c5135a9f36246f",
+      "status": "detected"
+    },
+    {
+      "corner_count": 48,
+      "detector": "findChessboardCornersSB",
+      "file": "5_Color.png",
+      "reprojection_rms_px": 0.6421972194517515,
+      "sha256": "0dbeebda00f45ef508f88b40a910661993822cb120b0a731a097615457c4bfb2",
+      "status": "detected"
+    },
+    {
+      "corner_count": 48,
+      "detector": "findChessboardCornersSB",
+      "file": "6_Color.png",
+      "reprojection_rms_px": 0.5783552754095039,
+      "sha256": "f64227f82f1cffd5ad81c2879bc239f2bf7b30dcaefc9ebbf876bb999df9a341",
+      "status": "detected"
+    },
+    {
+      "corner_count": 48,
+      "detector": "findChessboardCorners",
+      "file": "7_Color.png",
+      "reprojection_rms_px": 0.661773296242038,
+      "sha256": "ed0f63490710dbd58ec4669c4fd67063c6fedaafc0301daaa159b3c262e79ae0",
+      "status": "detected"
+    },
+    {
+      "corner_count": 48,
+      "detector": "findChessboardCornersSB",
+      "file": "8_Color.png",
+      "reprojection_rms_px": 1.0455636630386376,
+      "sha256": "e0ac7dfec20a7db32264f1909bec2f843dc5912312bb2ef941e576917837b4a8",
+      "status": "detected"
+    },
+    {
+      "corner_count": 48,
+      "detector": "findChessboardCornersSB",
+      "file": "9_Color.png",
+      "reprojection_rms_px": 0.6177516896620144,
+      "sha256": "099ec2aee2283017d64e1e2e8276f1b5aad4cedf8f1da41412cc84861ed85885",
+      "status": "detected"
+    }
+  ]
+}

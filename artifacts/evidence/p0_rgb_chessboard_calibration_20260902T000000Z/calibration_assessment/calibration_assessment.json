@@ -1,0 +1,34 @@
+{
+  "gates": {
+    "base_camera_transform": {
+      "reason": "evidence_section_missing",
+      "status": "not_measured"
+    },
+    "camera_imu_extrinsics": {
+      "reason": "evidence_section_missing",
+      "status": "not_measured"
+    },
+    "camera_intrinsics": {
+      "reason": "residual_or_threshold_missing",
+      "status": "not_measured",
+      "threshold": null,
+      "value": 0.8819015482070428
+    },
+    "device_host_clock_offset": {
+      "reason": "evidence_section_missing",
+      "status": "not_measured"
+    },
+    "rgb_depth_alignment": {
+      "reason": "evidence_section_missing",
+      "status": "not_measured"
+    }
+  },
+  "interpretation": "raw evidence is hash-bound; this is not a replacement for field calibration or robot acceptance",
+  "schema_version": "p0/calibration-assessment/v1",
+  "source": {
+    "evidence_sha256": "44d78cea54dcc516fafb035142ddac3cf73a54181f34938387537fc3395ff394",
+    "profile_sha256": "a7749a37e3345877180a93dc06a611330cdcfcf2992351b4ccaa89065310a2c4",
+    "schema_version": "p0/calibration-evidence/v1"
+  },
+  "status": "not_measured"
+}

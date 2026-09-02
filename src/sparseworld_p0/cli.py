@@ -8,7 +8,7 @@ import json
 from pathlib import Path
 
 from .discovery import discover_environment
-from .calibration import assess_calibration_evidence, render_calibration_report
+from .calibration import assess_calibration_evidence, calibrate_chessboard_intrinsics, render_calibration_report
 from .profile import load_profile
 from .quality import assess
 from .reporting import render_report
@@ -31,6 +31,11 @@ def main() -> int:
     calibration_parser = subparsers.add_parser("assess-calibration", help="assess hash-bound calibration/time-sync evidence")
     calibration_parser.add_argument("--evidence", required=True, type=Path)
     calibration_parser.add_argument("--output", required=True, type=Path)
+    chessboard_parser = subparsers.add_parser("calibrate-chessboard", help="measure RGB intrinsics from checkerboard images")
+    chessboard_parser.add_argument("--image-dir", required=True, type=Path)
+    chessboard_parser.add_argument("--inner-corners", required=True, nargs=2, type=int, metavar=("COLUMNS", "ROWS"))
+    chessboard_parser.add_argument("--square-size-mm", required=True, type=float)
+    chessboard_parser.add_argument("--output", required=True, type=Path)
     args = parser.parse_args()
     if args.command == "discover":
         from datetime import datetime, timezone
@@ -85,5 +90,16 @@ def main() -> int:
             raise ValueError("calibration assessment refused: evidence must be an object")
         result = assess_calibration_evidence(evidence, args.evidence.parent)
         render_calibration_report(result, args.output)
+        return 0
+    if args.command == "calibrate-chessboard":
+        result = calibrate_chessboard_intrinsics(
+            args.image_dir, pattern_size=tuple(args.inner_corners), square_size_m=args.square_size_mm / 1000.0,
+        )
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        payload = json.dumps(result, sort_keys=True, indent=2, ensure_ascii=False) + "\n"
+        args.output.write_text(payload, encoding="utf-8")
+        args.output.with_suffix(args.output.suffix + ".sha256").write_text(
+            f"{hashlib.sha256(payload.encode('utf-8')).hexdigest()}  {args.output.name}\n", encoding="utf-8"
+        )
         return 0
     return 2

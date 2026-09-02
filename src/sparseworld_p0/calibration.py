@@ -21,6 +21,104 @@ _GATES = (
 )
 
 
+def reprojection_rms_px(deltas: Any) -> float:
+    """Return RMS Euclidean reprojection error from ``(dx, dy)`` pairs."""
+    values = [(float(dx), float(dy)) for dx, dy in deltas]
+    if not values:
+        raise ValueError("reprojection RMS requires at least one point")
+    return (sum(dx * dx + dy * dy for dx, dy in values) / len(values)) ** 0.5
+
+
+def calibrate_chessboard_intrinsics(
+    image_dir: str | Path,
+    *,
+    pattern_size: tuple[int, int],
+    square_size_m: float,
+) -> dict[str, Any]:
+    """Calibrate a monocular pinhole camera from checkerboard images.
+
+    ``pattern_size`` is the number of *inner* corners (columns, rows), and
+    ``square_size_m`` is the measured checkerboard square edge in metres.
+    Returned calibration is observation evidence; callers must preserve the
+    image hashes and review residuals before accepting it.
+    """
+    if len(pattern_size) != 2 or any(not isinstance(value, int) or value < 2 for value in pattern_size):
+        raise ValueError("pattern_size must contain two integers >= 2")
+    if not isinstance(square_size_m, (int, float)) or isinstance(square_size_m, bool) or square_size_m <= 0:
+        raise ValueError("square_size_m must be positive")
+    try:
+        import cv2
+        import numpy as np
+    except ImportError as error:
+        raise RuntimeError("checkerboard calibration refused: install opencv-python and numpy") from error
+    source = Path(image_dir)
+    images = sorted(path for suffix in ("*.png", "*.jpg", "*.jpeg", "*.bmp") for path in source.glob(suffix))
+    if not images:
+        raise RuntimeError("checkerboard calibration refused: no supported images found")
+    columns, rows = pattern_size
+    object_points = np.zeros((columns * rows, 3), np.float32)
+    object_points[:, :2] = np.mgrid[0:columns, 0:rows].T.reshape(-1, 2) * float(square_size_m)
+    detected_objects, detected_corners, views = [], [], []
+    image_size = None
+    for path in images:
+        image = cv2.imread(str(path), cv2.IMREAD_GRAYSCALE)
+        entry: dict[str, Any] = {"file": path.name, "sha256": hashlib.sha256(path.read_bytes()).hexdigest()}
+        if image is None:
+            entry.update({"status": "unreadable", "corner_count": 0})
+            views.append(entry)
+            continue
+        if image_size is None:
+            image_size = (int(image.shape[1]), int(image.shape[0]))
+        elif image_size != (int(image.shape[1]), int(image.shape[0])):
+            entry.update({"status": "rejected_size_mismatch", "corner_count": 0, "image_size_px": [int(image.shape[1]), int(image.shape[0])]})
+            views.append(entry)
+            continue
+        found, corners = cv2.findChessboardCornersSB(
+            image, pattern_size, flags=cv2.CALIB_CB_NORMALIZE_IMAGE | cv2.CALIB_CB_EXHAUSTIVE | cv2.CALIB_CB_ACCURACY,
+        )
+        detector = "findChessboardCornersSB"
+        if not found:
+            found, corners = cv2.findChessboardCorners(image, pattern_size, flags=cv2.CALIB_CB_ADAPTIVE_THRESH | cv2.CALIB_CB_NORMALIZE_IMAGE)
+            detector = "findChessboardCorners"
+            if found:
+                corners = cv2.cornerSubPix(image, corners, (11, 11), (-1, -1), (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 1e-4))
+        entry.update({"status": "detected" if found else "not_detected", "corner_count": 0 if corners is None else int(len(corners)), "detector": detector})
+        views.append(entry)
+        if found and corners is not None:
+            detected_objects.append(object_points)
+            detected_corners.append(corners)
+    if len(detected_corners) < 3 or image_size is None:
+        raise RuntimeError(f"checkerboard calibration refused: only {len(detected_corners)} valid views; need at least 3")
+    rms, camera_matrix, distortion, rotations, translations = cv2.calibrateCamera(detected_objects, detected_corners, image_size, None, None)
+    errors = []
+    used = 0
+    for entry, object_set, image_set, rotation, translation in zip((item for item in views if item["status"] == "detected"), detected_objects, detected_corners, rotations, translations):
+        projected, _ = cv2.projectPoints(object_set, rotation, translation, camera_matrix, distortion)
+        deltas = (image_set.reshape(-1, 2) - projected.reshape(-1, 2)).tolist()
+        error_px = reprojection_rms_px(deltas)
+        entry["reprojection_rms_px"] = error_px
+        errors.append(error_px)
+        used += 1
+    return {
+        "schema_version": "p0/chessboard-intrinsics/v1",
+        "status": "measured",
+        "source_image_directory": str(source),
+        "pattern_inner_corners": [columns, rows],
+        "square_size_m": float(square_size_m),
+        "image_size_px": list(image_size),
+        "view_count": len(images),
+        "accepted_view_count": used,
+        "opencv_version": cv2.__version__,
+        "calibration_rms_px": float(rms),
+        "mean_reprojection_rms_px": float(sum(errors) / len(errors)),
+        "max_reprojection_rms_px": float(max(errors)),
+        "camera_matrix": camera_matrix.tolist(),
+        "distortion_coefficients": distortion.reshape(-1).tolist(),
+        "views": views,
+        "interpretation": "monocular RGB checkerboard calibration only; does not calibrate depth, stereo, IMU, base transform, clock offset, SLAM, navigation, or safety",
+    }
+
+
 def _raw_check(node: Any, evidence_dir: Path) -> tuple[str, str | None]:
     if not isinstance(node, Mapping):
         return "not_measured", "evidence_section_missing"

@@ -37,6 +37,37 @@ evidence directory. Missing field evidence is `not_measured`; a hash mismatch,
 unsupported schema, or residual violation is `fail`. It never estimates or
 fills calibration values.
 
+## RGB checkerboard calibration
+
+For an 8×6-inner-corner checkerboard whose measured square edge is 20 mm:
+
+```bash
+sparseworld-p0 calibrate-chessboard \
+  --image-dir /path/to/images \
+  --inner-corners 8 6 --square-size-mm 20 \
+  --output artifacts/evidence/<run-id>/rgb_checkerboard_intrinsics.json
+```
+
+The result stores SHA-256 for every input image, detector outcome, camera
+matrix, distortion coefficients, and per-view/overall reprojection RMS. It is
+only a monocular RGB calibration observation. Define acceptance criteria before
+marking its residual as a pass.
+
+## ROS 2 installation prerequisite
+
+ROS 2 needs an interactive sudo password on this host. In a local terminal,
+review then run:
+
+```bash
+bash scripts/p0_install_ros2_humble.sh
+source /opt/ros/humble/setup.bash
+ros2 --version
+```
+
+The script installs official ROS 2 Humble P0 tools only. The matching Orbbec
+driver must then be pinned to its official Gemini 335 support-matrix version
+before a `ros2 launch ... --show-args` preflight and any bag recording.
+
 ## P0 evidence and safety boundary
 
 Read [docs/p0/CALIBRATION_AND_TIME_SYNC.md](docs/p0/CALIBRATION_AND_TIME_SYNC.md)

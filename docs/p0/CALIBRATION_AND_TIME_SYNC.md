@@ -49,6 +49,16 @@ operator-declared threshold. A complete report with `pass` is still evidence
 of the declared calibration run only; it is not SLAM, navigation, or safety
 acceptance.
 
+### RGB checkerboard extractor
+
+Use `sparseworld-p0 calibrate-chessboard` for a monocular RGB image set. The
+CLI requires the actual count of **inner corners** and measured square edge in
+millimetres. It stores every input image SHA-256, detector method, rejection
+status, camera matrix, distortion coefficients, and per-view/overall RMS. The
+2026-09-02 supplied image set is 9 images at 1280×720, 9×7 squares / 8×6 inner
+corners, and 20 mm square edge. Its result is stored as P0 evidence, but has
+no acceptance threshold and therefore is measured rather than passed.
+
 ## Current state
 
 `pyorbbecsdk2==2.1.2` is installed and importable in `sparseworld`; its wheel

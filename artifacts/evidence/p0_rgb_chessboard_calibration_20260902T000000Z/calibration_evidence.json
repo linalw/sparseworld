@@ -1,0 +1,18 @@
+{
+  "schema_version": "p0/calibration-evidence/v1",
+  "profile_sha256": "a7749a37e3345877180a93dc06a611330cdcfcf2992351b4ccaa89065310a2c4",
+  "operator": "user-provided image set; automated OpenCV extraction",
+  "run_id": "p0_rgb_chessboard_calibration_20260902T000000Z",
+  "tool": {
+    "name": "sparseworld-p0 calibrate-chessboard / OpenCV",
+    "version": "sparseworld-p0 0.1.0; OpenCV 4.11.0"
+  },
+  "camera_intrinsics": {
+    "raw_file": "rgb_checkerboard_intrinsics.json",
+    "sha256": "1e80ac4736a5e17200ff722ed7ab3d58154918e6ac9c9ebcd8fafc9945d2becf",
+    "residual_px": 0.8819015482070428,
+    "acceptance_max_residual_px": null,
+    "measurement_basis": "9 RGB PNG images; 1280x720; checkerboard 8x6 inner corners; measured square edge 0.020 m",
+    "scope": "monocular RGB intrinsics only"
+  }
+}

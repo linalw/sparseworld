@@ -98,6 +98,8 @@
 - 最终重评估已启用时钟域保护：`assessment_final_clock_relation/assessment.json` 将 device-monotonic 与 host-UTC 的直接相减标记为 `clock_domain_mismatch`，不再输出伪偏移值；最终报告 SHA-256 为 `50a629fedc686d69b6f2a184d257886aa5ac35ca7c779f2defe8a2d460f0b825`。报告保留 elapsed-clock 相对速率诊断，但绝对偏移仍为 null。
 - 当前环境快照 `artifacts/evidence/p0_environment_20260830T093000Z.json` 记录 RTX 5090、`video` 组、Gemini 335 和 SDK 2.1.2；`ros2` 仍未安装。用户态 `rosbags`/`mcap` 只能提供规范化诊断容器，不能替代官方 ROS 2/Orbbec driver 路线。
 - 已加入 `sparseworld-p0 assess-calibration` 与 `config/p0_calibration_evidence.example.json`：它对同一 evidence 目录下的原始文件做 SHA-256 绑定，检查重投影/时钟残差、变换字段和 pairing policy；缺失数据为 `not_measured`，哈希或格式问题为 `fail`。68 个自动化测试通过，但尚无真实 checkerboard、相机-IMU/底盘外参或绝对时间偏移证据，不能将此工具测试表述为现场标定通过。
+- 用户提供的 `/home/ubuntu/linalw/Projects/lingbotmap/lingbot-map/imageforcalibration` 已完成真实 RGB 棋盘格提取：9 张 1280×720 图，9×7 方格 / 8×6 内角点，实测格长 20 mm；9/9 成功。`rgb_checkerboard_intrinsics.json` SHA-256 为 `1e80ac4736a5e17200ff722ed7ab3d58154918e6ac9c9ebcd8fafc9945d2becf`，OpenCV 总 RMS 为 `0.8819015482 px`，每图 RMS 均值/最大为 `0.8345907450/1.3977262764 px`。未冻结残差阈值，故为实测但不标记为通过；其余 RGB-depth/stereo、相机-IMU/底盘、绝对时间偏移均仍未实测。
+- 用户授权 ROS 2 安装，但当前非交互会话无法输入 sudo 密码。请本机终端执行 `bash scripts/p0_install_ros2_humble.sh`，再由接手者 pin 官方 Gemini 335 Orbbec driver、运行 `--show-args`、检查 topics/QoS/TF 并录制官方 rosbag。
 
 ### P0：可观测性与标定基线
 

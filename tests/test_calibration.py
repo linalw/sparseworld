@@ -3,7 +3,13 @@ import json
 import sys
 from pathlib import Path
 
-from sparseworld_p0.calibration import assess_calibration_evidence, render_calibration_report
+import pytest
+
+from sparseworld_p0.calibration import (
+    assess_calibration_evidence,
+    calibrate_chessboard_intrinsics,
+    render_calibration_report,
+)
 
 
 def _write_raw(path: Path, text: str = "raw calibration\n") -> str:
@@ -107,3 +113,21 @@ def test_cli_assess_calibration_writes_hash_bound_report(tmp_path: Path, monkeyp
     monkeypatch.setattr(sys, "argv", ["sparseworld-p0", "assess-calibration", "--evidence", str(evidence), "--output", str(output)])
     assert cli.main() == 0
     assert (output / "calibration_assessment.json").is_file()
+
+
+def test_chessboard_calibration_refuses_a_directory_without_images(tmp_path: Path):
+    with pytest.raises(RuntimeError, match="no supported images"):
+        calibrate_chessboard_intrinsics(tmp_path, pattern_size=(8, 6), square_size_m=0.02)
+
+
+def test_chessboard_calibration_refuses_invalid_board_geometry(tmp_path: Path):
+    with pytest.raises(ValueError, match="pattern_size"):
+        calibrate_chessboard_intrinsics(tmp_path, pattern_size=(1, 6), square_size_m=0.02)
+    with pytest.raises(ValueError, match="square_size_m"):
+        calibrate_chessboard_intrinsics(tmp_path, pattern_size=(8, 6), square_size_m=0)
+
+
+def test_reprojection_rms_is_root_mean_square_pixel_distance():
+    from sparseworld_p0.calibration import reprojection_rms_px
+
+    assert reprojection_rms_px([(3.0, 4.0), (0.0, 0.0)]) == pytest.approx(5.0 / (2 ** 0.5))
