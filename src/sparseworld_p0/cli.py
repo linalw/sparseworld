@@ -45,6 +45,9 @@ def main() -> int:
     semantic_parser.add_argument("--manifest", required=True, type=Path)
     semantic_parser.add_argument("--backend", required=True, choices=("fixture", "sam2_florence_siglip", "sam2"))
     semantic_parser.add_argument("--fixture-path", type=Path, help="fixture JSON path when --backend=fixture")
+    semantic_parser.add_argument("--mask-model-id", default="facebook/sam-vit-base")
+    semantic_parser.add_argument("--label-model-id", default="Salesforce/blip-image-captioning-base")
+    semantic_parser.add_argument("--device", type=int, default=0, help="Transformers device index; use -1 for CPU")
     semantic_parser.add_argument("--output", required=True, type=Path)
     args = parser.parse_args()
     if args.command == "discover":
@@ -123,7 +126,7 @@ def main() -> int:
         return 0
     if args.command == "semantic-map":
         manifest = json.loads(args.manifest.read_text(encoding="utf-8"))
-        backend_config = {"fixture_path": str(args.fixture_path)} if args.fixture_path else {}
+        backend_config = {"fixture_path": str(args.fixture_path)} if args.fixture_path else {"mask_model_id": args.mask_model_id, "label_model_id": args.label_model_id, "device": args.device}
         result = build_semantic_map(manifest, load_backend(args.backend, backend_config))
         payload = json.dumps(result, indent=2, sort_keys=True, ensure_ascii=False) + "\n"
         args.output.parent.mkdir(parents=True, exist_ok=True)

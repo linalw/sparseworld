@@ -1,11 +1,11 @@
 # Automatic semantic object mapping
 
 The semantic-map MVP turns synchronized RGB-D frames into deduplicated object
-records. Its production pipeline is designed for SAM 2 automatic masks,
-Florence-2 open-vocabulary labels, and optional SigLIP verification. The
-current repository includes a deterministic fixture backend for CI and offline
-integration; real model adapters fail closed until their packages and weights
-are explicitly installed.
+records. Its production pipeline is designed for automatic SAM masks,
+an image-to-text/open-vocabulary labeler, and optional SigLIP verification. The
+repository includes a deterministic fixture backend for CI and an optional
+Hugging Face adapter. Real inference loads only when requested packages and
+weights are explicitly available; otherwise it fails closed.
 
 ## Input manifest
 
@@ -45,9 +45,13 @@ class outside the gate remains separate. Repeated displacement is marked
 
 ## Production model boundary
 
-`--backend sam2_florence_siglip` is intentionally fail-closed in this MVP. A
-future adapter must record model/version/weights/input-size/latency metadata
-for every inference and preserve `unknown` candidates when confidence is low.
+`--backend sam2_florence_siglip` uses configurable Hugging Face
+`mask-generation` and `image-to-text` pipelines (defaults are SAM ViT Base and
+BLIP Image Captioning Base; Florence-2 may be supplied explicitly once its
+custom-code/runtime compatibility is pinned). The adapter records model/version/weights/input-size/latency
+metadata and preserves `unknown` candidates when confidence is low. Install
+the optional runtime with `pip install -e '.[semantic]'`, then pin and cache
+model revisions before an offline run.
 Installing or smoke-testing models does not establish mask IoU, class
 precision/recall, 3D anchor error, duplicate rate, real-time throughput, SLAM,
 navigation, or safety performance. Those require a labeled, attended Gemini
