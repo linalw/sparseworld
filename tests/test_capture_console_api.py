@@ -81,3 +81,28 @@ def test_depth_preview_endpoint_returns_404_until_depth_frame_exists(tmp_path):
 
     client = TestClient(create_app(CaptureSession(tmp_path, dry_run=True)))
     assert client.get("/api/preview/depth.jpg").status_code == 404
+
+
+def test_live_start_validates_mode_and_returns_live_metrics(tmp_path):
+    from fastapi.testclient import TestClient
+    from sparseworld_p0.capture_console import CaptureSession
+    from sparseworld_p0.capture_console_api import create_app
+
+    client = TestClient(create_app(CaptureSession(tmp_path, dry_run=True)))
+    invalid = client.post("/api/start", json={"run_name": "x", "mode": "wrong"})
+    assert invalid.status_code == 400
+    live = client.post("/api/start", json={"run_name": "live", "mode": "live", "debug_bag": False})
+    assert live.status_code == 200
+    assert live.json()["mode"] == "live"
+    assert live.json()["storage_policy"] == "sparse_no_raw_bag"
+
+
+def test_live_map_and_objects_endpoints_are_explicit_when_unavailable(tmp_path):
+    from fastapi.testclient import TestClient
+    from sparseworld_p0.capture_console import CaptureSession
+    from sparseworld_p0.capture_console_api import create_app
+
+    client = TestClient(create_app(CaptureSession(tmp_path, dry_run=True)))
+    assert client.get("/api/objects").json() == []
+    response = client.get("/api/map/preview")
+    assert response.status_code == 404

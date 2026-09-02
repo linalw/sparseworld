@@ -8,3 +8,6 @@ def test_console_assets_exist_and_reference_api():
     assert "capture_console.css" in html and "capture_console.js" in html
     assert "/api/status" in js and "/api/start" in js and "/api/stop" in js
     assert "不控制底盘" in html
+    assert "实时稀疏建图" in html
+    assert "debug-bag" in html
+    assert "slam_status" in js

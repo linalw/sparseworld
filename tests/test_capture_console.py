@@ -106,3 +106,20 @@ def test_real_capture_refuses_when_no_video_device_exists(tmp_path, monkeypatch)
     session = CaptureSession(tmp_path)
     with pytest.raises(RuntimeError, match="no /dev/video"):
         session.start("route", None, ["/tf"])
+
+
+def test_live_mode_does_not_record_bag_without_debug_option(tmp_path):
+    session = CaptureSession(tmp_path, process_factory=lambda argv, **kw: FakeProcess(argv), dry_run=True)
+    state = session.start("live", None, ["/tf"], mode="live", debug_bag=False)
+    commands = [" ".join(command) for command in state["commands"]]
+    assert state["mode"] == "live"
+    assert not any(" bag record " in f" {command} " for command in commands)
+    assert state["storage_policy"] == "sparse_no_raw_bag"
+    session.stop()
+
+
+def test_live_mode_records_bag_only_when_debug_option_is_enabled(tmp_path):
+    session = CaptureSession(tmp_path, process_factory=lambda argv, **kw: FakeProcess(argv), dry_run=True)
+    state = session.start("live", None, ["/tf"], mode="live", debug_bag=True)
+    assert any("bag record" in " ".join(command) for command in state["commands"])
+    session.stop()

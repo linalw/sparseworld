@@ -6,6 +6,7 @@ import glob
 import os
 import re
 import signal
+import shutil
 import subprocess
 import threading
 import time
@@ -48,6 +49,7 @@ class CaptureSession:
             out.update(state=self._state, active=self._state in {"starting", "recording", "stopping"},
                        preview_available=(self._run.get("preview_jpeg") is not None or bool(self._run.get("run_dir") and Path(self._run["run_dir"], "preview.jpg").is_file())),
                        depth_preview_available=bool(self._run.get("run_dir") and Path(self._run["run_dir"], "depth-preview.jpg").is_file()),
+                       map_preview_available=bool(self._run.get("run_dir") and Path(self._run["run_dir"], "map-preview.jpg").is_file()),
                        preview_status=self._run.get("preview_status", "unavailable"),
                        preview_error=self._run.get("preview_error"))
             if self._state == "recording":
@@ -83,7 +85,9 @@ class CaptureSession:
                 })
         return records
 
-    def start(self, run_name: str, duration_s: float | None, topics: list[str]) -> dict:
+    def start(self, run_name: str, duration_s: float | None, topics: list[str], *, mode: str = "capture", debug_bag: bool = False) -> dict:
+        if mode not in {"capture", "live"}:
+            raise ValueError("mode must be capture or live")
         clean = re.sub(r"[^A-Za-z0-9_.-]+", " ", str(run_name)).strip()
         if not clean:
             raise ValueError("run_name must contain at least one safe character")
@@ -98,19 +102,28 @@ class CaptureSession:
             stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
             run_dir = self.output_dir / f"{stamp}_{clean.replace(' ', '_')}"
             run_dir.mkdir(parents=True, exist_ok=False)
-            self._run = {"run_name": clean, "run_dir": str(run_dir), "topics": selected,
+            self._run = {"run_name": clean, "run_dir": str(run_dir), "topics": selected, "mode": mode,
+                         "storage_policy": "sparse_no_raw_bag" if mode == "live" and not debug_bag else "raw_rosbag",
+                         "debug_bag": bool(debug_bag), "slam_status": "unavailable" if mode == "live" else "not_applicable",
                          "started_at": datetime.now(timezone.utc).isoformat(), "started_epoch": time.time(),
                          "preview_jpeg": None, "preview_status": "starting", "preview_error": None, "error": None}
             self._state = "starting"
             record_cmd = ["ros2", "bag", "record", "-o", str(run_dir / "bag"), *selected]
+            slam_cmd = ["ros2", "launch", "rtabmap_launch", "rtabmap.launch.py", "rgb_topic:=/camera/color/image_raw", "depth_topic:=/camera/depth/image_raw", "camera_info_topic:=/camera/color/camera_info"]
             preview_script = Path(__file__).resolve().parents[2] / "scripts" / "p0_ros_preview.py"
             preview_cmd = ["/usr/bin/python3", str(preview_script), "--output", str(run_dir / "preview.jpg"), "--depth-output", str(run_dir / "depth-preview.jpg")]
             try:
                 if not self.dry_run:
-                    self._processes = [
-                        self.process_factory(self.driver_command, stdout=(run_dir / "driver.log").open("wb"), stderr=subprocess.STDOUT, start_new_session=True),
-                        self.process_factory(record_cmd, stdout=(run_dir / "rosbag.log").open("wb"), stderr=subprocess.STDOUT, start_new_session=True),
-                    ]
+                    self._processes = [self.process_factory(self.driver_command, stdout=(run_dir / "driver.log").open("wb"), stderr=subprocess.STDOUT, start_new_session=True)]
+                    if mode == "capture" or debug_bag:
+                        self._processes.append(self.process_factory(record_cmd, stdout=(run_dir / "rosbag.log").open("wb"), stderr=subprocess.STDOUT, start_new_session=True))
+                    if mode == "live":
+                        if shutil.which("rtabmap") or shutil.which("rtabmap_ros"):
+                            self._processes.append(self.process_factory(slam_cmd, stdout=(run_dir / "rtabmap.log").open("wb"), stderr=subprocess.STDOUT, start_new_session=True))
+                            self._run["slam_status"] = "starting"
+                        else:
+                            self._run["slam_status"] = "unavailable"
+                            self._run["slam_error"] = "rtabmap_ros is not installed"
                     try:
                         self._processes.append(self.process_factory(preview_cmd, stdout=(run_dir / "preview.log").open("wb"), stderr=subprocess.STDOUT, start_new_session=True))
                     except Exception as exc:
@@ -118,7 +131,12 @@ class CaptureSession:
                         self._run["preview_error"] = f"{type(exc).__name__}: {exc}"
                 else:
                     self._run["preview_status"] = "dry_run"
-                self._run["commands"] = [self.driver_command, record_cmd, preview_cmd]
+                commands = [self.driver_command, preview_cmd]
+                if mode == "live":
+                    commands.insert(1, slam_cmd)
+                if mode == "capture" or debug_bag:
+                    commands.insert(1, record_cmd)
+                self._run["commands"] = commands
                 self._state = "recording"
                 if duration_s is not None:
                     self._timer = threading.Timer(duration_s, self.stop)

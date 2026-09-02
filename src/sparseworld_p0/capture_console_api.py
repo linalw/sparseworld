@@ -30,7 +30,7 @@ def create_app(session=None):
     @app.post("/api/start")
     def start(payload: dict[str, Any]) -> dict[str, Any]:
         try:
-            return session.start(payload.get("run_name", ""), payload.get("duration_s"), payload.get("topics") or [])
+            return session.start(payload.get("run_name", ""), payload.get("duration_s"), payload.get("topics") or [], mode=payload.get("mode", "capture"), debug_bag=bool(payload.get("debug_bag", False)))
         except Exception as exc:
             from .capture_console import SessionBusyError
             if isinstance(exc, SessionBusyError):
@@ -44,6 +44,27 @@ def create_app(session=None):
     @app.get("/api/runs")
     def runs() -> list[dict[str, Any]]:
         return session.list_runs()
+
+    @app.get("/api/objects")
+    def objects() -> list[dict[str, Any]]:
+        snapshot = session.snapshot()
+        run_dir = snapshot.get("run_dir")
+        candidate = Path(run_dir) / "objects.json" if run_dir else None
+        if not candidate or not candidate.is_file():
+            return []
+        try:
+            data = json.loads(candidate.read_text(encoding="utf-8"))
+            return data if isinstance(data, list) else []
+        except (OSError, json.JSONDecodeError):
+            return []
+
+    @app.get("/api/map/preview")
+    def map_preview():
+        run_dir = session.snapshot().get("run_dir")
+        candidate = Path(run_dir) / "map-preview.jpg" if run_dir else None
+        if not candidate or not candidate.is_file():
+            raise HTTPException(404, "map_preview_unavailable")
+        return FileResponse(candidate, media_type="image/jpeg")
 
     @app.get("/api/runs/{run_id}")
     def run_detail(run_id: str) -> dict[str, Any]:
