@@ -109,7 +109,13 @@ class CaptureSession:
                          "preview_jpeg": None, "preview_status": "starting", "preview_error": None, "error": None}
             self._state = "starting"
             record_cmd = ["ros2", "bag", "record", "-o", str(run_dir / "bag"), *selected]
-            slam_cmd = ["ros2", "launch", "rtabmap_launch", "rtabmap.launch.py", "rgb_topic:=/camera/color/image_raw", "depth_topic:=/camera/depth/image_raw", "camera_info_topic:=/camera/color/camera_info"]
+            slam_cmd = ["ros2", "launch", "rtabmap_launch", "rtabmap.launch.py",
+                        "frame_id:=camera_link", "rgb_topic:=/camera/color/image_raw",
+                        "depth_topic:=/camera/depth/image_raw",
+                        "camera_info_topic:=/camera/color/camera_info",
+                        f"database_path:={run_dir / 'rtabmap.db'}", "rtabmap_viz:=false",
+                        "rviz:=false", "approx_sync:=true", "approx_rgbd_sync:=true",
+                        "depth_scale:=0.001"]
             preview_script = Path(__file__).resolve().parents[2] / "scripts" / "p0_ros_preview.py"
             preview_cmd = ["/usr/bin/python3", str(preview_script), "--output", str(run_dir / "preview.jpg"), "--depth-output", str(run_dir / "depth-preview.jpg")]
             try:
@@ -118,7 +124,7 @@ class CaptureSession:
                     if mode == "capture" or debug_bag:
                         self._processes.append(self.process_factory(record_cmd, stdout=(run_dir / "rosbag.log").open("wb"), stderr=subprocess.STDOUT, start_new_session=True))
                     if mode == "live":
-                        if shutil.which("rtabmap") or shutil.which("rtabmap_ros"):
+                        if shutil.which("rtabmap") and shutil.which("ros2"):
                             self._processes.append(self.process_factory(slam_cmd, stdout=(run_dir / "rtabmap.log").open("wb"), stderr=subprocess.STDOUT, start_new_session=True))
                             self._run["slam_status"] = "starting"
                         else:

@@ -123,3 +123,12 @@ def test_live_mode_records_bag_only_when_debug_option_is_enabled(tmp_path):
     state = session.start("live", None, ["/tf"], mode="live", debug_bag=True)
     assert any("bag record" in " ".join(command) for command in state["commands"])
     session.stop()
+
+
+def test_live_mode_uses_rtabmap_launch_with_run_local_database(tmp_path):
+    session = CaptureSession(tmp_path, process_factory=lambda argv, **kw: FakeProcess(argv), dry_run=True)
+    state = session.start("live", None, ["/tf"], mode="live")
+    slam = next(command for command in state["commands"] if "rtabmap_launch" in command)
+    assert slam[:4] == ["ros2", "launch", "rtabmap_launch", "rtabmap.launch.py"]
+    assert any("database_path:=" in arg and "rtabmap.db" in arg for arg in slam)
+    session.stop()
