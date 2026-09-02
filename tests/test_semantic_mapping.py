@@ -1,4 +1,6 @@
 import json
+import sys
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -123,3 +125,22 @@ def test_build_semantic_map_deduplicates_two_fixture_frames(tmp_path):
     assert len(document["objects"][0]["evidence"]) == 2
     assert document["objects"][0]["lifecycle_status"] == "tentative"
     assert document["inference_runs"][0]["frames_processed"] == 2
+
+
+def test_semantic_map_cli_writes_hash_bound_deduplicated_document(tmp_path: Path, monkeypatch):
+    """Breaks if CLI bypasses association or fails to bind its JSON output hash."""
+    rgb = tmp_path / "rgb.npy"
+    depth = tmp_path / "depth.npy"
+    np.save(rgb, np.zeros((2, 2, 3), dtype=np.uint8))
+    np.save(depth, np.ones((2, 2), dtype=np.float32))
+    fixture = tmp_path / "fixture.json"
+    fixture.write_text(json.dumps({"masks": [{"mask": [[1, 1], [0, 0]], "labels": [{"label": "cup", "probability": 0.9}]}]}), encoding="utf-8")
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text(json.dumps({"schema_version": "p0/semantic-input/v1", "intrinsics": {"fx": 100, "fy": 100, "cx": 0, "cy": 0}, "frames": [{"frame_id": "f1", "timestamp": "2026-09-02T12:00:00Z", "rgb_path": str(rgb), "depth_path": str(depth)}, {"frame_id": "f2", "timestamp": "2026-09-02T12:00:01Z", "rgb_path": str(rgb), "depth_path": str(depth)}]}), encoding="utf-8")
+    output = tmp_path / "map.json"
+    from sparseworld_p0 import cli
+    monkeypatch.setattr(sys, "argv", ["sparseworld-p0", "semantic-map", "--manifest", str(manifest), "--backend", "fixture", "--fixture-path", str(fixture), "--output", str(output)])
+
+    assert cli.main() == 0
+    assert len(json.loads(output.read_text(encoding="utf-8"))["objects"]) == 1
+    assert output.with_suffix(".json.sha256").is_file()
