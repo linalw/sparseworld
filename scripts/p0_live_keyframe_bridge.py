@@ -45,7 +45,9 @@ def main() -> int:
                     from sparseworld_p0.live_mapping import LiveSemanticWorker
                     config = {"mask_model_id": args.mask_model_id, "label_model_id": args.label_model_id, "device": args.semantic_device}
                     if args.semantic_fixture: config["fixture_path"] = str(args.semantic_fixture)
-                    self.semantic = LiveSemanticProcessor(load_backend(args.semantic_backend, config), output_dir=args.output_dir)
+                    # Keyframe pixels stay under keyframes/, while the API and
+                    # manifest expose the compact semantic document at run root.
+                    self.semantic = LiveSemanticProcessor(load_backend(args.semantic_backend, config), output_dir=args.output_dir.parent)
                     self.semantic_worker = LiveSemanticWorker(lambda frame: self.semantic.process(**frame))
                     self.semantic_worker.start()
                 except Exception as exc:
