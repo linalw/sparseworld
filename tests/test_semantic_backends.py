@@ -56,3 +56,7 @@ def test_default_label_model_is_florence_two():
 def test_generated_label_removes_the_image_to_text_prompt_echo():
     """Breaks if prompt text becomes a semantic label in the persistent map."""
     assert _normalise_generated_label("Describe the object in this image with one short noun phrase. checker") == "checker"
+
+
+def test_generated_label_rejects_florence_prompt_echo():
+    assert _normalise_generated_label("What is the main object in this image?") == "unknown"

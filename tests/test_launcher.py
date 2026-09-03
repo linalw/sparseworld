@@ -17,3 +17,9 @@ def test_launcher_installs_socks_support_when_a_socks_proxy_is_configured():
     script = (Path(__file__).parents[1] / "scripts" / "start_live_semantic.sh").read_text()
     assert '"${ALL_PROXY:-}" == socks5://*' in script
     assert "import socksio" in script
+
+
+def test_launcher_migrates_old_blip_default_to_florence_two():
+    script = (Path(__file__).parents[1] / "scripts" / "start_live_semantic.sh").read_text()
+    assert '"Salesforce/blip-image-captioning-base"' in script
+    assert "microsoft/Florence-2-base" in script

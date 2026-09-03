@@ -25,6 +25,10 @@ export PYTHONPATH="${ROOT_DIR}/src${PYTHONPATH:+:${PYTHONPATH}}"
 export SPARSEWORLD_PYTHON="${SPARSEWORLD_PYTHON:-${CONDA_PREFIX}/bin/python}"
 export SPARSEWORLD_SEMANTIC_BACKEND="${SPARSEWORLD_SEMANTIC_BACKEND:-sam2_florence_siglip}"
 export SPARSEWORLD_MASK_MODEL_ID="${SPARSEWORLD_MASK_MODEL_ID:-facebook/sam-vit-base}"
+if [[ "${SPARSEWORLD_LABEL_MODEL_ID:-}" == "Salesforce/blip-image-captioning-base" ]]; then
+  echo "检测到旧 BLIP 标签配置，自动迁移到 Florence-2。" >&2
+  unset SPARSEWORLD_LABEL_MODEL_ID
+fi
 export SPARSEWORLD_LABEL_MODEL_ID="${SPARSEWORLD_LABEL_MODEL_ID:-microsoft/Florence-2-base}"
 export SPARSEWORLD_SEMANTIC_DEVICE="${SPARSEWORLD_SEMANTIC_DEVICE:-0}"
 

@@ -167,5 +167,8 @@ def _normalise_generated_label(text: str) -> str:
     cleaned = text.strip()
     if cleaned.lower().startswith(prompt):
         cleaned = cleaned[len(prompt):].strip()
+    lowered = cleaned.lower().strip(" .,:;!?_")
+    if lowered in {"what is the main object in this image", "what is the main object in this image?", "describe the object in this image with one short noun phrase"}:
+        return "unknown"
     cleaned = cleaned.split("\n", 1)[0].strip(" .,:;-")
     return cleaned or "unknown"
