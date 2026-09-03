@@ -7,6 +7,11 @@ CONDA_ROOT="${SPARSEWORLD_CONDA_ROOT:-/home/ubuntu/linalw/App/minconda3}"
 source "${CONDA_ROOT}/etc/profile.d/conda.sh"
 conda activate sparseworld
 
+if [[ "${ALL_PROXY:-}" == socks5://* ]] && ! python -c 'import socksio' 2>/dev/null; then
+  echo "SOCKS 代理需要 Python 包 socksio；正在安装…" >&2
+  python -m pip install socksio
+fi
+
 # ROS Humble's generated setup scripts read optional variables without
 # defaults. Scope nounset disablement to setup loading, then restore it.
 set +u
