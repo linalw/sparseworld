@@ -7,6 +7,9 @@ CONDA_ROOT="${SPARSEWORLD_CONDA_ROOT:-/home/ubuntu/linalw/App/minconda3}"
 source "${CONDA_ROOT}/etc/profile.d/conda.sh"
 conda activate sparseworld
 
+# ROS Humble's setup files read this optional trace flag without a default.
+# Initialise it before sourcing so Bash's nounset mode remains safe.
+export AMENT_TRACE_SETUP_FILES="${AMENT_TRACE_SETUP_FILES:-}"
 source /opt/ros/humble/setup.bash
 if [[ -f /home/ubuntu/ros2_ws/install-systempy4/setup.bash ]]; then
   source /home/ubuntu/ros2_ws/install-systempy4/setup.bash
