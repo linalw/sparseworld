@@ -26,6 +26,22 @@ sparseworld-p0 capture-console --host 127.0.0.1 --port 8765 --output-dir artifac
 
 ## 实时语义建图（方案 A）
 
+### 一键启动模型模式
+
+在项目根目录运行：
+
+```bash
+bash scripts/start_live_semantic.sh
+```
+
+脚本默认使用 RTX GPU（`SPARSEWORLD_SEMANTIC_DEVICE=0`）、SAM mask 模型和图像标注模型；首次启动会下载权重。浏览器打开 <http://127.0.0.1:8765/>，选择“实时稀疏建图”，然后点击“开始录制”。如需 CPU：
+
+```bash
+SPARSEWORLD_SEMANTIC_DEVICE=-1 bash scripts/start_live_semantic.sh
+```
+
+如需先配置网络代理，在同一终端设置 `HTTP_PROXY`、`HTTPS_PROXY` 和 `ALL_PROXY` 后再运行脚本。模型初始化失败会在页面显示 `semantic_worker=unavailable`，不会阻塞 RGB-D/SLAM 链路。
+
 实时模式只把门控后的关键帧交给语义 worker，队列容量固定为 1，旧任务会被覆盖；不会逐帧运行分割/标注模型。worker 通过 `map→camera` TF 投影对象，无法获得有效位姿时只保留关键帧证据，不写入全局对象。
 
 默认语义后端为 `none`（仅验证采集链路）。现场启用时可在启动控制台前设置：

@@ -128,8 +128,9 @@ class CaptureSession:
                         "depth_scale:=0.001"]
             preview_script = Path(__file__).resolve().parents[2] / "scripts" / "p0_ros_preview.py"
             keyframe_script = Path(__file__).resolve().parents[2] / "scripts" / "p0_live_keyframe_bridge.py"
-            preview_cmd = ["/usr/bin/python3", str(preview_script), "--output", str(run_dir / "preview.jpg"), "--depth-output", str(run_dir / "depth-preview.jpg"), "--map-output", str(run_dir / "map-preview.jpg")]
-            keyframe_cmd = ["/usr/bin/python3", str(keyframe_script), "--output-dir", str(run_dir / "keyframes"),
+            python_executable = os.environ.get("SPARSEWORLD_PYTHON", shutil.which("python3") or "/usr/bin/python3")
+            preview_cmd = [python_executable, str(preview_script), "--output", str(run_dir / "preview.jpg"), "--depth-output", str(run_dir / "depth-preview.jpg"), "--map-output", str(run_dir / "map-preview.jpg")]
+            keyframe_cmd = [python_executable, str(keyframe_script), "--output-dir", str(run_dir / "keyframes"),
                             "--status", str(run_dir / "live-status.json"), "--max-rate-hz", "1.0",
                             "--min-translation-m", "0.35", "--min-rotation-deg", "15"]
             semantic_backend = os.environ.get("SPARSEWORLD_SEMANTIC_BACKEND", "none").strip()

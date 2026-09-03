@@ -140,3 +140,14 @@ def test_live_mode_launches_keyframe_bridge_and_reports_sparse_storage(tmp_path)
     assert any("p0_live_keyframe_bridge.py" in " ".join(command) for command in state["commands"])
     assert state["keyframe_policy"]["max_rate_hz"] == 1.0
     session.stop()
+
+
+def test_live_mode_uses_active_python_for_model_enabled_bridge(tmp_path, monkeypatch):
+    monkeypatch.setenv("SPARSEWORLD_SEMANTIC_BACKEND", "sam2_florence_siglip")
+    session = CaptureSession(tmp_path, process_factory=lambda argv, **kw: FakeProcess(argv), dry_run=True)
+    state = session.start("live", None, [], mode="live")
+    bridge = next(command for command in state["commands"] if "p0_live_keyframe_bridge.py" in " ".join(command))
+    assert bridge[0] != "/usr/bin/python3"
+    assert "--semantic-backend" in bridge
+    assert bridge[bridge.index("--semantic-backend") + 1] == "sam2_florence_siglip"
+    session.stop()
