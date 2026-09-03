@@ -7,13 +7,14 @@ CONDA_ROOT="${SPARSEWORLD_CONDA_ROOT:-/home/ubuntu/linalw/App/minconda3}"
 source "${CONDA_ROOT}/etc/profile.d/conda.sh"
 conda activate sparseworld
 
-# ROS Humble's setup files read this optional trace flag without a default.
-# Initialise it before sourcing so Bash's nounset mode remains safe.
-export AMENT_TRACE_SETUP_FILES="${AMENT_TRACE_SETUP_FILES:-}"
+# ROS Humble's generated setup scripts read optional variables without
+# defaults. Scope nounset disablement to setup loading, then restore it.
+set +u
 source /opt/ros/humble/setup.bash
 if [[ -f /home/ubuntu/ros2_ws/install-systempy4/setup.bash ]]; then
   source /home/ubuntu/ros2_ws/install-systempy4/setup.bash
 fi
+set -u
 
 export PYTHONPATH="${ROOT_DIR}/src${PYTHONPATH:+:${PYTHONPATH}}"
 export SPARSEWORLD_PYTHON="${SPARSEWORLD_PYTHON:-${CONDA_PREFIX}/bin/python}"
