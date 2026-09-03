@@ -74,15 +74,17 @@ def main() -> int:
                 (args.output_dir/(stem+".json")).write_text(json.dumps({"keyframe_id":stem,"timestamp_s":now,"intrinsics":{"fx":info.k[0],"fy":info.k[4],"cx":info.k[2],"cy":info.k[5]},"global_accuracy":"unvalidated","source":"live_keyframe_gate"},sort_keys=True)+"\n")
                 self.accepted+=1; self.last=now
                 if self.semantic:
-                    pose = None
-                    for frame in ("camera_link", "camera_color_optical_frame", rgb.header.frame_id):
-                        if not frame: continue
+                    pose = None; pose_frame = None
+                    for target_frame, source_frame in (("map", "camera_link"), ("map", "camera_color_optical_frame"), ("map", rgb.header.frame_id), ("odom", "camera_link"), ("odom", rgb.header.frame_id)):
+                        if not source_frame: continue
                         try:
-                            transform = self.tf_buffer.lookup_transform("map", frame, rclpy.time.Time.from_msg(rgb.header.stamp), timeout=Duration(seconds=0.02))
+                            # Ask TF for the most recent transform. A keyframe can arrive
+                            # before RTAB-Map emits map->odom at its exact camera timestamp.
+                            transform = self.tf_buffer.lookup_transform(target_frame, source_frame, rclpy.time.Time(), timeout=Duration(seconds=0.10))
                             t, q = transform.transform.translation, transform.transform.rotation
-                            matrix = np.eye(4); matrix[:3,:3] = quaternion_matrix(q.x,q.y,q.z,q.w); matrix[:3,3] = [t.x,t.y,t.z]; pose = matrix; break
+                            matrix = np.eye(4); matrix[:3,:3] = quaternion_matrix(q.x,q.y,q.z,q.w); matrix[:3,3] = [t.x,t.y,t.z]; pose = matrix; pose_frame = target_frame; break
                         except Exception: pass
-                    self.semantic_worker.submit({"keyframe_id": stem, "timestamp": f"{now:.9f}", "rgb": cv2.cvtColor(color, cv2.COLOR_BGR2RGB), "depth": depth_image, "intrinsics": {"fx":info.k[0],"fy":info.k[4],"cx":info.k[2],"cy":info.k[5],"depth_unit_m":0.001}, "map_T_camera": pose})
+                    self.semantic_worker.submit({"keyframe_id": stem, "timestamp": f"{now:.9f}", "rgb": cv2.cvtColor(color, cv2.COLOR_BGR2RGB), "depth": depth_image, "intrinsics": {"fx":info.k[0],"fy":info.k[4],"cx":info.k[2],"cy":info.k[5],"depth_unit_m":0.001}, "map_T_camera": pose, "pose_frame": pose_frame})
                 self.write_status("running")
             except Exception as exc:
                 self.get_logger().warning(f"keyframe rejected: {exc}"); self.rejected+=1; self.write_status("error")

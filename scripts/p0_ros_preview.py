@@ -24,6 +24,9 @@ def main() -> int:
             self.create_subscription(Image, "/camera/depth/image_raw", self.depth_callback, 10)
             if args.map_output:
                 self.map_output = Path(args.map_output)
+                # rtabmap_launch namespaces the OccupancyGrid as /rtabmap/map.
+                # Keep /map as a compatibility source for alternate launch files.
+                self.create_subscription(OccupancyGrid, "/rtabmap/map", self.map_callback, 2)
                 self.create_subscription(OccupancyGrid, "/map", self.map_callback, 2)
         def callback(self, msg):
             try:

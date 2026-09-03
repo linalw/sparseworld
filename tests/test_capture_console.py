@@ -134,6 +134,14 @@ def test_live_mode_uses_rtabmap_launch_with_run_local_database(tmp_path):
     session.stop()
 
 
+def test_live_mode_preview_subscribes_to_rtabmap_map_topic(tmp_path):
+    session = CaptureSession(tmp_path, process_factory=lambda argv, **kw: FakeProcess(argv), dry_run=True)
+    state = session.start("live", None, [], mode="live")
+    preview = next(command for command in state["commands"] if "p0_ros_preview.py" in " ".join(command))
+    assert "--map-output" in preview
+    session.stop()
+
+
 def test_live_mode_launches_keyframe_bridge_and_reports_sparse_storage(tmp_path):
     session = CaptureSession(tmp_path, process_factory=lambda argv, **kw: FakeProcess(argv), dry_run=True)
     state = session.start("live", None, [], mode="live")

@@ -66,6 +66,7 @@ class LiveSemanticProcessor:
         intrinsics: Mapping[str, Any],
         *,
         map_T_camera: Any = None,
+        pose_frame: str | None = None,
     ) -> bool:
         """Process a keyframe once; false means an already-seen input.
 
@@ -102,7 +103,7 @@ class LiveSemanticProcessor:
                     frame_id=keyframe_id,
                     timestamp=timestamp,
                     anchor_xyz=anchor,
-                    frame="map",
+                    frame=pose_frame or "map",
                     class_candidates=tuple(LabelCandidate(label=item.label, probability=item.probability) for item in labels),
                     confidence=float(primary.probability),
                     depth_valid_fraction=projection.depth_valid_fraction,
