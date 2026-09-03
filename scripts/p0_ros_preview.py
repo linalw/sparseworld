@@ -5,11 +5,12 @@ import argparse, os, tempfile
 from pathlib import Path
 
 def main() -> int:
-    parser = argparse.ArgumentParser(); parser.add_argument("--output", required=True); parser.add_argument("--depth-output", required=True); args = parser.parse_args()
+    parser = argparse.ArgumentParser(); parser.add_argument("--output", required=True); parser.add_argument("--depth-output", required=True); parser.add_argument("--map-output"); args = parser.parse_args()
     try:
         import rclpy
         from rclpy.node import Node
         from sensor_msgs.msg import Image
+        from nav_msgs.msg import OccupancyGrid
         from cv_bridge import CvBridge
         import cv2
     except Exception as exc:
@@ -21,6 +22,9 @@ def main() -> int:
             self.bridge, self.output, self.depth_output = CvBridge(), Path(args.output), Path(args.depth_output)
             self.create_subscription(Image, "/camera/color/image_raw", self.callback, 10)
             self.create_subscription(Image, "/camera/depth/image_raw", self.depth_callback, 10)
+            if args.map_output:
+                self.map_output = Path(args.map_output)
+                self.create_subscription(OccupancyGrid, "/map", self.map_callback, 2)
         def callback(self, msg):
             try:
                 image = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
@@ -44,6 +48,17 @@ def main() -> int:
                 if cv2.imwrite(tmp, display): os.replace(tmp, self.depth_output)
                 else: os.unlink(tmp)
             except Exception as exc: self.get_logger().warning(f"depth preview frame failed: {exc}")
+        def map_callback(self, msg):
+            try:
+                import numpy as np
+                grid = np.asarray(msg.data, dtype=np.int16).reshape((msg.info.height, msg.info.width))
+                display = np.full(grid.shape, 127, dtype=np.uint8)
+                display[grid == 0] = 255; display[grid > 50] = 0
+                display = cv2.resize(display, None, fx=2, fy=2, interpolation=cv2.INTER_NEAREST)
+                fd, tmp = tempfile.mkstemp(prefix="map-preview-", suffix=".jpg", dir=self.map_output.parent); os.close(fd)
+                if cv2.imwrite(tmp, display): os.replace(tmp, self.map_output)
+                else: os.unlink(tmp)
+            except Exception as exc: self.get_logger().warning(f"map preview frame failed: {exc}")
     rclpy.init(); node = Preview()
     try: rclpy.spin(node)
     except KeyboardInterrupt: pass

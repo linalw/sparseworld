@@ -54,6 +54,8 @@ def create_app(session=None):
             return []
         try:
             data = json.loads(candidate.read_text(encoding="utf-8"))
+            if isinstance(data, dict):
+                return data.get("objects", []) if isinstance(data.get("objects"), list) else []
             return data if isinstance(data, list) else []
         except (OSError, json.JSONDecodeError):
             return []

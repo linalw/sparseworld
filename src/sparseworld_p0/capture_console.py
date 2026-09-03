@@ -68,7 +68,7 @@ class CaptureSession:
                         live_status = json.loads(status_path.read_text(encoding="utf-8"))
                         if isinstance(live_status, dict):
                             out["keyframes"] = live_status
-                            out["semantic_worker"] = {"status": "pending_keyframe_integration", "queue_capacity": 1}
+                            out["semantic_worker"] = live_status.get("semantic_worker", {"status": "waiting_for_keyframes", "queue_capacity": 1})
                     except (OSError, json.JSONDecodeError):
                         out["keyframes"] = {"status": "unreadable"}
             return out
@@ -128,10 +128,19 @@ class CaptureSession:
                         "depth_scale:=0.001"]
             preview_script = Path(__file__).resolve().parents[2] / "scripts" / "p0_ros_preview.py"
             keyframe_script = Path(__file__).resolve().parents[2] / "scripts" / "p0_live_keyframe_bridge.py"
-            preview_cmd = ["/usr/bin/python3", str(preview_script), "--output", str(run_dir / "preview.jpg"), "--depth-output", str(run_dir / "depth-preview.jpg")]
+            preview_cmd = ["/usr/bin/python3", str(preview_script), "--output", str(run_dir / "preview.jpg"), "--depth-output", str(run_dir / "depth-preview.jpg"), "--map-output", str(run_dir / "map-preview.jpg")]
             keyframe_cmd = ["/usr/bin/python3", str(keyframe_script), "--output-dir", str(run_dir / "keyframes"),
                             "--status", str(run_dir / "live-status.json"), "--max-rate-hz", "1.0",
                             "--min-translation-m", "0.35", "--min-rotation-deg", "15"]
+            semantic_backend = os.environ.get("SPARSEWORLD_SEMANTIC_BACKEND", "none").strip()
+            keyframe_cmd += ["--semantic-backend", semantic_backend or "none"]
+            fixture = os.environ.get("SPARSEWORLD_SEMANTIC_FIXTURE", "").strip()
+            if fixture:
+                keyframe_cmd += ["--semantic-fixture", fixture]
+            for env_name, flag in (("SPARSEWORLD_MASK_MODEL_ID", "--mask-model-id"), ("SPARSEWORLD_LABEL_MODEL_ID", "--label-model-id"), ("SPARSEWORLD_SEMANTIC_DEVICE", "--semantic-device")):
+                value = os.environ.get(env_name, "").strip()
+                if value:
+                    keyframe_cmd += [flag, value]
             if mode == "live":
                 self._run["keyframe_policy"] = {"max_rate_hz": 1.0, "min_translation_m": 0.35, "min_rotation_deg": 15.0, "queue_capacity": 1}
             try:

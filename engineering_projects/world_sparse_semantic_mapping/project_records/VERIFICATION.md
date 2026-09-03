@@ -6,7 +6,7 @@ The confirmed方案 A design is being implemented on `codex/live-sparse-mapping`
 
 RTAB-Map dependency follow-up: `ros-humble-rtabmap-ros 0.23.7` is installed and its official `rtabmap_launch/rtabmap.launch.py` arguments were verified. A 12-second motor-independent live smoke run produced RGB/depth preview files and a 3.1 MiB run-local RTAB-Map database without raw rosbag. The keyframe bridge saves only gated frames and status metadata. This does not establish ATE/RPE, synchronization, calibration, semantic precision, or navigation performance.
 
-Branch checkpoint: gated keyframe bridge, run artifact manifesting, RTAB-Map command wiring, live mode API/UI fields, and existing semantic-map CLI all pass the full 108-test suite; `pip check` is clean. Live semantic worker integration with actual model inference remains pending.
+Branch checkpoint: gated keyframe bridge, run artifact manifesting, RTAB-Map command wiring, live mode API/UI fields, and live keyframe semantic-worker integration pass the full 110-test suite; `pip check` remains the environment gate. Real model inference, map accuracy, calibration, synchronization, and route performance remain unvalidated.
 
 ## Capture console tooling evidence (2026-09-02)
 
