@@ -40,3 +40,11 @@ def test_processor_records_rejected_depth_and_backend_failures(tmp_path: Path):
     stats = processor.snapshot()
     assert stats["processed"] == 1
     assert stats["rejected"] == 1
+
+
+def test_processor_explicitly_counts_rgb_depth_shape_mismatch(tmp_path: Path):
+    processor = LiveSemanticProcessor(_backend(), output_dir=tmp_path, minimum_valid_depth_pixels=1)
+    rgb = np.zeros((2, 2, 3), dtype=np.uint8)
+    depth_mm = np.full((1, 2), 1000, dtype=np.uint16)
+    processor.process("kf-000001", "2026-09-03T00:00:00Z", rgb, depth_mm, {"fx": 100, "fy": 100, "cx": 0, "cy": 0}, map_T_camera=np.eye(4).tolist())
+    assert processor.snapshot()["rgb_depth_shape_mismatch"] == 1

@@ -134,6 +134,11 @@ def test_live_mode_uses_rtabmap_launch_with_run_local_database(tmp_path):
     session.stop()
 
 
+def test_default_gemini_driver_requests_depth_registered_to_color():
+    session = CaptureSession("unused", dry_run=True)
+    assert session.driver_command[-2:] == ["depth_registration:=true", "align_target_stream:=COLOR"]
+
+
 def test_live_mode_preview_subscribes_to_rtabmap_map_topic(tmp_path):
     session = CaptureSession(tmp_path, process_factory=lambda argv, **kw: FakeProcess(argv), dry_run=True)
     state = session.start("live", None, [], mode="live")

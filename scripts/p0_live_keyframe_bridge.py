@@ -51,7 +51,9 @@ def main() -> int:
                 except Exception as exc:
                     self.semantic_error = f"{type(exc).__name__}: {exc}"
             self.tf_buffer = Buffer(); self.tf_listener = TransformListener(self.tf_buffer, self)
-            sync=ApproximateTimeSynchronizer([Subscriber(self,Image,"/camera/color/image_raw"),Subscriber(self,Image,"/camera/depth/image_raw"),Subscriber(self,CameraInfo,"/camera/color/camera_info")], 5, .08)
+            depth_topic = "/camera/depth/image_raw"
+            self.get_logger().info("semantic bridge expects color-aligned depth; driver alignment is enabled")
+            sync=ApproximateTimeSynchronizer([Subscriber(self,Image,"/camera/color/image_raw"),Subscriber(self,Image,depth_topic),Subscriber(self,CameraInfo,"/camera/color/camera_info")], 5, .08)
             sync.registerCallback(self.callback); self.write_status("waiting_for_rgbd")
             self.create_timer(1.0, self.persist_semantics)
         def write_status(self, state):

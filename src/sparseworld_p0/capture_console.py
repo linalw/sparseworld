@@ -35,7 +35,7 @@ class CaptureSession:
                  driver_command: Sequence[str] | None = None, dry_run: bool = False):
         self.output_dir = Path(output_dir)
         self.process_factory = process_factory or subprocess.Popen
-        self.driver_command = list(driver_command or ["ros2", "launch", "orbbec_camera", "gemini_330_series.launch.py"])
+        self.driver_command = list(driver_command or ["ros2", "launch", "orbbec_camera", "gemini_330_series.launch.py", "depth_registration:=true", "align_target_stream:=COLOR"])
         self.dry_run = dry_run
         self._lock = threading.RLock()
         self._state = "idle"

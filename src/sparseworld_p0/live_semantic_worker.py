@@ -56,6 +56,7 @@ class LiveSemanticProcessor:
         self._pose_unavailable = 0
         self._errors = 0
         self._last_error: str | None = None
+        self._rgb_depth_shape_mismatch = 0
 
     def process(
         self,
@@ -79,6 +80,10 @@ class LiveSemanticProcessor:
             return False
         self._processed_ids.add(keyframe_id)
         self._processed += 1
+        if np.asarray(rgb).ndim >= 2 and np.asarray(depth).ndim >= 2 and np.asarray(rgb).shape[:2] != np.asarray(depth).shape[:2]:
+            self._rgb_depth_shape_mismatch += 1
+            self._rejected += 1
+            return True
         if map_T_camera is None:
             self._pose_unavailable += 1
             return True
@@ -125,6 +130,7 @@ class LiveSemanticProcessor:
             "pose_unavailable": self._pose_unavailable,
             "errors": self._errors,
             "last_error": self._last_error,
+            "rgb_depth_shape_mismatch": self._rgb_depth_shape_mismatch,
             "global_accuracy": "unvalidated",
         }
 
