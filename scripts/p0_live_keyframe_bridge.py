@@ -22,7 +22,7 @@ def main() -> int:
     parser.add_argument("--output-dir", required=True, type=Path); parser.add_argument("--status", required=True, type=Path)
     parser.add_argument("--max-rate-hz", type=float, default=1.0); parser.add_argument("--min-translation-m", type=float, default=0.35); parser.add_argument("--min-rotation-deg", type=float, default=15.0)
     parser.add_argument("--semantic-backend", default="none", choices=("none", "fixture", "sam2", "sam2_florence_siglip")); parser.add_argument("--semantic-fixture", type=Path)
-    parser.add_argument("--mask-model-id", default="facebook/sam-vit-base"); parser.add_argument("--label-model-id", default="Salesforce/blip-image-captioning-base"); parser.add_argument("--semantic-device", type=int, default=-1)
+    parser.add_argument("--mask-model-id", default="facebook/sam-vit-base"); parser.add_argument("--label-model-id", default="microsoft/Florence-2-base"); parser.add_argument("--semantic-device", type=int, default=-1)
     args = parser.parse_args(); args.output_dir.mkdir(parents=True, exist_ok=True); args.status.parent.mkdir(parents=True, exist_ok=True)
     try:
         import cv2, numpy as np, rclpy

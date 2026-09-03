@@ -51,7 +51,7 @@ def main() -> int:
     semantic_parser.add_argument("--backend", required=True, choices=("fixture", "sam2_florence_siglip", "sam2"))
     semantic_parser.add_argument("--fixture-path", type=Path)
     semantic_parser.add_argument("--mask-model-id", default="facebook/sam-vit-base")
-    semantic_parser.add_argument("--label-model-id", default="Salesforce/blip-image-captioning-base")
+    semantic_parser.add_argument("--label-model-id", default="microsoft/Florence-2-base")
     semantic_parser.add_argument("--device", type=int, default=0)
     semantic_parser.add_argument("--output", required=True, type=Path)
     args = parser.parse_args()

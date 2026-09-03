@@ -49,7 +49,7 @@ SPARSEWORLD_SEMANTIC_DEVICE=-1 bash scripts/start_live_semantic.sh
 ```bash
 export SPARSEWORLD_SEMANTIC_BACKEND=sam2_florence_siglip
 export SPARSEWORLD_MASK_MODEL_ID=facebook/sam-vit-base
-export SPARSEWORLD_LABEL_MODEL_ID=Salesforce/blip-image-captioning-base
+export SPARSEWORLD_LABEL_MODEL_ID=microsoft/Florence-2-base
 export SPARSEWORLD_SEMANTIC_DEVICE=-1   # CPU；GPU 使用 0
 ```
 

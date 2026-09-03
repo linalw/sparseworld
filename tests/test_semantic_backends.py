@@ -36,8 +36,8 @@ def test_huggingface_backend_records_requested_model_ids_without_loading_weights
 
     class FakeTransformers:
         @staticmethod
-        def pipeline(task, model, device):
-            captured.append((task, model, device))
+        def pipeline(task, model, device, **kwargs):
+            captured.append((task, model, device, kwargs))
             return lambda *args, **kwargs: []
 
     monkeypatch.setitem(__import__("sys").modules, "transformers", FakeTransformers)
@@ -45,7 +45,12 @@ def test_huggingface_backend_records_requested_model_ids_without_loading_weights
 
     assert backend._mask_model_id == "org/mask"
     assert backend._label_model_id == "org/label"
-    assert captured == [("mask-generation", "org/mask", -1), ("image-to-text", "org/label", -1)]
+    assert captured == [("mask-generation", "org/mask", -1, {}), ("image-text-to-text", "org/label", -1, {"trust_remote_code": True})]
+
+
+def test_default_label_model_is_florence_two():
+    import sparseworld_p0.semantic_backends as module
+    assert module.DEFAULT_LABEL_MODEL_ID == "microsoft/Florence-2-base"
 
 
 def test_generated_label_removes_the_image_to_text_prompt_echo():

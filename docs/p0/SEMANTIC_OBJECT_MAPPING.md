@@ -45,10 +45,11 @@ class outside the gate remains separate. Repeated displacement is marked
 
 ## Production model boundary
 
-`--backend sam2_florence_siglip` uses configurable Hugging Face
-`mask-generation` and `image-to-text` pipelines (defaults are SAM ViT Base and
-BLIP Image Captioning Base; Florence-2 may be supplied explicitly once its
-custom-code/runtime compatibility is pinned). The adapter records model/version/weights/input-size/latency
+`--backend sam2_florence_siglip` uses SAM ViT Base masks and Florence-2 Base
+caption inference by default. Florence-2 uses its official custom-code
+`AutoProcessor + AutoModelForCausalLM` path, with `transformers==4.48.3`,
+`timm`, and `einops` pinned as runtime dependencies. SigLIP is not yet enabled
+as a second-stage re-ranker. The adapter records model/version/weights/input-size/latency
 metadata and preserves `unknown` candidates when confidence is low. Install
 the optional runtime with `pip install -e '.[semantic]'`, then pin and cache
 model revisions before an offline run.

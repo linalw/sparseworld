@@ -12,6 +12,9 @@ import numpy as np
 
 from .semantic_mapping import LabelCandidate
 
+DEFAULT_MASK_MODEL_ID = "facebook/sam-vit-base"
+DEFAULT_LABEL_MODEL_ID = "microsoft/Florence-2-base"
+
 
 @dataclass(frozen=True)
 class MaskInstance:
@@ -74,10 +77,18 @@ class HuggingFaceSemanticBackend:
         self._label_model_id = label_model_id
         try:
             self._mask_pipeline = pipeline("mask-generation", model=mask_model_id, device=device)
-            try:
-                self._label_pipeline = pipeline("image-to-text", model=label_model_id, device=device)
-            except (KeyError, ValueError):
-                self._label_pipeline = pipeline("image-text-to-text", model=label_model_id, device=device)
+            self._florence = label_model_id.lower().startswith("microsoft/florence-2-")
+            if self._florence:
+                from transformers import AutoModelForCausalLM, AutoProcessor
+                import torch
+                self._torch = torch
+                self._label_processor = AutoProcessor.from_pretrained(label_model_id, trust_remote_code=True)
+                self._label_model = AutoModelForCausalLM.from_pretrained(label_model_id, trust_remote_code=True).eval()
+                self._label_device = torch.device("cpu" if device < 0 else f"cuda:{device}")
+                self._label_model.to(self._label_device)
+            else:
+                self._florence = False
+                self._label_pipeline = pipeline("image-text-to-text", model=label_model_id, device=device, trust_remote_code=True)
         except Exception as error:
             raise RuntimeError(
                 "semantic backend unavailable: unable to load the requested model runtime or weights "
@@ -114,20 +125,28 @@ class HuggingFaceSemanticBackend:
         from PIL import Image
         masked = np.where(mask.mask[..., None], image, 0).astype(np.uint8)
         started = time.perf_counter()
-        try:
-            outputs = self._label_pipeline(Image.fromarray(masked), max_new_tokens=32)
-        except ValueError as error:
-            if "provide text" not in str(error).lower():
-                raise
-            outputs = self._label_pipeline(text="Describe the object in this image with one short noun phrase.", images=Image.fromarray(masked), max_new_tokens=32)
+        if self._florence:
+            prompt = "<CAPTION>"
+            inputs = self._label_processor(text=prompt, images=Image.fromarray(masked), return_tensors="pt")
+            inputs = {name: value.to(self._label_device) for name, value in inputs.items()}
+            with self._torch.inference_mode():
+                generated = self._label_model.generate(**inputs, max_new_tokens=32, num_beams=3)
+            generated_text = self._label_processor.batch_decode(generated, skip_special_tokens=False)[0]
+            parsed = self._label_processor.post_process_generation(generated_text, task=prompt, image_size=(image.shape[1], image.shape[0]))
+            text = str(parsed.get(prompt, generated_text)) if isinstance(parsed, dict) else str(parsed)
+        else:
+            try:
+                outputs = self._label_pipeline(text="What is the main object in this image?", images=Image.fromarray(masked), max_new_tokens=32)
+            except (TypeError, ValueError):
+                outputs = self._label_pipeline(Image.fromarray(masked), max_new_tokens=32)
+            text = ""
+            if isinstance(outputs, list) and outputs and isinstance(outputs[0], dict):
+                text = str(outputs[0].get("generated_text", outputs[0].get("text", "")))
+            elif outputs:
+                text = str(outputs)
         elapsed_ms = (time.perf_counter() - started) * 1000.0
-        text = ""
-        if isinstance(outputs, list) and outputs and isinstance(outputs[0], dict):
-            text = str(outputs[0].get("generated_text", outputs[0].get("text", "")))
-        elif outputs:
-            text = str(outputs)
         label = _normalise_generated_label(text)
-        return [BackendLabelCandidate(label=label, probability=0.5 if label != "unknown" else 0.0, model_metadata={"model_name": "huggingface-image-to-text", "model_version": "transformers", "weights_id": self._label_model_id, "latency_ms": round(elapsed_ms, 3)})]
+        return [BackendLabelCandidate(label=label, probability=0.7 if label != "unknown" else 0.0, model_metadata={"model_name": "florence-2", "model_version": "transformers", "weights_id": self._label_model_id, "latency_ms": round(elapsed_ms, 3)})]
 
 
 def load_backend(kind: str, config: dict[str, Any]) -> Any:
@@ -137,8 +156,8 @@ def load_backend(kind: str, config: dict[str, Any]) -> Any:
             raise ValueError("fixture backend requires fixture_path")
         return FixtureSemanticBackend.from_json(Path(fixture_path))
     if kind in {"sam2_florence_siglip", "sam2"}:
-        mask_model_id = config.get("mask_model_id", "facebook/sam-vit-base")
-        label_model_id = config.get("label_model_id", "Salesforce/blip-image-captioning-base")
+        mask_model_id = config.get("mask_model_id", DEFAULT_MASK_MODEL_ID)
+        label_model_id = config.get("label_model_id", DEFAULT_LABEL_MODEL_ID)
         return HuggingFaceSemanticBackend(mask_model_id=mask_model_id, label_model_id=label_model_id, device=int(config.get("device", 0)))
     raise ValueError(f"unknown semantic backend: {kind}")
 
