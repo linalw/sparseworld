@@ -1,5 +1,27 @@
 # Requirements-to-Evidence Verification
 
+## Local-origin semantic-map explorer checkpoint (2026-09-04)
+
+The live keyframe bridge now locks the first valid `map` pose (falling back to `odom` only before a map pose exists, then retaining that single reference frame) as `initial_camera_map`. `objects.json` records the transform and axis convention; `trajectory.json` stores pose breadcrumbs. `GET /api/map/state` serves the coordinate frame, objects, trajectory, and occupancy-preview availability. The browser console renders an interactive starfield canvas with drag rotation, wheel zoom, WASD pan, origin/forward marker, trajectory, and unique semantic object IDs. Automated evidence: `conda run -n sparseworld python -m pytest -q` -> 126 passed; `conda run -n sparseworld pip check` -> no broken requirements; `python3 -m py_compile` passed for changed Python modules; `git diff --check` passed. This remains prototype visualization and coordinate normalization; no global accuracy, ATE/RPE, semantic precision, navigation, or safety gate is passed.
+
+## RGB label/crop display checkpoint (2026-09-04)
+
+The semantic backend now labels colour RGB bounding-box crops, rather than zero-filled masked frames. Florence-style wrappers such as `a_black_and_white_photo_of_` and `with_a_black_background` are removed from the persistent class label; the unmodified generated text remains in `model.raw_output` for audit. New objects receive one representative crop (`semantic-crops/<object_id>.jpg`), and the map-state API returns a constrained `/api/runs/<run_id>/assets/semantic-crops/...` URL. The UI button `显示对象图片` toggles those crops at their deduplicated 3D positions. Fresh verification: `conda run -n sparseworld python -m pytest -q` -> 130 passed; `pip check` remains clean. This addresses display/preprocessing behaviour only and does not validate semantic recognition accuracy.
+
+The follow-up canvas fix caches asynchronous image loads and redraws cached images during the animation loop, eliminating the clear-after-`onload` race. Full verification remains `130 passed`, `pip check` clean, and `git diff --check` clean.
+
+## Version-2 candidate planning checkpoint (2026-09-04)
+
+`src/sparseworld_p0/path_planning.py` provides deterministic target resolution and Dijkstra over the observed trajectory graph. `POST /api/plan` returns candidate route positions, total geometric length, `planning_basis: observed_trajectory`, and mandatory `route_status: planned_unverified`. The browser adds route query/replay controls and an inspector surface. Fresh software verification: `conda run -n sparseworld python -m pytest -q` -> 134 passed; `pip check` -> no broken requirements; `git diff --check` passed. This is planning/replay logic only: no depth/costmap clearance check, physical traversability, navigation execution, or `/cmd_vel` control is present or validated.
+
+## Live sparse mapping implementation checkpoint (2026-09-02)
+
+The confirmed方案 A design is being implemented on `codex/live-sparse-mapping`. Keyframe gating (1 s / 0.35 m / 15°), capacity-one latest-frame semantic queue, live-vs-debug-bag command semantics, and API/UI mode fields are covered by automated tests. The reference host currently has no `rtabmap_ros` package (`ros2 pkg prefix` returned `Package not found`), so live SLAM and real-time map output remain explicitly `unavailable`; no trajectory or semantic global accuracy claim is made.
+
+RTAB-Map dependency follow-up: `ros-humble-rtabmap-ros 0.23.7` is installed and its official `rtabmap_launch/rtabmap.launch.py` arguments were verified. A 12-second motor-independent live smoke run produced RGB/depth preview files and a 3.1 MiB run-local RTAB-Map database without raw rosbag. The keyframe bridge saves only gated frames and status metadata. This does not establish ATE/RPE, synchronization, calibration, semantic precision, or navigation performance.
+
+Branch checkpoint: gated keyframe bridge, run artifact manifesting, RTAB-Map command wiring, live mode API/UI fields, and live keyframe semantic-worker integration pass the full 110-test suite; `pip check` remains the environment gate. Real model inference, map accuracy, calibration, synchronization, and route performance remain unvalidated.
+
 ## Capture console tooling evidence (2026-09-02)
 
 The `codex/capture-console` branch adds a localhost-only FastAPI browser console (`sparseworld-p0 capture-console`) for attended Gemini 335 ROS 2 recording. It enforces one active session, preserves raw run directories and manifests on stop/failure, and labels unavailable preview or unassessed quality explicitly. `conda run -n sparseworld python -m pytest -q` passed 79 tests; `pip check` reported no broken requirements; a dry-run Uvicorn startup/shutdown on `127.0.0.1:8876` completed. This verifies software/operator workflow only. Route data, RGB-depth alignment, `map_T_camera`, time synchronization, semantic precision, SLAM, navigation, and safety gates remain `not_measured`.
@@ -61,3 +83,12 @@ This is a concept/prototype design verification, not a hardware acceptance test.
 | Gemini 335 device and launch preflight | `ros2 run orbbec_camera list_devices_node`; `ros2 launch orbbec_camera gemini_330_series.launch.py --show-args`; `artifacts/evidence/p0_ros2_stationary_20260902T111500Z/environment_versions.txt` | Enumerated Gemini 335 PID `0x0800`, serial `CP0F4630001M`, USB3.2, firmware `1.4.60`; launch argument preflight succeeded | Read-only enumeration/parameter evidence; no calibration or performance acceptance |
 | ROS topic/QoS/TF preflight | `artifacts/evidence/p0_ros2_stationary_20260902T111500Z/` topic probe outputs and driver logs | RGB/depth/left/right raw images, camera-info, separate accel/gyro IMU, device status, `/tf`, `/tf_static` visible; publishers reported RELIABLE/VOLATILE and status/TF static TRANSIENT_LOCAL; static camera transform queried | Topic availability and TF lookup only; probe-induced subscriber backpressure means drops need a bounded measurement design |
 | Official ROS 2 stationary MCAP capture and replay | Bag `artifacts/rosbags/p0_ros2_stationary_20260902T111500Z/`; `bag_info.txt`; `rosbag_timestamps.jsonl`; `rosbag_quality.json` | 19.850123 s, 20,628 messages, 15 requested topics subscribed; MCAP readable; `ros2 bag play --clock` smoke test completed; per-topic recorded/header timestamps monotonic; RGB/depth/IR ~29.96–29.98 Hz, accel/gyro ~199.36 Hz | Motor-disabled stationary observability/container evidence only; route, calibration, clock synchronization, SLAM, navigation, and safety gates remain `not_measured` |
+
+## Simulation foundation checkpoint (2026-09-04)
+
+- `tests/test_simulation.py` and `tests/test_simulation_cli.py`: deterministic motion, command clamping, sensor contract, success/collision outcomes, and JSON evidence marker.
+- `PYTHONPATH=src conda run -n sparseworld pytest -q`: 148 passed, 1 existing Starlette deprecation warning.
+- `PYTHONPATH=src conda run -n sparseworld python -m sparseworld_p0.cli sim-smoke --output /tmp/sim.json`: completed; endpoint error 0.0585 m, path length 1.9415 m, collision count 0; JSON and SHA-256 sidecar written.
+- `git diff --check`: clean.
+
+Boundary: this is `simulation_evidence` only. Isaac Sim ROS 2 sensor publication, Nav2 closed-loop motion, semantic target retrieval, and physical Gemini 335 navigation remain pending.

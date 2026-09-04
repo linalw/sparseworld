@@ -13,6 +13,9 @@ from .profile import load_profile
 from .quality import assess
 from .reporting import render_report
 from .rosbag_export import package_normalized_samples_mcap, summarize_rosbag_timestamps
+from .semantic_backends import load_backend
+from .semantic_mapping import build_semantic_map
+from .simulation import SimulationConfig, run_smoke_test
 
 
 def main() -> int:
@@ -44,6 +47,18 @@ def main() -> int:
     console_parser.add_argument("--port", default=8765, type=int)
     console_parser.add_argument("--output-dir", default=Path("artifacts/rosbags"), type=Path)
     console_parser.add_argument("--dry-run", action="store_true")
+    semantic_parser = subparsers.add_parser("semantic-map", help="build an auditable semantic object map from RGB-D frames")
+    semantic_parser.add_argument("--manifest", required=True, type=Path)
+    semantic_parser.add_argument("--backend", required=True, choices=("fixture", "sam2_florence_siglip", "sam2"))
+    semantic_parser.add_argument("--fixture-path", type=Path)
+    semantic_parser.add_argument("--mask-model-id", default="facebook/sam-vit-base")
+    semantic_parser.add_argument("--label-model-id", default="microsoft/Florence-2-base")
+    semantic_parser.add_argument("--device", type=int, default=0)
+    semantic_parser.add_argument("--output", required=True, type=Path)
+    sim_parser = subparsers.add_parser("sim-smoke", help="run deterministic simulation navigation smoke test")
+    sim_parser.add_argument("--output", required=True, type=Path)
+    sim_parser.add_argument("--target", nargs=2, type=float, default=(2.0, 0.0), metavar=("X", "Y"))
+    sim_parser.add_argument("--timeout-s", type=float, default=20.0)
     args = parser.parse_args()
     if args.command == "discover":
         from datetime import datetime, timezone
@@ -60,6 +75,13 @@ def main() -> int:
         output.with_suffix(output.suffix + ".sha256").write_text(
             f"{digest}  {output.name}\n", encoding="utf-8"
         )
+        return 0
+    if args.command == "sim-smoke":
+        result = run_smoke_test(SimulationConfig(target=tuple(args.target), timeout_s=args.timeout_s))
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        payload = json.dumps(result, indent=2, sort_keys=True) + "\n"
+        args.output.write_text(payload, encoding="utf-8")
+        args.output.with_suffix(args.output.suffix + ".sha256").write_text(f"{hashlib.sha256(payload.encode('utf-8')).hexdigest()}  {args.output.name}\n", encoding="utf-8")
         return 0
     if args.command == "assess":
         profile = load_profile(args.profile)
@@ -130,4 +152,17 @@ def main() -> int:
         from .capture_console_api import create_app
         uvicorn.run(create_app(CaptureSession(args.output_dir, dry_run=args.dry_run)), host=args.host, port=args.port)
         return 0
+    if args.command == "semantic-map":
+        manifest = json.loads(args.manifest.read_text(encoding="utf-8"))
+        backend_config = {"fixture_path": str(args.fixture_path)} if args.fixture_path else {"mask_model_id": args.mask_model_id, "label_model_id": args.label_model_id, "device": args.device}
+        result = build_semantic_map(manifest, load_backend(args.backend, backend_config))
+        payload = json.dumps(result, indent=2, sort_keys=True, ensure_ascii=False) + "\n"
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(payload, encoding="utf-8")
+        args.output.with_suffix(args.output.suffix + ".sha256").write_text(f"{hashlib.sha256(payload.encode('utf-8')).hexdigest()}  {args.output.name}\n", encoding="utf-8")
+        return 0
     return 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

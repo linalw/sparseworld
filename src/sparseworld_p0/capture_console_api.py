@@ -30,7 +30,7 @@ def create_app(session=None):
     @app.post("/api/start")
     def start(payload: dict[str, Any]) -> dict[str, Any]:
         try:
-            return session.start(payload.get("run_name", ""), payload.get("duration_s"), payload.get("topics") or [])
+            return session.start(payload.get("run_name", ""), payload.get("duration_s"), payload.get("topics") or [], mode=payload.get("mode", "capture"), debug_bag=bool(payload.get("debug_bag", False)))
         except Exception as exc:
             from .capture_console import SessionBusyError
             if isinstance(exc, SessionBusyError):
@@ -44,6 +44,96 @@ def create_app(session=None):
     @app.get("/api/runs")
     def runs() -> list[dict[str, Any]]:
         return session.list_runs()
+
+    @app.get("/api/objects")
+    def objects() -> list[dict[str, Any]]:
+        snapshot = session.snapshot()
+        run_dir = snapshot.get("run_dir")
+        candidate = Path(run_dir) / "objects.json" if run_dir else None
+        if not candidate or not candidate.is_file():
+            return []
+        try:
+            data = json.loads(candidate.read_text(encoding="utf-8"))
+            if isinstance(data, dict):
+                return data.get("objects", []) if isinstance(data.get("objects"), list) else []
+            return data if isinstance(data, list) else []
+        except (OSError, json.JSONDecodeError):
+            return []
+
+    @app.get("/api/map/preview")
+    def map_preview():
+        run_dir = session.snapshot().get("run_dir")
+        candidate = Path(run_dir) / "map-preview.jpg" if run_dir else None
+        if not candidate or not candidate.is_file():
+            raise HTTPException(404, "map_preview_unavailable")
+        return FileResponse(candidate, media_type="image/jpeg")
+
+    @app.get("/api/map/state")
+    def map_state() -> dict[str, Any]:
+        """Compact state for the browser's navigable semantic-map renderer."""
+        run_dir = session.snapshot().get("run_dir")
+        if not run_dir:
+            return {"status": "waiting_for_live_run", "objects": [], "trajectory": [], "coordinate_frame": None, "global_accuracy": "unvalidated"}
+        root = Path(run_dir)
+        objects_document: dict[str, Any] = {}
+        trajectory_document: dict[str, Any] = {}
+        for path, target in ((root / "objects.json", "objects"), (root / "trajectory.json", "trajectory")):
+            if not path.is_file():
+                continue
+            try:
+                decoded = json.loads(path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                continue
+            if isinstance(decoded, dict):
+                if target == "objects":
+                    objects_document = decoded
+                else:
+                    trajectory_document = decoded
+        coordinate_frame = objects_document.get("map_frame") or trajectory_document.get("coordinate_frame")
+        objects_value = objects_document.get("objects", [])
+        poses_value = trajectory_document.get("poses", [])
+        objects_value = objects_value if isinstance(objects_value, list) else []
+        for item in objects_value:
+            if not isinstance(item, dict):
+                continue
+            uri = item.get("representative_image_uri")
+            if isinstance(uri, str) and uri.startswith("semantic-crops/") and Path(uri).name == uri.split("/")[-1]:
+                item["representative_image_url"] = f"/api/runs/{root.name}/assets/{uri}"
+        poses_value = poses_value if isinstance(poses_value, list) else []
+        return {
+            "status": "ready" if coordinate_frame else "waiting_for_valid_slam_pose",
+            "coordinate_frame": coordinate_frame,
+            "objects": objects_value,
+            "trajectory": poses_value,
+            "map_preview_available": (root / "map-preview.jpg").is_file(),
+            "map_preview_url": "/api/map/preview" if (root / "map-preview.jpg").is_file() else None,
+            "global_accuracy": "unvalidated",
+        }
+
+    @app.post("/api/plan")
+    def plan(payload: dict[str, Any]) -> dict[str, Any]:
+        from .path_planning import plan_route
+        state = map_state()
+        return plan_route(state.get("objects", []), state.get("trajectory", []), str(payload.get("target_query", "")), object_id=payload.get("object_id"), start_node_id=payload.get("start_node_id"))
+
+    @app.get("/api/runs/{run_id}/assets/{asset_path:path}")
+    def run_asset(run_id: str, asset_path: str):
+        if Path(run_id).name != run_id:
+            raise HTTPException(400, "invalid run id")
+        if not asset_path.startswith("semantic-crops/"):
+            raise HTTPException(400, "invalid asset path")
+        runs = session.list_runs()
+        active = session.snapshot()
+        if active.get("run_dir") and Path(active["run_dir"]).name == run_id:
+            runs = runs + [{"run_id": run_id, "manifest_path": str(Path(active["run_dir"]) / "capture_manifest.json")}]
+        for run in runs:
+            if run["run_id"] == run_id:
+                root = Path(run["manifest_path"]).parent
+                candidate = (root / asset_path).resolve()
+                if root.resolve() not in candidate.parents or not candidate.is_file():
+                    raise HTTPException(404, "asset not found")
+                return FileResponse(candidate)
+        raise HTTPException(404, "run not found")
 
     @app.get("/api/runs/{run_id}")
     def run_detail(run_id: str) -> dict[str, Any]:

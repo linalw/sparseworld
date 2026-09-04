@@ -82,3 +82,4 @@ Authoritative evidence, hashes, decisions, and unresolved risks live under
 # Local capture console
 
 See [`docs/p0/CAPTURE_CONSOLE.md`](docs/p0/CAPTURE_CONSOLE.md) for the Gemini 335 browser console.
+See [`docs/p0/LIVE_SPARSE_MAPPING.md`](docs/p0/LIVE_SPARSE_MAPPING.md) for the low-storage real-time mapping mode.
