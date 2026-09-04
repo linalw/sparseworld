@@ -8,6 +8,8 @@ The live keyframe bridge now locks the first valid `map` pose (falling back to `
 
 The semantic backend now labels colour RGB bounding-box crops, rather than zero-filled masked frames. Florence-style wrappers such as `a_black_and_white_photo_of_` and `with_a_black_background` are removed from the persistent class label; the unmodified generated text remains in `model.raw_output` for audit. New objects receive one representative crop (`semantic-crops/<object_id>.jpg`), and the map-state API returns a constrained `/api/runs/<run_id>/assets/semantic-crops/...` URL. The UI button `显示对象图片` toggles those crops at their deduplicated 3D positions. Fresh verification: `conda run -n sparseworld python -m pytest -q` -> 130 passed; `pip check` remains clean. This addresses display/preprocessing behaviour only and does not validate semantic recognition accuracy.
 
+The follow-up canvas fix caches asynchronous image loads and redraws cached images during the animation loop, eliminating the clear-after-`onload` race. Full verification remains `130 passed`, `pip check` clean, and `git diff --check` clean.
+
 ## Live sparse mapping implementation checkpoint (2026-09-02)
 
 The confirmed方案 A design is being implemented on `codex/live-sparse-mapping`. Keyframe gating (1 s / 0.35 m / 15°), capacity-one latest-frame semantic queue, live-vs-debug-bag command semantics, and API/UI mode fields are covered by automated tests. The reference host currently has no `rtabmap_ros` package (`ros2 pkg prefix` returned `Package not found`), so live SLAM and real-time map output remain explicitly `unavailable`; no trajectory or semantic global accuracy claim is made.
