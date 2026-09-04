@@ -1,0 +1,67 @@
+{
+  "controller": "deterministic_waypoint_cmd_vel",
+  "evidence_class": "simulation_evidence",
+  "motion_execution": {
+    "collision_count": 0,
+    "final_pose": [
+      3.2054651242888834,
+      0.07899792468855862,
+      -1.6391310661715064
+    ],
+    "goal_error_m": 0.07918673934815174,
+    "observed": true,
+    "waypoints_reached": 4,
+    "waypoints_total": 4
+  },
+  "navigation_acceptance": "unvalidated",
+  "notes": [
+    "Procedural local scene; no Nucleus asset download",
+    "Kinematic base and waypoint controller are an interface smoke test, not a dynamics or safety validation"
+  ],
+  "physical_traversability": "unvalidated",
+  "route": [
+    [
+      1.1,
+      0.0
+    ],
+    [
+      1.1,
+      1.0
+    ],
+    [
+      3.2,
+      1.0
+    ],
+    [
+      3.2,
+      0.0
+    ]
+  ],
+  "scene": "procedural_local_indoor",
+  "semantic_target": {
+    "class": "target_object",
+    "id": "target_object",
+    "map_xyz": [
+      3.7,
+      0.0,
+      0.35
+    ]
+  },
+  "sensor_contract": {
+    "camera_info": true,
+    "depth": true,
+    "imu": true,
+    "odom": true,
+    "rgb": true,
+    "tf": true
+  },
+  "status": "executed_unverified",
+  "topic_counts": {
+    "camera_info": 151,
+    "depth": 151,
+    "imu": 151,
+    "odom": 151,
+    "rgb": 151,
+    "tf": 151
+  }
+}

@@ -92,3 +92,10 @@ This is a concept/prototype design verification, not a hardware acceptance test.
 - `git diff --check`: clean.
 
 Boundary: this is `simulation_evidence` only. Isaac Sim ROS 2 sensor publication, Nav2 closed-loop motion, semantic target retrieval, and physical Gemini 335 navigation remain pending.
+
+## Isaac Sim runtime checkpoint (2026-09-04)
+
+- Launcher: `bash scripts/start_isaacsim_local_nav.sh`; it selects Isaac Sim 6 bundled Python 3.12 ROS 2 Humble libraries and avoids ABI mixing with system Python 3.10.
+- Runtime evidence: `artifacts/evidence/isaacsim_local_nav_smoke.json` and `.sha256`.
+- Isaac Sim 6.0.1 procedural local indoor scene ran for 20 s. `/sim/camera/rgb`, `/sim/camera/depth`, `/sim/camera/camera_info`, `/sim/imu`, `/sim/odom`, and `/tf` each delivered 151 messages. Four planned waypoints were reached; endpoint error `0.0791867393 m`; collision count `0`.
+- Status is `executed_unverified` under `evidence_class=simulation_evidence`. The base and controller are kinematic; Nav2 integration, semantic model inference, dynamics, physical traversability, and Gemini 335 equivalence remain unvalidated.
