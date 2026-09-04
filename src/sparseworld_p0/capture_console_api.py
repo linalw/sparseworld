@@ -90,6 +90,15 @@ def create_app(session=None):
                 else:
                     trajectory_document = decoded
         coordinate_frame = objects_document.get("map_frame") or trajectory_document.get("coordinate_frame")
+        planning_graph: dict[str, Any] = {}
+        planning_path = root / "planning_graph.json"
+        if planning_path.is_file():
+            try:
+                decoded_graph = json.loads(planning_path.read_text(encoding="utf-8"))
+                if isinstance(decoded_graph, dict):
+                    planning_graph = decoded_graph
+            except (OSError, json.JSONDecodeError):
+                planning_graph = {"status": "unavailable", "reason": "malformed_planning_graph"}
         objects_value = objects_document.get("objects", [])
         poses_value = trajectory_document.get("poses", [])
         objects_value = objects_value if isinstance(objects_value, list) else []
@@ -105,6 +114,7 @@ def create_app(session=None):
             "coordinate_frame": coordinate_frame,
             "objects": objects_value,
             "trajectory": poses_value,
+            "planning_graph": planning_graph or {"status": "unavailable", "planning_basis": "observed_trajectory"},
             "map_preview_available": (root / "map-preview.jpg").is_file(),
             "map_preview_url": "/api/map/preview" if (root / "map-preview.jpg").is_file() else None,
             "global_accuracy": "unvalidated",

@@ -108,3 +108,16 @@ def test_processor_persists_one_representative_crop_per_object(tmp_path: Path):
     assert object_record["representative_image_uri"].startswith("semantic-crops/")
     assert (tmp_path / object_record["representative_image_uri"]).is_file()
     assert object_record["evidence"][0]["image_crop_uri"] == object_record["representative_image_uri"]
+
+
+def test_processor_persists_planning_graph_from_observed_trajectory(tmp_path: Path):
+    processor = LiveSemanticProcessor(_backend(), output_dir=tmp_path, minimum_valid_depth_pixels=1)
+    processor.record_pose("kf-1", "2026-09-03T00:00:00Z", np.eye(4))
+    pose = np.eye(4); pose[0, 3] = 1.0
+    processor.record_pose("kf-2", "2026-09-03T00:00:01Z", pose)
+    processor.persist()
+    document = json.loads((tmp_path / "planning_graph.json").read_text())
+    assert document["planning_basis"] == "observed_trajectory"
+    assert [node["node_id"] for node in document["nodes"]] == ["kf-1", "kf-2"]
+    assert document["edges"][0]["status"] == "planned_unverified"
+    assert document["edges"][0]["length_m"] == 1.0

@@ -166,3 +166,18 @@ def test_plan_endpoint_returns_observed_trajectory_route(tmp_path):
     assert response.status_code == 200
     assert response.json()["route_status"] == "planned_unverified"
     assert response.json()["nodes"] == ["kf-0", "kf-1", "kf-2"]
+
+
+def test_map_state_exposes_planning_graph_metadata(tmp_path):
+    from fastapi.testclient import TestClient
+    from sparseworld_p0.capture_console import CaptureSession
+    from sparseworld_p0.capture_console_api import create_app
+
+    session = CaptureSession(tmp_path, dry_run=True)
+    started = session.start("live", None, ["/tf"], mode="live")
+    root = Path(started["run_dir"])
+    (root / "objects.json").write_text('{"map_frame":{"name":"initial_camera_map"},"objects":[]}')
+    (root / "trajectory.json").write_text('{"poses":[{"keyframe_id":"kf-0","position_xyz":[0,0,0]},{"keyframe_id":"kf-1","position_xyz":[1,0,0]}]}')
+    (root / "planning_graph.json").write_text('{"planning_basis":"observed_trajectory","nodes":[{"node_id":"kf-0"}],"edges":[]}')
+    payload = TestClient(create_app(session)).get("/api/map/state").json()
+    assert payload["planning_graph"]["planning_basis"] == "observed_trajectory"

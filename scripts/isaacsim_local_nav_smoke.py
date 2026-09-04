@@ -16,6 +16,10 @@ import os
 import sys
 from pathlib import Path
 
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT / "src") not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT / "src"))
+
 # Isaac Sim 6 runs Python 3.12.  Never import the system ROS 2 Python 3.10
 # modules into this process: use the matching Humble bindings bundled with Sim.
 ISAAC_ROS = "/home/ubuntu/linalw/App/isaacsim/_build/linux-x86_64/release/exts/isaacsim.ros2.core/humble"
@@ -161,6 +165,7 @@ try:
     node.create_subscription(Twist, "/cmd_vel", on_cmd, 10)
     print("sparseworld: subscriptions ready", flush=True)
     counts = {"rgb": 0, "depth": 0, "camera_info": 0, "imu": 0, "odom": 0, "tf": 0}
+    latest_frames = {"rgb": None, "depth": None}
     for topic, module_name, class_name, key in (
         ("/sim/camera/rgb", "sensor_msgs.msg", "Image", "rgb"),
         ("/sim/camera/depth", "sensor_msgs.msg", "Image", "depth"),
@@ -171,7 +176,22 @@ try:
     ):
         module = __import__(module_name, fromlist=[class_name])
         cls = getattr(module, class_name)
-        node.create_subscription(cls, topic, lambda _msg, observed_key=key: counts.__setitem__(observed_key, counts[observed_key] + 1), 10)
+        def sensor_callback(message, observed_key=key):
+            counts[observed_key] += 1
+            if observed_key == "rgb" and getattr(message, "data", None):
+                raw = np.frombuffer(bytes(message.data), dtype=np.uint8)
+                channels = 4 if str(getattr(message, "encoding", "")).lower() in {"rgba8", "bgra8"} else 3
+                expected = int(message.height) * int(message.width) * channels
+                if raw.size >= expected:
+                    latest_frames["rgb"] = raw[:expected].reshape((int(message.height), int(message.width), channels))[:, :, :3].copy()
+            elif observed_key == "depth" and getattr(message, "data", None):
+                encoding = str(getattr(message, "encoding", "")).lower()
+                dtype = np.float32 if encoding in {"32fc1", "32fc"} else np.uint16
+                raw = np.frombuffer(bytes(message.data), dtype=dtype)
+                expected = int(message.height) * int(message.width)
+                if raw.size >= expected:
+                    latest_frames["depth"] = raw[:expected].reshape((int(message.height), int(message.width))).astype(np.float32, copy=True)
+        node.create_subscription(cls, topic, sensor_callback, 10)
 
     # Planned route around the obstacle. This is an execution test, not Nav2.
     route = [(1.1, 0.0), (1.1, 1.0), (3.2, 1.0), (3.2, 0.0)]
@@ -180,6 +200,9 @@ try:
     elapsed = 0.0
     collision_count = 0
     trajectory = []
+    keyframes = []
+    keyframe_dir = args.output.parent / "isaacsim_keyframes"
+    from sparseworld_p0.simulation_semantic_export import build_manifest, pose_matrix_from_odom, write_keyframe
     app_utils.play()
     print("sparseworld: simulation loop starting", flush=True)
     SimulationManager.setup_simulation(dt=1.0 / 60.0, device="cpu")
@@ -214,6 +237,19 @@ try:
         imu = Imu(); imu.header.stamp = _sim_time(elapsed); imu.header.frame_id = "imu_link"; imu.linear_acceleration.z = 9.81; imu_pub.publish(imu)
         transform = TransformStamped(); transform.header.stamp = _sim_time(elapsed); transform.header.frame_id = "odom"; transform.child_frame_id = "base_link"; transform.transform.translation.x = x; transform.transform.translation.y = y; transform.transform.rotation = _yaw_quaternion(yaw); tf_pub.publish(TFMessage(transforms=[transform]))
         trajectory.append({"t": elapsed, "x": x, "y": y, "yaw": yaw, "waypoint": waypoint_index})
+        # Persist sparse RGB-D keyframes only (not a full-rate bag). These are
+        # directly consumable by sparseworld_p0.semantic_mapping.
+        if step >= 30 and step % 30 == 0 and latest_frames["rgb"] is not None and latest_frames["depth"] is not None:
+            try:
+                rgb_frame = latest_frames["rgb"]
+                depth_frame = latest_frames["depth"]
+                if rgb_frame.ndim == 3 and depth_frame.ndim == 2 and rgb_frame.shape[:2] == depth_frame.shape:
+                    frame_id = f"sim_{step:06d}"
+                    keyframes.append(write_keyframe(keyframe_dir, frame_id=frame_id, timestamp=f"sim:{elapsed:.6f}", rgb=rgb_frame, depth_m=depth_frame, map_T_camera=pose_matrix_from_odom(x, y, yaw)))
+            except Exception as exc:
+                # Sensor absence is retained in evidence rather than replaced
+                # with synthetic arrays.
+                trajectory[-1]["keyframe_capture_error"] = f"{type(exc).__name__}: {exc}"
     cmd_pub.publish(Twist())
     for _ in range(10): app.update(); rclpy.spin_once(node, timeout_sec=0.0)
     goal_error = math.hypot(route[-1][0] - x, route[-1][1] - y)
@@ -229,6 +265,11 @@ try:
         "motion_execution": {"observed": len(trajectory) > 0, "final_pose": [x, y, yaw], "goal_error_m": goal_error, "collision_count": collision_count, "waypoints_reached": waypoint_index, "waypoints_total": len(route)},
         "navigation_acceptance": "unvalidated",
         "physical_traversability": "unvalidated",
+        "semantic_input": {
+            "keyframes_saved": len(keyframes),
+            "manifest_path": None,
+            "model_inference": "pending_external_backend_run",
+        },
         "notes": ["Procedural local scene; no Nucleus asset download", "Kinematic base and waypoint controller are an interface smoke test, not a dynamics or safety validation"],
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
@@ -236,6 +277,11 @@ try:
     args.output.write_text(payload, encoding="utf-8")
     args.output.with_suffix(args.output.suffix + ".sha256").write_text(f"{hashlib.sha256(payload.encode()).hexdigest()}  {args.output.name}\n", encoding="utf-8")
     print(json.dumps(result, sort_keys=True))
+    if keyframes:
+        manifest = build_manifest(keyframe_dir, intrinsics={"fx": 763.5409, "fy": 763.5409, "cx": 160.0, "cy": 120.0, "depth_unit_m": 1.0}, frames=keyframes, simulation_truth={"object_id": "target_object", "class": "target_object", "map_xyz": [3.7, 0.0, 0.35]})
+        result["semantic_input"]["manifest_path"] = str(keyframe_dir / "semantic_manifest.json")
+        payload = json.dumps(result, indent=2, sort_keys=True) + "\n"
+        args.output.write_text(payload, encoding="utf-8")
     node.destroy_node(); rclpy.shutdown(); app_utils.stop()
 finally:
     app.close()

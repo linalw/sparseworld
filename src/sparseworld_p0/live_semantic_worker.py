@@ -183,3 +183,16 @@ class LiveSemanticProcessor:
             "poses": list(self._trajectory),
             "global_accuracy": "unvalidated",
         })
+        nodes = [{"node_id": pose["keyframe_id"], "position_xyz": pose["position_xyz"], "timestamp": pose.get("timestamp"), "source_keyframe": pose["keyframe_id"]} for pose in self._trajectory]
+        edges = []
+        for before, after in zip(nodes, nodes[1:]):
+            length = float(np.linalg.norm(np.asarray(after["position_xyz"], dtype=float) - np.asarray(before["position_xyz"], dtype=float)))
+            edges.append({"from_node_id": before["node_id"], "to_node_id": after["node_id"], "length_m": round(length, 9), "status": "planned_unverified"})
+        atomic_json(self.output_dir / "planning_graph.json", {
+            "schema_version": "p0/planning-graph/v1",
+            "planning_basis": "observed_trajectory",
+            "nodes": nodes,
+            "edges": edges,
+            "occupancy": {"status": "unavailable", "reason": "no_occupancy_grid"},
+            "global_accuracy": "unvalidated",
+        })
