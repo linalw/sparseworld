@@ -96,6 +96,7 @@ class _StoredObject:
     frame_ids: set[str] = field(default_factory=set)
     pending_move_anchor: tuple[float, float, float] | None = None
     pending_move_count: int = 0
+    representative_image_uri: str | None = None
 
 
 class SemanticObjectStore:
@@ -197,6 +198,7 @@ class SemanticObjectStore:
                 "confidence": round(item.confidence, 6),
                 "retention": "persistent_compact",
                 "evidence": list(item.evidence),
+                **({"representative_image_uri": item.representative_image_uri} if item.representative_image_uri else {}),
             })
         return {
             "schema_version": "p0/semantic-world-observations/v1",
@@ -205,6 +207,15 @@ class SemanticObjectStore:
             "inference_runs": [],
             "association_config": {"spatial_gate_m": self.spatial_gate_m, "moved_gate_m": self.moved_gate_m, "min_confirmations": self.min_confirmations, "min_distinct_frames": self.min_distinct_frames, "move_confirmations": self.move_confirmations},
         }
+
+    def set_representative_image(self, object_id: str, uri: str) -> None:
+        for item in self._objects:
+            if item.object_id == object_id:
+                if not item.representative_image_uri:
+                    item.representative_image_uri = uri
+                    for evidence in item.evidence:
+                        evidence.setdefault("image_crop_uri", uri)
+                return
 
     def _allocate_id(self, label: str) -> str:
         self._next_ids[label] = self._next_ids.get(label, 0) + 1

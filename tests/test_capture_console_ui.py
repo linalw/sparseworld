@@ -14,3 +14,5 @@ def test_console_assets_exist_and_reference_api():
     assert "semantic-canvas" in html
     assert "/api/map/state" in js
     assert "pointerdown" in js and "wheel" in js and "keydown" in js
+    assert "对象图片" in html
+    assert "image-mode" in js

@@ -92,3 +92,19 @@ def test_processor_writes_objects_in_initial_camera_frame(tmp_path: Path):
     # The fixture mask projects slightly right/down of the optical centre;
     # importantly that anchor is expressed relative to the frozen first pose.
     assert document["objects"][0]["geometry"]["anchor_xyz"] == [0.005, 0.005, 1.0]
+
+
+def test_processor_persists_one_representative_crop_per_object(tmp_path: Path):
+    processor = LiveSemanticProcessor(_backend(), output_dir=tmp_path, minimum_valid_depth_pixels=1)
+    rgb = np.full((2, 2, 3), 180, dtype=np.uint8)
+    depth_mm = np.full((2, 2), 1000, dtype=np.uint16)
+    processor.set_initial_pose(np.eye(4))
+
+    processor.process("kf-000001", "2026-09-03T00:00:00Z", rgb, depth_mm, {"fx": 100, "fy": 100, "cx": 0, "cy": 0}, map_T_camera=np.eye(4))
+    processor.persist()
+    document = processor.document()
+    object_record = document["objects"][0]
+
+    assert object_record["representative_image_uri"].startswith("semantic-crops/")
+    assert (tmp_path / object_record["representative_image_uri"]).is_file()
+    assert object_record["evidence"][0]["image_crop_uri"] == object_record["representative_image_uri"]

@@ -128,3 +128,22 @@ def test_map_state_endpoint_returns_coordinate_frame_objects_and_trajectory(tmp_
     assert payload["coordinate_frame"]["name"] == "initial_camera_map"
     assert payload["objects"][0]["object_id"] == "obj_cup_0001"
     assert payload["trajectory"][0]["position_xyz"] == [0, 0, 0]
+
+
+def test_map_state_exposes_safe_representative_image_url(tmp_path):
+    from fastapi.testclient import TestClient
+    from sparseworld_p0.capture_console import CaptureSession
+    from sparseworld_p0.capture_console_api import create_app
+
+    session = CaptureSession(tmp_path, dry_run=True)
+    started = session.start("live", None, ["/tf"], mode="live")
+    run_id = Path(started["run_dir"]).name
+    crop_dir = Path(started["run_dir"]) / "semantic-crops"
+    crop_dir.mkdir()
+    (crop_dir / "cup.jpg").write_bytes(b"jpeg")
+    (Path(started["run_dir"]) / "objects.json").write_text('{"map_frame":{"name":"initial_camera_map"},"objects":[{"object_id":"obj_cup_0001","representative_image_uri":"semantic-crops/cup.jpg"}]}')
+    client = TestClient(create_app(session))
+
+    payload = client.get("/api/map/state").json()
+    assert payload["objects"][0]["representative_image_url"] == f"/api/runs/{run_id}/assets/semantic-crops/cup.jpg"
+    assert client.get(payload["objects"][0]["representative_image_url"]).content == b"jpeg"

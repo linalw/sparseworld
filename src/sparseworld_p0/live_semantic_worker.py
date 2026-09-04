@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any, Mapping
 
 import numpy as np
+from PIL import Image
 
 from .semantic_mapping import (
     InitialPoseFrame,
@@ -22,6 +23,7 @@ from .semantic_mapping import (
     _transform_point,
     project_mask_depth,
 )
+from .semantic_backends import _object_rgb_crop
 
 
 def atomic_json(path: Path, value: Mapping[str, Any]) -> None:
@@ -122,7 +124,7 @@ class LiveSemanticProcessor:
                     continue
                 anchor = _transform_point(projection.anchor_camera_xyz, map_T_camera, "map")
                 primary = labels[0]
-                self.store.upsert(SemanticObservation(
+                result = self.store.upsert(SemanticObservation(
                     frame_id=keyframe_id,
                     timestamp=timestamp,
                     anchor_xyz=anchor,
@@ -134,6 +136,12 @@ class LiveSemanticProcessor:
                     model_metadata={"mask": mask_instance.model_metadata, "label": primary.model_metadata},
                     mask_area=int(np.count_nonzero(mask_instance.mask)),
                 ))
+                if result.action == "created":
+                    crop_uri = f"semantic-crops/{result.object_id}.jpg"
+                    crop_path = self.output_dir / crop_uri
+                    crop_path.parent.mkdir(parents=True, exist_ok=True)
+                    Image.fromarray(_object_rgb_crop(mask_instance.mask, rgb)).save(crop_path, format="JPEG", quality=88)
+                    self.store.set_representative_image(result.object_id, crop_uri)
         except Exception as exc:
             self._errors += 1
             self._last_error = f"{type(exc).__name__}: {exc}"

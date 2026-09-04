@@ -4,7 +4,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from sparseworld_p0.semantic_backends import _normalise_generated_label, load_backend
+from sparseworld_p0.semantic_backends import _normalise_generated_label, _object_rgb_crop, load_backend
 
 
 def test_fixture_backend_returns_masks_and_labels_with_audit_metadata(tmp_path: Path):
@@ -60,3 +60,20 @@ def test_generated_label_removes_the_image_to_text_prompt_echo():
 
 def test_generated_label_rejects_florence_prompt_echo():
     assert _normalise_generated_label("What is the main object in this image?") == "unknown"
+
+
+def test_generated_label_strips_photo_style_and_background_noise():
+    assert _normalise_generated_label("a_black_and_white_photo_of_a_laptop_computer") == "laptop computer"
+    assert _normalise_generated_label("a_metal_door_with_a_black_background") == "metal door"
+    assert _normalise_generated_label("a_black_and_white_image_of_a_person_in_a_wheelchair") == "person in a wheelchair"
+
+
+def test_object_crop_keeps_rgb_context_instead_of_black_mask_background():
+    rgb = np.arange(4 * 4 * 3, dtype=np.uint8).reshape((4, 4, 3))
+    mask = np.zeros((4, 4), dtype=bool)
+    mask[1:3, 1:3] = True
+
+    crop = _object_rgb_crop(mask, rgb)
+
+    assert crop.shape == (2, 2, 3)
+    assert np.array_equal(crop, rgb[1:3, 1:3])

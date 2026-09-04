@@ -93,6 +93,12 @@ def create_app(session=None):
         objects_value = objects_document.get("objects", [])
         poses_value = trajectory_document.get("poses", [])
         objects_value = objects_value if isinstance(objects_value, list) else []
+        for item in objects_value:
+            if not isinstance(item, dict):
+                continue
+            uri = item.get("representative_image_uri")
+            if isinstance(uri, str) and uri.startswith("semantic-crops/") and Path(uri).name == uri.split("/")[-1]:
+                item["representative_image_url"] = f"/api/runs/{root.name}/assets/{uri}"
         poses_value = poses_value if isinstance(poses_value, list) else []
         return {
             "status": "ready" if coordinate_frame else "waiting_for_valid_slam_pose",
@@ -103,6 +109,25 @@ def create_app(session=None):
             "map_preview_url": "/api/map/preview" if (root / "map-preview.jpg").is_file() else None,
             "global_accuracy": "unvalidated",
         }
+
+    @app.get("/api/runs/{run_id}/assets/{asset_path:path}")
+    def run_asset(run_id: str, asset_path: str):
+        if Path(run_id).name != run_id:
+            raise HTTPException(400, "invalid run id")
+        if not asset_path.startswith("semantic-crops/"):
+            raise HTTPException(400, "invalid asset path")
+        runs = session.list_runs()
+        active = session.snapshot()
+        if active.get("run_dir") and Path(active["run_dir"]).name == run_id:
+            runs = runs + [{"run_id": run_id, "manifest_path": str(Path(active["run_dir"]) / "capture_manifest.json")}]
+        for run in runs:
+            if run["run_id"] == run_id:
+                root = Path(run["manifest_path"]).parent
+                candidate = (root / asset_path).resolve()
+                if root.resolve() not in candidate.parents or not candidate.is_file():
+                    raise HTTPException(404, "asset not found")
+                return FileResponse(candidate)
+        raise HTTPException(404, "run not found")
 
     @app.get("/api/runs/{run_id}")
     def run_detail(run_id: str) -> dict[str, Any]:

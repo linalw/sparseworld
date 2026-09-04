@@ -123,11 +123,11 @@ class HuggingFaceSemanticBackend:
 
     def label(self, mask: MaskInstance, image: np.ndarray) -> list[BackendLabelCandidate]:
         from PIL import Image
-        masked = np.where(mask.mask[..., None], image, 0).astype(np.uint8)
+        cropped = _object_rgb_crop(mask.mask, image)
         started = time.perf_counter()
         if self._florence:
             prompt = "<CAPTION>"
-            inputs = self._label_processor(text=prompt, images=Image.fromarray(masked), return_tensors="pt")
+            inputs = self._label_processor(text=prompt, images=Image.fromarray(cropped), return_tensors="pt")
             inputs = {name: value.to(self._label_device) for name, value in inputs.items()}
             with self._torch.inference_mode():
                 generated = self._label_model.generate(**inputs, max_new_tokens=32, num_beams=3)
@@ -136,9 +136,9 @@ class HuggingFaceSemanticBackend:
             text = str(parsed.get(prompt, generated_text)) if isinstance(parsed, dict) else str(parsed)
         else:
             try:
-                outputs = self._label_pipeline(text="What is the main object in this image?", images=Image.fromarray(masked), max_new_tokens=32)
+                outputs = self._label_pipeline(text="What is the main object in this image?", images=Image.fromarray(cropped), max_new_tokens=32)
             except (TypeError, ValueError):
-                outputs = self._label_pipeline(Image.fromarray(masked), max_new_tokens=32)
+                outputs = self._label_pipeline(Image.fromarray(cropped), max_new_tokens=32)
             text = ""
             if isinstance(outputs, list) and outputs and isinstance(outputs[0], dict):
                 text = str(outputs[0].get("generated_text", outputs[0].get("text", "")))
@@ -146,7 +146,7 @@ class HuggingFaceSemanticBackend:
                 text = str(outputs)
         elapsed_ms = (time.perf_counter() - started) * 1000.0
         label = _normalise_generated_label(text)
-        return [BackendLabelCandidate(label=label, probability=0.7 if label != "unknown" else 0.0, model_metadata={"model_name": "florence-2", "model_version": "transformers", "weights_id": self._label_model_id, "latency_ms": round(elapsed_ms, 3)})]
+        return [BackendLabelCandidate(label=label, probability=0.7 if label != "unknown" else 0.0, model_metadata={"model_name": "florence-2", "model_version": "transformers", "weights_id": self._label_model_id, "latency_ms": round(elapsed_ms, 3), "raw_output": text})]
 
 
 def load_backend(kind: str, config: dict[str, Any]) -> Any:
@@ -171,4 +171,32 @@ def _normalise_generated_label(text: str) -> str:
     if lowered in {"what is the main object in this image", "what is the main object in this image?", "describe the object in this image with one short noun phrase"}:
         return "unknown"
     cleaned = cleaned.split("\n", 1)[0].strip(" .,:;-")
-    return cleaned or "unknown"
+    # Florence captions can describe photographic style or masked background
+    # rather than the object. Preserve raw output in evidence, but never use
+    # that wrapper as a persistent class label.
+    import re
+    cleaned = cleaned.replace("_", " ")
+    cleaned = re.sub(r"^a\s+", "", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"^(?:black and white|colour|color)\s+(?:photo|photograph|image|picture)\s+of\s+", "", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"^(?:photo|photograph|image|picture)\s+of\s+", "", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"^a\s+", "", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\s+(?:on|against)\s+(?:a|an)\s+(?:black|white|dark|light)\s+(?:background|backdrop)\.?$", "", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\s+with\s+(?:a|an)\s+(?:black|white|dark|light)\s+(?:background|backdrop)\.?$", "", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\s+in\s+the\s+(?:image|picture|photo)\.?$", "", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\s+", " ", cleaned).strip(" .,:;-")
+    noise = {"", "unknown", "black and white", "black background", "white background", "photo", "image", "picture"}
+    return cleaned if cleaned.lower() not in noise else "unknown"
+
+
+def _object_rgb_crop(mask: np.ndarray, image: np.ndarray) -> np.ndarray:
+    """Return the RGB bounding-box crop, preserving local colour context."""
+    selected = np.asarray(mask, dtype=bool)
+    rgb = np.asarray(image, dtype=np.uint8)
+    if selected.shape != rgb.shape[:2]:
+        raise ValueError("mask shape must match RGB image")
+    rows, columns = np.nonzero(selected)
+    if rows.size == 0:
+        return rgb
+    top, bottom = int(rows.min()), int(rows.max()) + 1
+    left, right = int(columns.min()), int(columns.max()) + 1
+    return rgb[top:bottom, left:right]
