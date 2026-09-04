@@ -15,6 +15,7 @@ from .reporting import render_report
 from .rosbag_export import package_normalized_samples_mcap, summarize_rosbag_timestamps
 from .semantic_backends import load_backend
 from .semantic_mapping import build_semantic_map
+from .simulation import SimulationConfig, run_smoke_test
 
 
 def main() -> int:
@@ -54,6 +55,10 @@ def main() -> int:
     semantic_parser.add_argument("--label-model-id", default="microsoft/Florence-2-base")
     semantic_parser.add_argument("--device", type=int, default=0)
     semantic_parser.add_argument("--output", required=True, type=Path)
+    sim_parser = subparsers.add_parser("sim-smoke", help="run deterministic simulation navigation smoke test")
+    sim_parser.add_argument("--output", required=True, type=Path)
+    sim_parser.add_argument("--target", nargs=2, type=float, default=(2.0, 0.0), metavar=("X", "Y"))
+    sim_parser.add_argument("--timeout-s", type=float, default=20.0)
     args = parser.parse_args()
     if args.command == "discover":
         from datetime import datetime, timezone
@@ -70,6 +75,13 @@ def main() -> int:
         output.with_suffix(output.suffix + ".sha256").write_text(
             f"{digest}  {output.name}\n", encoding="utf-8"
         )
+        return 0
+    if args.command == "sim-smoke":
+        result = run_smoke_test(SimulationConfig(target=tuple(args.target), timeout_s=args.timeout_s))
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        payload = json.dumps(result, indent=2, sort_keys=True) + "\n"
+        args.output.write_text(payload, encoding="utf-8")
+        args.output.with_suffix(args.output.suffix + ".sha256").write_text(f"{hashlib.sha256(payload.encode('utf-8')).hexdigest()}  {args.output.name}\n", encoding="utf-8")
         return 0
     if args.command == "assess":
         profile = load_profile(args.profile)
@@ -150,3 +162,7 @@ def main() -> int:
         args.output.with_suffix(args.output.suffix + ".sha256").write_text(f"{hashlib.sha256(payload.encode('utf-8')).hexdigest()}  {args.output.name}\n", encoding="utf-8")
         return 0
     return 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

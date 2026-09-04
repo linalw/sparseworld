@@ -83,3 +83,12 @@ This is a concept/prototype design verification, not a hardware acceptance test.
 | Gemini 335 device and launch preflight | `ros2 run orbbec_camera list_devices_node`; `ros2 launch orbbec_camera gemini_330_series.launch.py --show-args`; `artifacts/evidence/p0_ros2_stationary_20260902T111500Z/environment_versions.txt` | Enumerated Gemini 335 PID `0x0800`, serial `CP0F4630001M`, USB3.2, firmware `1.4.60`; launch argument preflight succeeded | Read-only enumeration/parameter evidence; no calibration or performance acceptance |
 | ROS topic/QoS/TF preflight | `artifacts/evidence/p0_ros2_stationary_20260902T111500Z/` topic probe outputs and driver logs | RGB/depth/left/right raw images, camera-info, separate accel/gyro IMU, device status, `/tf`, `/tf_static` visible; publishers reported RELIABLE/VOLATILE and status/TF static TRANSIENT_LOCAL; static camera transform queried | Topic availability and TF lookup only; probe-induced subscriber backpressure means drops need a bounded measurement design |
 | Official ROS 2 stationary MCAP capture and replay | Bag `artifacts/rosbags/p0_ros2_stationary_20260902T111500Z/`; `bag_info.txt`; `rosbag_timestamps.jsonl`; `rosbag_quality.json` | 19.850123 s, 20,628 messages, 15 requested topics subscribed; MCAP readable; `ros2 bag play --clock` smoke test completed; per-topic recorded/header timestamps monotonic; RGB/depth/IR ~29.96–29.98 Hz, accel/gyro ~199.36 Hz | Motor-disabled stationary observability/container evidence only; route, calibration, clock synchronization, SLAM, navigation, and safety gates remain `not_measured` |
+
+## Simulation foundation checkpoint (2026-09-04)
+
+- `tests/test_simulation.py` and `tests/test_simulation_cli.py`: deterministic motion, command clamping, sensor contract, success/collision outcomes, and JSON evidence marker.
+- `PYTHONPATH=src conda run -n sparseworld pytest -q`: 148 passed, 1 existing Starlette deprecation warning.
+- `PYTHONPATH=src conda run -n sparseworld python -m sparseworld_p0.cli sim-smoke --output /tmp/sim.json`: completed; endpoint error 0.0585 m, path length 1.9415 m, collision count 0; JSON and SHA-256 sidecar written.
+- `git diff --check`: clean.
+
+Boundary: this is `simulation_evidence` only. Isaac Sim ROS 2 sensor publication, Nav2 closed-loop motion, semantic target retrieval, and physical Gemini 335 navigation remain pending.
