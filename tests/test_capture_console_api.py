@@ -147,3 +147,22 @@ def test_map_state_exposes_safe_representative_image_url(tmp_path):
     payload = client.get("/api/map/state").json()
     assert payload["objects"][0]["representative_image_url"] == f"/api/runs/{run_id}/assets/semantic-crops/cup.jpg"
     assert client.get(payload["objects"][0]["representative_image_url"]).content == b"jpeg"
+
+
+def test_plan_endpoint_returns_observed_trajectory_route(tmp_path):
+    from fastapi.testclient import TestClient
+    from sparseworld_p0.capture_console import CaptureSession
+    from sparseworld_p0.capture_console_api import create_app
+
+    session = CaptureSession(tmp_path, dry_run=True)
+    started = session.start("live", None, ["/tf"], mode="live")
+    root = Path(started["run_dir"])
+    (root / "objects.json").write_text('{"objects":[{"object_id":"obj_cup_0001","class_candidates":[{"label":"red cup"}],"geometry":{"anchor_xyz":[2,0,1]}}]}')
+    (root / "trajectory.json").write_text('{"poses":[{"keyframe_id":"kf-0","position_xyz":[0,0,0]},{"keyframe_id":"kf-1","position_xyz":[1,0,0]},{"keyframe_id":"kf-2","position_xyz":[2,0,0]}]}')
+    client = TestClient(create_app(session))
+
+    response = client.post("/api/plan", json={"target_query":"red cup","start_node_id":"kf-0"})
+
+    assert response.status_code == 200
+    assert response.json()["route_status"] == "planned_unverified"
+    assert response.json()["nodes"] == ["kf-0", "kf-1", "kf-2"]

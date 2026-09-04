@@ -110,6 +110,12 @@ def create_app(session=None):
             "global_accuracy": "unvalidated",
         }
 
+    @app.post("/api/plan")
+    def plan(payload: dict[str, Any]) -> dict[str, Any]:
+        from .path_planning import plan_route
+        state = map_state()
+        return plan_route(state.get("objects", []), state.get("trajectory", []), str(payload.get("target_query", "")), object_id=payload.get("object_id"), start_node_id=payload.get("start_node_id"))
+
     @app.get("/api/runs/{run_id}/assets/{asset_path:path}")
     def run_asset(run_id: str, asset_path: str):
         if Path(run_id).name != run_id:

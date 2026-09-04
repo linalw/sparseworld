@@ -10,6 +10,10 @@ The semantic backend now labels colour RGB bounding-box crops, rather than zero-
 
 The follow-up canvas fix caches asynchronous image loads and redraws cached images during the animation loop, eliminating the clear-after-`onload` race. Full verification remains `130 passed`, `pip check` clean, and `git diff --check` clean.
 
+## Version-2 candidate planning checkpoint (2026-09-04)
+
+`src/sparseworld_p0/path_planning.py` provides deterministic target resolution and Dijkstra over the observed trajectory graph. `POST /api/plan` returns candidate route positions, total geometric length, `planning_basis: observed_trajectory`, and mandatory `route_status: planned_unverified`. The browser adds route query/replay controls and an inspector surface. Fresh software verification: `conda run -n sparseworld python -m pytest -q` -> 134 passed; `pip check` -> no broken requirements; `git diff --check` passed. This is planning/replay logic only: no depth/costmap clearance check, physical traversability, navigation execution, or `/cmd_vel` control is present or validated.
+
 ## Live sparse mapping implementation checkpoint (2026-09-02)
 
 The confirmed方案 A design is being implemented on `codex/live-sparse-mapping`. Keyframe gating (1 s / 0.35 m / 15°), capacity-one latest-frame semantic queue, live-vs-debug-bag command semantics, and API/UI mode fields are covered by automated tests. The reference host currently has no `rtabmap_ros` package (`ros2 pkg prefix` returned `Package not found`), so live SLAM and real-time map output remain explicitly `unavailable`; no trajectory or semantic global accuracy claim is made.
