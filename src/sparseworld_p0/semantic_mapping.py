@@ -46,6 +46,43 @@ class AssociationResult:
     object_id: str
 
 
+@dataclass(frozen=True)
+class InitialPoseFrame:
+    """A planar local frame fixed at the first valid SLAM camera pose."""
+
+    local_T_map: np.ndarray
+    first_map_T_camera: np.ndarray
+    heading_yaw_rad: float
+    reference_frame: str
+
+    @classmethod
+    def from_map_T_camera(cls, map_T_camera: Any, *, reference_frame: str = "map") -> "InitialPoseFrame":
+        matrix = np.asarray(map_T_camera, dtype=float)
+        if matrix.shape != (4, 4) or not np.all(np.isfinite(matrix)):
+            raise ValueError("map_T_camera must be a finite 4x4 matrix")
+        yaw = math.atan2(float(matrix[1, 0]), float(matrix[0, 0]))
+        cosine, sine = math.cos(yaw), math.sin(yaw)
+        local_T_map = np.eye(4)
+        local_T_map[:3, :3] = np.array(((cosine, sine, 0.0), (-sine, cosine, 0.0), (0.0, 0.0, 1.0)))
+        local_T_map[:3, 3] = -local_T_map[:3, :3] @ matrix[:3, 3]
+        if reference_frame not in {"map", "odom"}:
+            raise ValueError("reference_frame must be map or odom")
+        return cls(local_T_map=local_T_map, first_map_T_camera=matrix, heading_yaw_rad=yaw, reference_frame=reference_frame)
+
+    def as_document(self) -> dict[str, Any]:
+        return {
+            "name": "initial_camera_map",
+            "units": "m",
+            "axis_convention": "x_forward_at_initial_camera_heading_y_left_z_up",
+            "origin_definition": "first_valid_map_T_camera_position_and_horizontal_heading",
+            "slam_reference_frame": self.reference_frame,
+            "initial_heading_yaw_rad_in_slam_map": self.heading_yaw_rad,
+            "local_T_slam_map": self.local_T_map.round(12).tolist(),
+            "first_slam_map_T_camera": self.first_map_T_camera.round(12).tolist(),
+            "global_accuracy": "unvalidated",
+        }
+
+
 @dataclass
 class _StoredObject:
     object_id: str

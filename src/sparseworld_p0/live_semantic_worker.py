@@ -15,6 +15,7 @@ from typing import Any, Mapping
 import numpy as np
 
 from .semantic_mapping import (
+    InitialPoseFrame,
     LabelCandidate,
     SemanticObjectStore,
     SemanticObservation,
@@ -57,6 +58,22 @@ class LiveSemanticProcessor:
         self._errors = 0
         self._last_error: str | None = None
         self._rgb_depth_shape_mismatch = 0
+        self.initial_pose: InitialPoseFrame | None = None
+        self._trajectory: list[dict[str, Any]] = []
+
+    def set_initial_pose(self, map_T_camera: Any, *, reference_frame: str = "map") -> InitialPoseFrame:
+        """Freeze the requested local coordinate frame at the first valid pose."""
+        if self.initial_pose is None:
+            self.initial_pose = InitialPoseFrame.from_map_T_camera(map_T_camera, reference_frame=reference_frame)
+        return self.initial_pose
+
+    def record_pose(self, keyframe_id: str, timestamp: str, local_T_camera: Any) -> None:
+        matrix = np.asarray(local_T_camera, dtype=float)
+        if matrix.shape != (4, 4) or not np.all(np.isfinite(matrix)):
+            return
+        if self._trajectory and self._trajectory[-1]["keyframe_id"] == keyframe_id:
+            return
+        self._trajectory.append({"keyframe_id": keyframe_id, "timestamp": timestamp, "position_xyz": [round(float(value), 9) for value in matrix[:3, 3]]})
 
     def process(
         self,
@@ -87,6 +104,7 @@ class LiveSemanticProcessor:
         if map_T_camera is None:
             self._pose_unavailable += 1
             return True
+        self.record_pose(keyframe_id, timestamp, map_T_camera)
         try:
             depth_m = np.asarray(depth, dtype=np.float32) * float(intrinsics.get("depth_unit_m", 0.001))
             masks = self.backend.generate_masks(rgb)
@@ -136,6 +154,8 @@ class LiveSemanticProcessor:
 
     def document(self) -> dict[str, Any]:
         document = self.store.as_document()
+        if self.initial_pose:
+            document["map_frame"] = self.initial_pose.as_document()
         document["inference_runs"] = [{
             "backend": type(self.backend).__name__,
             "keyframes_processed": self._processed,
@@ -149,3 +169,9 @@ class LiveSemanticProcessor:
 
     def persist(self) -> None:
         atomic_json(self.output_dir / "objects.json", self.document())
+        atomic_json(self.output_dir / "trajectory.json", {
+            "schema_version": "p0/live-semantic-trajectory/v1",
+            "coordinate_frame": self.initial_pose.as_document() if self.initial_pose else None,
+            "poses": list(self._trajectory),
+            "global_accuracy": "unvalidated",
+        })

@@ -37,7 +37,7 @@ def main() -> int:
     class Bridge(Node):
         def __init__(self):
             super().__init__("sparseworld_live_keyframes"); self.bridge=CvBridge(); self.last=None; self.accepted=0; self.rejected=0
-            self.semantic = None; self.semantic_worker = None; self.semantic_error = None
+            self.semantic = None; self.semantic_worker = None; self.semantic_error = None; self.reference_frame = None
             if args.semantic_backend != "none":
                 try:
                     from sparseworld_p0.semantic_backends import load_backend
@@ -79,7 +79,11 @@ def main() -> int:
                 self.accepted+=1; self.last=now
                 if self.semantic:
                     pose = None; pose_frame = None
-                    for target_frame, source_frame in (("map", "camera_link"), ("map", "camera_color_optical_frame"), ("map", rgb.header.frame_id), ("odom", "camera_link"), ("odom", rgb.header.frame_id)):
+                    preferred = self.reference_frame or "map"
+                    frames = ((preferred, "camera_link"), (preferred, "camera_color_optical_frame"), (preferred, rgb.header.frame_id))
+                    if self.reference_frame is None:
+                        frames += (("odom", "camera_link"), ("odom", rgb.header.frame_id))
+                    for target_frame, source_frame in frames:
                         if not source_frame: continue
                         try:
                             # Ask TF for the most recent transform. A keyframe can arrive
@@ -88,6 +92,13 @@ def main() -> int:
                             t, q = transform.transform.translation, transform.transform.rotation
                             matrix = np.eye(4); matrix[:3,:3] = quaternion_matrix(q.x,q.y,q.z,q.w); matrix[:3,3] = [t.x,t.y,t.z]; pose = matrix; pose_frame = target_frame; break
                         except Exception: pass
+                    if pose is not None:
+                        # Freeze the first valid pose as local origin and forward
+                        # axis.  We do not invent a pose when TF is unavailable.
+                        self.reference_frame = pose_frame
+                        origin = self.semantic.set_initial_pose(pose, reference_frame=pose_frame)
+                        pose = origin.local_T_map @ pose
+                        pose_frame = "initial_camera_map"
                     self.semantic_worker.submit({"keyframe_id": stem, "timestamp": f"{now:.9f}", "rgb": cv2.cvtColor(color, cv2.COLOR_BGR2RGB), "depth": depth_image, "intrinsics": {"fx":info.k[0],"fy":info.k[4],"cx":info.k[2],"cy":info.k[5],"depth_unit_m":0.001}, "map_T_camera": pose, "pose_frame": pose_frame})
                 self.write_status("running")
             except Exception as exc:

@@ -106,3 +106,25 @@ def test_live_map_and_objects_endpoints_are_explicit_when_unavailable(tmp_path):
     assert client.get("/api/objects").json() == []
     response = client.get("/api/map/preview")
     assert response.status_code == 404
+
+
+def test_map_state_endpoint_returns_coordinate_frame_objects_and_trajectory(tmp_path):
+    from fastapi.testclient import TestClient
+    from sparseworld_p0.capture_console import CaptureSession
+    from sparseworld_p0.capture_console_api import create_app
+
+    session = CaptureSession(tmp_path, dry_run=True)
+    started = session.start("live", None, ["/tf"], mode="live")
+    run_dir = Path(started["run_dir"])
+    (run_dir / "objects.json").write_text('{"map_frame":{"name":"initial_camera_map"},"objects":[{"object_id":"obj_cup_0001"}]}')
+    (run_dir / "trajectory.json").write_text('{"poses":[{"keyframe_id":"kf-000000","position_xyz":[0,0,0]}]}')
+    client = TestClient(create_app(session))
+
+    response = client.get("/api/map/state")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["status"] == "ready"
+    assert payload["coordinate_frame"]["name"] == "initial_camera_map"
+    assert payload["objects"][0]["object_id"] == "obj_cup_0001"
+    assert payload["trajectory"][0]["position_xyz"] == [0, 0, 0]

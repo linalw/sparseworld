@@ -11,3 +11,6 @@ def test_console_assets_exist_and_reference_api():
     assert "实时稀疏建图" in html
     assert "debug-bag" in html
     assert "slam_status" in js
+    assert "semantic-canvas" in html
+    assert "/api/map/state" in js
+    assert "pointerdown" in js and "wheel" in js and "keydown" in js

@@ -1,5 +1,9 @@
 # Requirements-to-Evidence Verification
 
+## Local-origin semantic-map explorer checkpoint (2026-09-04)
+
+The live keyframe bridge now locks the first valid `map` pose (falling back to `odom` only before a map pose exists, then retaining that single reference frame) as `initial_camera_map`. `objects.json` records the transform and axis convention; `trajectory.json` stores pose breadcrumbs. `GET /api/map/state` serves the coordinate frame, objects, trajectory, and occupancy-preview availability. The browser console renders an interactive starfield canvas with drag rotation, wheel zoom, WASD pan, origin/forward marker, trajectory, and unique semantic object IDs. Automated evidence: `conda run -n sparseworld python -m pytest -q` -> 126 passed; `conda run -n sparseworld pip check` -> no broken requirements; `python3 -m py_compile` passed for changed Python modules; `git diff --check` passed. This remains prototype visualization and coordinate normalization; no global accuracy, ATE/RPE, semantic precision, navigation, or safety gate is passed.
+
 ## Live sparse mapping implementation checkpoint (2026-09-02)
 
 The confirmed方案 A design is being implemented on `codex/live-sparse-mapping`. Keyframe gating (1 s / 0.35 m / 15°), capacity-one latest-frame semantic queue, live-vs-debug-bag command semantics, and API/UI mode fields are covered by automated tests. The reference host currently has no `rtabmap_ros` package (`ros2 pkg prefix` returned `Package not found`), so live SLAM and real-time map output remain explicitly `unavailable`; no trajectory or semantic global accuracy claim is made.
